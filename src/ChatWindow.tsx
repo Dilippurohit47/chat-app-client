@@ -64,9 +64,11 @@ const ChatWindow = ({ ws, user, senderId }: { ws: WebSocket }) => {
 
     return formattedTime;
   };
-useEffect(() =>{
-  chatWindowRef.current?.scrollIntoView({behavior:"smooth"})
-},[messages])
+  useEffect(() => {
+    setTimeout(() => {
+      chatWindowRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 0);
+  }, [messages]);
 
 const handleKeyDown = (e:any) =>{
   if(e.key === "Enter"){

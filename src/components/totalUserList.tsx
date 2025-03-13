@@ -14,6 +14,7 @@ const TotalUserList = ({
   selectedUser,
   onSelectUser,
   onlineUsers,
+  logedInUser,
 }: UserListProps) => {
   const [totalUsers, setTotalUSers] = useState([]);
   useEffect(() => {
@@ -23,13 +24,15 @@ const TotalUserList = ({
       });
       console.log(res);
       if (res.status === 200) {
-        setTotalUSers(res.data);
+        console.log("user",logedInUser)
+        console.log(res.data)
+        const filterData = res?.data.filter((c) => c.id !== logedInUser?.id)
+        setTotalUSers(filterData);
       }
     };
     getTotalUsers();
   }, []);
 
-  console.log(onlineUsers);
 
   return (
     <div className="p-4">

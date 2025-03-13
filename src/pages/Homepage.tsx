@@ -16,7 +16,6 @@ function Home() {
   const [connected, setConnected] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState();
-  const [idInput, setIdInput] = useState();
   const [message, setMessage] = useState([]);
   const [user, setUser] = useState();
 
@@ -47,7 +46,6 @@ function Home() {
 
    
       if (data.type === "online-users") {
-        console.log(data.onlineUsers)
         const filterData = data?.onlineUsers.filter((c) => c.id !== user.id);
         setOnlineUsers(filterData);
       }
@@ -77,10 +75,8 @@ function Home() {
     getUser();
   }, []);
 
-
   return (
-    <div className="flex h-screen bg-gray-100">
-{user && user.name}
+    <div className="flex h-screen  bg-gray-100">
       <div className="w-1/4 bg-white border-r border-gray-200">
         <Tabs defaultValue="online-users" className="w-[300px]">
           <TabsList className="w-full border-2 shadow-md">
@@ -102,12 +98,11 @@ function Home() {
             selectedUser={selectedUser}
             onSelectUser={setSelectedUser}
             onlineUsers={onlineUsers}
-
+            logedInUser={user}
             />
           </TabsContent>
         </Tabs>
       </div>
-
       {/* Chat Window Section */}
       <div className="w-3/4 bg-gray-50">
         {selectedUser ? (
