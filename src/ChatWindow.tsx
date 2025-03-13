@@ -66,7 +66,7 @@ const ChatWindow = ({ ws, user, senderId }: { ws: WebSocket }) => {
   };
   useEffect(() => {
     setTimeout(() => {
-      chatWindowRef.current?.scrollIntoView({ behavior: "smooth" });
+      chatWindowRef.current?.scrollIntoView({ behavior: "instant"});
     }, 0);
   }, [messages]);
 
@@ -77,8 +77,8 @@ const handleKeyDown = (e:any) =>{
 }
 
   return (
-    <div className="flex flex-col h-[90%] p-4" >
-      <div className="flex-1 overflow-y-auto" >
+    <div className="flex flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl  " >
+      <div className="flex-1 overflow-y-auto hide-scrollbar " >
         {messages.map((message) => (
           <div
           ref={chatWindowRef}
@@ -110,7 +110,7 @@ const handleKeyDown = (e:any) =>{
           placeholder="Type a message..."
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none text-white focus:border-blue-500"
         />
         <button
           className="ml-2 p-2 bg-blue-500 hover:bg-blue-700 text-white

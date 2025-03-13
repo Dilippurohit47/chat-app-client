@@ -24,18 +24,17 @@ const TotalUserList = ({
       });
       console.log(res);
       if (res.status === 200) {
-        console.log("user",logedInUser)
-        console.log(res.data)
-        const filterData = res?.data.filter((c) => c.id !== logedInUser?.id)
+        console.log("user", logedInUser);
+        console.log(res.data);
+        const filterData = res?.data.filter((c) => c.id !== logedInUser.id);
         setTotalUSers(filterData);
       }
     };
     getTotalUsers();
   }, []);
 
-
   return (
-    <div className="p-4">
+    <div className="p-4  ">
       <ul>
         {totalUsers &&
           totalUsers.map((user) => (

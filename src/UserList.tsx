@@ -16,7 +16,7 @@ const UserList = ({
   connected,
 }: UserListProps) => {
   return (
-    <div className="p-4">
+    <div className="p-4 gb-[#3F3D56]">
       <h2 className="text-lg  flex justify-center items-center gap-2 font-semibold mb-4">
         {" "}
         {connected ? (

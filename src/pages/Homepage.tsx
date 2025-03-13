@@ -10,9 +10,13 @@ import {
   TabsTrigger,
 } from "../components/ui/tabs";
 import TotalUserList from "../components/totalUserList";
+import { useDispatch } from "react-redux";
+import { saveUser } from "../slices/userSlice";
 
 function Home() {
   const ws = useRef<WebSocket | null>(null);
+  const dispatch = useDispatch()
+
   const [connected, setConnected] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState();
@@ -61,7 +65,6 @@ function Home() {
       }
     };
   }, [user]);
-
   useEffect(() => {
     const getUser = async () => {
       const res = await axios.get("http://localhost:8000/user/get-user", {
@@ -70,17 +73,18 @@ function Home() {
       if (res.status === 200) {
         setUser(res.data);
         localStorage.setItem("userId", res.data.id);
+        dispatch(saveUser(res.data))
       }
     };
     getUser();
   }, []);
 
   return (
-    <div className="flex h-screen  bg-gray-100">
-      <div className="w-1/4 bg-white border-r border-gray-200">
+    <div className="flex h-[84.5vh]  bg-gray-100  hide-scrollbar">
+      <div className="w-1/4 shadow-2xl rounded-md border-r border-gray-300 border-2 mr-2">
         <Tabs defaultValue="online-users" className="w-[300px]">
-          <TabsList className="w-full border-2 shadow-md">
-            <TabsTrigger value="online-users"       className="cursor-pointer data-[state=active]:bg-blue-500 data-[state=active]:text-white">Online</TabsTrigger>
+          <TabsList className="w-full border-2 ">
+            <TabsTrigger value="online-users"       className="cursor-pointer data-[state=active]:bg-[#008080] data-[state=active]:text-white">Online</TabsTrigger>
             <TabsTrigger value="total-users"  className="cursor-pointer data-[state=active]:bg-blue-500 data-[state=active]:text-white">Total</TabsTrigger>
           </TabsList>
           <TabsContent value="online-users">
@@ -113,7 +117,7 @@ function Home() {
             senderId={user.id}
           />
         ) : (
-          <div className="flex items-center justify-center h-full text-gray-500">
+          <div className="flex bg-[#1e1e2e] items-center justify-center h-full text-gray-200 rounded-md text-[1.1rem] ">
             Select a user to start chatting
           </div>
         )}
