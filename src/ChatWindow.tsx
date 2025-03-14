@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
-
+import { MdOutlineAttachment } from "react-icons/md";
 const ChatWindow = ({ ws, user, senderId }: { ws: WebSocket }) => {
   const [input, setInput] = useState<string>("");
   const  chatWindowRef = useRef<HTMLDivElement>(null)
@@ -103,7 +103,7 @@ const handleKeyDown = (e:any) =>{
           </div>
         ))}
       </div>
-      <div className="mt-4 flex gap-2">
+      <div className="mt-4 flex gap-2 justify-center items-center ">
         <input
           value={input}
           type="text"
@@ -112,6 +112,9 @@ const handleKeyDown = (e:any) =>{
           onKeyDown={handleKeyDown}
           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none text-white focus:border-blue-500"
         />
+
+        <label htmlFor="file-input"><MdOutlineAttachment className="text-gray-300 rotate-120 hover:text-gray-500 cursor-pointer" size={26} /></label>
+        <input  id="file-input" type="file" className="hidden w-0 h-0 bg-red-500" />
         <button
           className="ml-2 p-2 bg-blue-500 hover:bg-blue-700 text-white
         rounded-lg focus:outline-none focus:bg-blue-700"
