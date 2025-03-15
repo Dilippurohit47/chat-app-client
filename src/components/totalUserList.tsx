@@ -37,7 +37,7 @@ const TotalUserList = ({
     <div className="p-4  ">
       <ul>
         {totalUsers &&
-          totalUsers.map((user) => (
+          totalUsers?.map((user) => (
             <li
               key={user.id}
               className={`p-3 hover:bg-gray-100 cursor-pointer rounded-lg  flex justify-center items-center gap-3 ${
@@ -45,7 +45,7 @@ const TotalUserList = ({
               }`}
               onClick={() => onSelectUser(user)}
             >
-              {onlineUsers.map((u) => u.userId).includes(user.id) ? (
+              { onlineUsers && onlineUsers.map((u) => u.userId).includes(user.id) ? (
                 <div className="bg-green-500 rounded-4xl h-3 w-3"></div>
               ) : (
                 <div className="bg-gray-500 rounded-4xl h-3 w-3"></div>

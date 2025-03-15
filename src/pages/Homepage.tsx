@@ -10,8 +10,9 @@ import {
   TabsTrigger,
 } from "../components/ui/tabs";
 import TotalUserList from "../components/totalUserList";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { saveUser } from "../slices/userSlice";
+import { RootState } from "../store";
 
 function Home() {
   const ws = useRef<WebSocket | null>(null);
@@ -21,10 +22,12 @@ function Home() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState();
   const [message, setMessage] = useState([]);
-  const [user, setUser] = useState();
+
+  const user = useSelector((state:RootState) => state.user);
+  
 
   useEffect(() => {
-    if (!user) return;
+    if (!user.isLogin) return;
     ws.current = new WebSocket("ws://localhost:8000");
     ws.current.onopen = () => {
       console.log("WebSocket connection opened");
@@ -71,8 +74,6 @@ function Home() {
         withCredentials: true,
       });
       if (res.status === 200) {
-        setUser(res.data);
-        localStorage.setItem("userId", res.data.id);
         dispatch(saveUser(res.data))
       }
     };
