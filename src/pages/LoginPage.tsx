@@ -1,20 +1,17 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { saveUser } from "../slices/userSlice";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [login, setLogin] = useState(localStorage.getItem("userId"));
   const navigate = useNavigate();
 
-  useEffect(() => {
-if(login){
-  navigate("/");
-}
-  }, [login]);
 
+const dispatch = useDispatch()
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -28,9 +25,8 @@ if(login){
           withCredentials: true,
         }
       );
-      console.log(res);
       if (res.status === 200) {
-        localStorage.setItem("token", res.data.token);
+        dispatch(saveUser(res.data.user))
         navigate("/");
       }
     } catch (err) {
@@ -45,6 +41,7 @@ if(login){
         <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
           Welcome Back!
         </h2>
+
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
@@ -94,7 +91,7 @@ if(login){
         </form>
         <p className="mt-4 text-center text-gray-600">
           Don't have an account?{" "}
-          <a href="/signup" className="text-blue-600 hover:underline">
+          <a href="/sign-up" className="text-blue-600 hover:underline">
             Sign up
           </a>
         </p>

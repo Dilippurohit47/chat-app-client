@@ -25,7 +25,6 @@ function Home() {
 
   const user = useSelector((state:RootState) => state.user);
   
-
   useEffect(() => {
     if (!user.isLogin) return;
     ws.current = new WebSocket("ws://localhost:8000");
@@ -116,6 +115,7 @@ function Home() {
             user={selectedUser}
             ws={ws.current}
             senderId={user.id}
+            selectedUser={selectedUser}
           />
         ) : (
           <div className="flex bg-[#1e1e2e] items-center justify-center h-full text-gray-200 rounded-md text-[1.1rem] ">

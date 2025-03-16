@@ -1,9 +1,16 @@
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { MdOutlineAttachment } from "react-icons/md";
-const ChatWindow = ({ ws, user, senderId }: { ws: WebSocket }) => {
+const ChatWindow = ({
+  ws,
+  user,
+  senderId,
+  selectedUser,
+}: {
+  ws: WebSocket;
+}) => {
   const [input, setInput] = useState<string>("");
-  const  chatWindowRef = useRef<HTMLDivElement>(null)
+  const chatWindowRef = useRef<HTMLDivElement>(null);
 
   const [messages, setMessages] = useState([]);
 
@@ -12,7 +19,7 @@ const ChatWindow = ({ ws, user, senderId }: { ws: WebSocket }) => {
       senderId: sender,
       content: content,
       receiverId: receiver,
-      createdAt: Date.now()
+      createdAt: Date.now(),
     };
   };
 
@@ -52,7 +59,7 @@ const ChatWindow = ({ ws, user, senderId }: { ws: WebSocket }) => {
     };
   }, [user]);
 
-  const formatDate = (newDate:string) => {
+  const formatDate = (newDate: string) => {
     const date = new Date(newDate);
 
     const options = {
@@ -66,22 +73,30 @@ const ChatWindow = ({ ws, user, senderId }: { ws: WebSocket }) => {
   };
   useEffect(() => {
     setTimeout(() => {
-      chatWindowRef.current?.scrollIntoView({ behavior: "instant"});
+      chatWindowRef.current?.scrollIntoView({ behavior: "instant" });
     }, 0);
   }, [messages]);
 
-const handleKeyDown = (e:any) =>{
-  if(e.key === "Enter"){
-    sendMessage();
-  }
-}
-
+  const handleKeyDown = (e: any) => {
+    if (e.key === "Enter") {
+      sendMessage();
+    }
+  };
+  console.log(selectedUser?.name);
   return (
-    <div className="flex flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl  " >
-      <div className="flex-1 overflow-y-auto hide-scrollbar " >
+    <div className="flex flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl  ">
+      <div className=" px-2 bg-[#ffffffc6] h-10 rounded-sm flex justify-start items-center gap-3">
+        <img
+          src={selectedUser?.profileUrl}
+          className="h-8 w-8 object-cover rounded-full"
+          alt=""
+        />
+        <h1 className="text-black font-semibold"> {selectedUser?.name}</h1>
+      </div>
+      <div className="flex-1 overflow-y-auto hide-scrollbar  mt-2 ">
         {messages.map((message) => (
           <div
-          ref={chatWindowRef}
+            ref={chatWindowRef}
             key={message}
             className={`mb-4 ${
               message.senderId === senderId ? "text-right" : "text-left"
@@ -113,8 +128,17 @@ const handleKeyDown = (e:any) =>{
           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none text-white focus:border-blue-500"
         />
 
-        <label htmlFor="file-input"><MdOutlineAttachment className="text-gray-300 rotate-120 hover:text-gray-500 cursor-pointer" size={26} /></label>
-        <input  id="file-input" type="file" className="hidden w-0 h-0 bg-red-500" />
+        <label htmlFor="file-input">
+          <MdOutlineAttachment
+            className="text-gray-300 rotate-120 hover:text-gray-500 cursor-pointer"
+            size={26}
+          />
+        </label>
+        <input
+          id="file-input"
+          type="file"
+          className="hidden w-0 h-0 bg-red-500"
+        />
         <button
           className="ml-2 p-2 bg-blue-500 hover:bg-blue-700 text-white
         rounded-lg focus:outline-none focus:bg-blue-700"

@@ -17,7 +17,6 @@ const Navbar = () => {
 
   const user = useSelector((state:RootState) =>state.user)
   const dispatch = useDispatch()
-
   const logoutUser =async() =>{
     const res = await axios.post("http://localhost:8000/user/sign-out",{},{
       withCredentials:true
@@ -36,7 +35,7 @@ const Navbar = () => {
       <DropdownMenu>
         <DropdownMenuTrigger>
           <Avatar className="cursor-pointer" >
-            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+            <AvatarImage src={user.profileUrl ? user.profileUrl : "https://github.com/shadcn.png"} alt="@shadcn"  className="object-cover"/>
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
         </DropdownMenuTrigger>
