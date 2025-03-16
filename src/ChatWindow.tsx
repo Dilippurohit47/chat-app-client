@@ -1,6 +1,8 @@
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { MdOutlineAttachment } from "react-icons/md";
+import { IoMdSearch } from "react-icons/io";
+import SearchBarForChat from "./components/SearchBarForChat";
 const ChatWindow = ({
   ws,
   user,
@@ -13,7 +15,9 @@ const ChatWindow = ({
   const chatWindowRef = useRef<HTMLDivElement>(null);
 
   const [messages, setMessages] = useState([]);
-
+  const [openSearchBar, setOpenSearchBar] = useState<boolean>(false);
+  const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const [findMessagesIds,setFindMessagesIds] = useState([])
   const newMessage = (sender, content, receiver) => {
     return {
       senderId: sender,
@@ -82,41 +86,86 @@ const ChatWindow = ({
       sendMessage();
     }
   };
-  console.log(selectedUser?.name);
+
+  const setRefs = (el, messageId, isLast) => {
+    if (el) {
+      messageRefs.current[messageId] = el;
+      if (isLast) chatWindowRef.current = el;
+    }
+  };
+  let index = 0
+  const findMessages = (input) => {
+    index = 0
+    const findMessageIds = Object.keys(messageRefs.current).filter((id) =>
+      messageRefs.current[id]?.textContent
+        ?.toLocaleLowerCase()
+        .includes(input.toLocaleLowerCase())
+    );
+    if (findMessageIds) {
+      setFindMessagesIds(findMessageIds)
+    }
+  };
+
+  const scrollToFindMessageForward =() =>{
+    if(findMessagesIds.length > 0 && (findMessagesIds.length - 1) !== index){
+      const messageId = findMessagesIds[index]
+      messageRefs?.current[messageId]?.scrollIntoView({ behavior: "smooth", block: "center" });
+      index++;
+    }
+  }
+  const scrollToFindMessageBackward =() =>{
+    index--;
+    if(findMessagesIds.length > 0 && (findMessagesIds.length - 1) !== index){
+      const messageId = findMessagesIds[index]
+      messageRefs?.current[messageId]?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
   return (
-    <div className="flex flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl  ">
-      <div className=" px-2 bg-[#ffffffc6] h-10 rounded-sm flex justify-start items-center gap-3">
-        <img
-          src={selectedUser?.profileUrl}
-          className="h-8 w-8 object-cover rounded-full"
-          alt=""
-        />
-        <h1 className="text-black font-semibold"> {selectedUser?.name}</h1>
+    <div className="flex relative  flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl  ">
+      <div className=" px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
+        <div className="flex justify-between items-center gap-3">
+          <img
+            src={selectedUser?.profileUrl}
+            className="h-8 w-8 object-cover rounded-full"
+            alt=""
+          />
+          <h1 className="text-black font-semibold"> {selectedUser?.name}</h1>
+        </div>
+        <div
+          className="cursor-pointer"
+          onClick={() => setOpenSearchBar(!openSearchBar)}
+        >
+          <IoMdSearch size={24} />
+        </div>
       </div>
+      <SearchBarForChat isOpen={openSearchBar} messages={messages} findMessages={findMessages} scrollToFindMessageForward={scrollToFindMessageForward}  scrollToFindMessageBackward={scrollToFindMessageBackward}/>
       <div className="flex-1 overflow-y-auto hide-scrollbar  mt-2 ">
-        {messages.map((message) => (
-          <div
-            ref={chatWindowRef}
-            key={message}
-            className={`mb-4 ${
-              message.senderId === senderId ? "text-right" : "text-left"
-            }`}
-          >
+        {messages.map((message, index) => {
+          const isLast = index === messages.length - 1;
+          return (
             <div
-              className={`inline-block p-3 rounded-lg ${
-                message.senderId === senderId
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-800"
-              }
-              `}
+              key={message}
+              ref={(el) => setRefs(el, message.id, isLast)}
+              className={`mb-4 ${
+                message.senderId === senderId ? "text-right" : "text-left"
+              }`}
             >
-              {message.content}
+              <div
+                className={`inline-block p-3 rounded-lg ${
+                  message.senderId === senderId
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 text-gray-800"
+                }
+              `}
+              >
+                {message.content}
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                {formatDate(message.createdAt)}
+              </div>
             </div>
-            <div className="text-xs text-gray-500 mt-1">
-              {formatDate(message.createdAt)}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <div className="mt-4 flex gap-2 justify-center items-center ">
         <input

@@ -45,8 +45,8 @@ const TotalUserList = ({
               }`}
               onClick={() => onSelectUser(user)}
             >
-                 <img src={user.profileUrl ? user.profileUrl : "https://github.com/shadcn.png" } className="rounded-full object-cover h-8 w-8" alt="" />
-              <div className="font-medium">{user.name}</div>
+                 <img src={user.profileUrl ? user.profileUrl : "https://github.com/shadcn.png" } className="rounded-full object-cover h-9 w-9" alt="" />
+              <div className="font-medium  max-w-[10rem]  overflow-hidden truncate">{user?.name}</div>
               { onlineUsers && onlineUsers.map((u) => u.userId).includes(user.id) ? (
                 <div className="bg-green-500 rounded-4xl h-3 w-3"></div>
               ) : (
