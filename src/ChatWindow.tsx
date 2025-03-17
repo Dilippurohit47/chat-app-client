@@ -17,7 +17,7 @@ const ChatWindow = ({
   const [messages, setMessages] = useState([]);
   const [openSearchBar, setOpenSearchBar] = useState<boolean>(false);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-  const [findMessagesIds,setFindMessagesIds] = useState([])
+  const [findMessagesIds, setFindMessagesIds] = useState([]);
   const newMessage = (sender, content, receiver) => {
     return {
       senderId: sender,
@@ -26,8 +26,8 @@ const ChatWindow = ({
       createdAt: Date.now(),
     };
   };
-
-  const sendMessage = () => {
+console.log("re render")
+  const sendMessage = async () => {
     ws.send(
       JSON.stringify({
         type: "personal-msg",
@@ -37,8 +37,20 @@ const ChatWindow = ({
       })
     );
     const msg = newMessage(senderId, input, user.id);
+    let lastMessage = input;
     setMessages((prev) => [...prev, msg]);
     setInput("");
+    const res = await axios.post("http://localhost:8000/chat/create-chats", {
+      userId1: senderId,
+      userId2: user.id,
+      lastMessage,
+    });
+
+    if (res.status === 200) {
+      console.log("chat created Successfull and last message updated");
+    }
+
+    
   };
 
   useEffect(() => {
@@ -93,33 +105,49 @@ const ChatWindow = ({
       if (isLast) chatWindowRef.current = el;
     }
   };
-  let index = 0
-  const findMessages = (input) => {
-    index = 0
+
+  const findMessages = (text) => {
     const findMessageIds = Object.keys(messageRefs.current).filter((id) =>
       messageRefs.current[id]?.textContent
         ?.toLocaleLowerCase()
-        .includes(input.toLocaleLowerCase())
+        .includes(text.toLocaleLowerCase())
     );
     if (findMessageIds) {
-      setFindMessagesIds(findMessageIds)
+      setFindMessagesIds(findMessageIds);
     }
   };
+  const [messageIndex, setMessageIndex] = useState(null);
+  const scrollToFindMessageForward = () => {
+    if (findMessagesIds.length === 0) return;
+    setMessageIndex((prevIndex) => {
+      const newIndex =
+        prevIndex === null ? findMessagesIds.length - 1 : prevIndex - 1;
+      if (newIndex >= 0) {
+        const messageId = findMessagesIds[newIndex];
+        messageRefs?.current[messageId]?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+      return newIndex >= 0 ? newIndex : prevIndex;
+    });
+  };
 
-  const scrollToFindMessageForward =() =>{
-    if(findMessagesIds.length > 0 && (findMessagesIds.length - 1) !== index){
-      const messageId = findMessagesIds[index]
-      messageRefs?.current[messageId]?.scrollIntoView({ behavior: "smooth", block: "center" });
-      index++;
-    }
-  }
-  const scrollToFindMessageBackward =() =>{
-    index--;
-    if(findMessagesIds.length > 0 && (findMessagesIds.length - 1) !== index){
-      const messageId = findMessagesIds[index]
-      messageRefs?.current[messageId]?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  }
+  const scrollToFindMessageBackward = () => {
+    if (findMessagesIds.length === 0) return;
+    setMessageIndex((prevIndex) => {
+      const newIndex = prevIndex === null ? 0 : prevIndex + 1;
+
+      if (newIndex < findMessagesIds.length) {
+        const messageId = findMessagesIds[newIndex];
+        messageRefs?.current[messageId]?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+      return newIndex < findMessagesIds.length ? newIndex : prevIndex;
+    });
+  };
   return (
     <div className="flex relative  flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl  ">
       <div className=" px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
@@ -138,13 +166,21 @@ const ChatWindow = ({
           <IoMdSearch size={24} />
         </div>
       </div>
-      <SearchBarForChat isOpen={openSearchBar} messages={messages} findMessages={findMessages} scrollToFindMessageForward={scrollToFindMessageForward}  scrollToFindMessageBackward={scrollToFindMessageBackward}/>
+      <SearchBarForChat
+        messageIndex={messageIndex}
+        totalFindmessages={findMessagesIds.length}
+        isOpen={openSearchBar}
+        messages={messages}
+        findMessages={findMessages}
+        scrollToFindMessageForward={scrollToFindMessageForward}
+        scrollToFindMessageBackward={scrollToFindMessageBackward}
+      />
       <div className="flex-1 overflow-y-auto hide-scrollbar  mt-2 ">
         {messages.map((message, index) => {
           const isLast = index === messages.length - 1;
           return (
             <div
-              key={message}
+              key={message.id}
               ref={(el) => setRefs(el, message.id, isLast)}
               className={`mb-4 ${
                 message.senderId === senderId ? "text-right" : "text-left"

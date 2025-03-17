@@ -32,7 +32,6 @@ const TotalUserList = ({
     getTotalUsers();
   }, []);
 
-
   return (
     <div className="p-4  ">
       <ul className="flex flex-col gap-2">

@@ -93,7 +93,7 @@ function Home() {
             selectedUser={selectedUser}
             onSelectUser={setSelectedUser}
             connected={connected}
-            user={user}
+            logedInUser={user}
             onlineUsers={onlineUsers}
             />
           </TabsContent>
