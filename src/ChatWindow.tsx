@@ -8,6 +8,7 @@ const ChatWindow = ({
   user,
   senderId,
   selectedUser,
+  setSelectedUser
 }: {
   ws: WebSocket;
 }) => {
@@ -37,20 +38,9 @@ console.log("re render")
       })
     );
     const msg = newMessage(senderId, input, user.id);
-    let lastMessage = input;
     setMessages((prev) => [...prev, msg]);
     setInput("");
-    const res = await axios.post("http://localhost:8000/chat/create-chats", {
-      userId1: senderId,
-      userId2: user.id,
-      lastMessage,
-    });
 
-    if (res.status === 200) {
-      console.log("chat created Successfull and last message updated");
-    }
-
-    
   };
 
   useEffect(() => {
@@ -74,7 +64,6 @@ console.log("re render")
       }
     };
   }, [user]);
-
   const formatDate = (newDate: string) => {
     const date = new Date(newDate);
 
@@ -157,7 +146,7 @@ console.log("re render")
             className="h-8 w-8 object-cover rounded-full"
             alt=""
           />
-          <h1 className="text-black font-semibold"> {selectedUser?.name}</h1>
+          <h1 className="text-black font-semibold" onClick={() =>setSelectedUser(null)}> {selectedUser?.name}</h1>
         </div>
         <div
           className="cursor-pointer"

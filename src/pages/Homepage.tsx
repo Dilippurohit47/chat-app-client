@@ -45,7 +45,6 @@ function Home() {
     };
     ws.current.onmessage = (m) => {
       const data = JSON.parse(m.data);
-
       if (data.type === "personal-msg") {
         setMessage((prev) => [...prev, data.message]);
       }
@@ -78,7 +77,6 @@ function Home() {
     };
     getUser();
   }, []);
-
   return (
     <div className="flex h-[84.5vh]  bg-gray-100  hide-scrollbar">
       <div className="w-1/4 shadow-2xl rounded-md border-r border-gray-300 border-2 mr-2">
@@ -94,6 +92,7 @@ function Home() {
             onSelectUser={setSelectedUser}
             connected={connected}
             logedInUser={user}
+            ws={ws.current}
             onlineUsers={onlineUsers}
             />
           </TabsContent>
@@ -116,6 +115,7 @@ function Home() {
             ws={ws.current}
             senderId={user.id}
             selectedUser={selectedUser}
+            setSelectedUser={setSelectedUser}
           />
         ) : (
           <div className="flex bg-[#1e1e2e] items-center justify-center h-full text-gray-200 rounded-md text-[1.1rem] ">

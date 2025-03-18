@@ -11,6 +11,7 @@ interface UserListProps {
   connected: boolean;
   onlineUsers: Object[] | undefined;
   heading: string;
+  ws: WebSocket;
 }
 
 const UserList = ({
@@ -19,6 +20,7 @@ const UserList = ({
   selectedUser,
   onSelectUser,
   connected,
+  ws,
 }: UserListProps) => {
   const [recentChatUsers, setRecentChatUsers] = useState([]);
 
@@ -29,23 +31,35 @@ const UserList = ({
         { params: { userId: logedInUser.id }, withCredentials: true }
       );
       if (res.status === 200) {
-        console.log(res.data);
-        const filterData = res?.data.chats.filter(
-          (c) => c.id !== logedInUser.id
-        );
-        setRecentChatUsers(filterData);
+        setRecentChatUsers(res.data.chats);
       }
     };
     getTotalUsers();
   }, [logedInUser]);
+
+ useEffect(() => {
+  if (!ws) return;
+  const messageHandler = (m) => {
+    const data = JSON.parse(m.data);
+    if (data.type === "recent-chats") {
+      setRecentChatUsers(data.chats); // Directly use payload data
+    }
+  };
+  ws.addEventListener('message', messageHandler);
+  return () => {
+    console.log("Cleaning up previous WS listener");
+    ws.removeEventListener('message', messageHandler);
+  };
+}, [ws]); 
+
   return (
     <div className="p-4 gb-[#3F3D56]">
       <h2 className="text-lg  flex justify-center items-center gap-2 font-semibold mb-2">
         {" "}
         {connected ? "" : "connecting..."}{" "}
       </h2>
-      <ul className="flex flex-col gap-2">
-        {recentChatUsers &&
+      <ul className="flex flex-col gap-2 transition-all ">
+        {recentChatUsers.length > 0 &&
           recentChatUsers.map((chat) => {
             const user = chat.otherUser;
             return (
@@ -76,7 +90,13 @@ const UserList = ({
                     </div>
                     <div className="bg-green-500  rounded-4xl h-3 w-3"></div>
                   </div>
-                  <div className={`text-sm   overflow-hidden truncate max-w-[10rem] ${selectedUser?.id === user.id ? "text-gray-2 00":"text-gray-500"}`}>
+                  <div
+                    className={`text-sm   overflow-hidden truncate max-w-[10rem] ${
+                      selectedUser?.id === user.id
+                        ? "text-gray-2 00"
+                        : "text-gray-500"
+                    }`}
+                  >
                     {chat?.lastMessage}
                   </div>
                 </div>
