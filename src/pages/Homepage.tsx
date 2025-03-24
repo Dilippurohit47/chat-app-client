@@ -82,7 +82,7 @@ function Home() {
       <div className="w-1/4 shadow-2xl rounded-md border-r border-gray-300 border-2 mr-2">
         <Tabs defaultValue="online-users" className="w-[300px]">
           <TabsList className="w-full border-2 ">
-            <TabsTrigger value="online-users"       className="cursor-pointer data-[state=active]:bg-[#008080] data-[state=active]:text-white">Online</TabsTrigger>
+            <TabsTrigger value="online-users"       className="cursor-pointer data-[state=active]:bg-[#008080] data-[state=active]:text-white">Saved</TabsTrigger>
             <TabsTrigger value="total-users"  className="cursor-pointer data-[state=active]:bg-blue-500 data-[state=active]:text-white">Total</TabsTrigger>
           </TabsList>
           <TabsContent value="online-users">

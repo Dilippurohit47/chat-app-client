@@ -29,7 +29,7 @@ const Navbar = () => {
 
   return (
     <div className="bg-[#3F3D56]  text-white mb-2 rounded-md py-2 flex justify-between px-5 items-center min-h-[3rem]">
-      <h1 className="font-[500]">{user.isLogin ?  user.name : "Chat-App"}  </h1>
+     <a href="/"> <h1 className="font-[500]">{user.isLogin ?  user.name : "Chat-App"}  </h1></a> 
     {
       user.isLogin ?   <div className=" flex justify-center items-center">
       <DropdownMenu>

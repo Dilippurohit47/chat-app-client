@@ -39,7 +39,7 @@ const TotalUserList = ({
           totalUsers?.map((user) => (
             <li
               key={user.id}
-              className={`p-3  cursor-pointer rounded-lg   flex  justify-start items-center gap-3 ${
+              className={`p-3    cursor-pointer rounded-lg   flex  justify-evenly items-center gap-3 ${
                 selectedUser?.id === user.id ? "bg-blue-300" : "bg-gray-200"
               }`}
               onClick={() => onSelectUser(user)}
