@@ -1,5 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { IoIosArrowDown } from "react-icons/io";
+import { MessageType } from "../ChatWindow";
+
+interface SearchBarProps {
+  isOpen: boolean;
+  findMessages: (state:string) => void;
+  scrollToFindMessageForward: () => void;  
+  scrollToFindMessageBackward: () => void; 
+  messageIndex: null | number; 
+  totalFindmessages: number; 
+  messages:MessageType[]
+}
+
 const SearchBarForChat = ({
   isOpen,
   findMessages,
@@ -7,8 +19,8 @@ const SearchBarForChat = ({
   scrollToFindMessageBackward,
   messageIndex, 
   totalFindmessages
-}) => {
-  const inputRef = useRef(null);
+}:SearchBarProps) => {
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (inputRef.current && isOpen) {
@@ -47,7 +59,7 @@ const SearchBarForChat = ({
       >
         <IoIosArrowDown size={22} />
       </div>
-      <div className="  text-white  w-full">{messageIndex +1} of {totalFindmessages}</div>
+      <div className="  text-white  w-full">{ messageIndex && messageIndex +1} of {totalFindmessages}</div>
     </div>
   );
 };

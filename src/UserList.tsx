@@ -1,21 +1,29 @@
-import { useSelector } from "react-redux";
-import { RootState } from "./store";
+
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { UserType } from "./slices/userSlice";
+import { onlineUsersType } from "./components/totalUserList";
 
 interface UserListProps {
-  users: any[];
   selectedUser: any;
-  onSelectUser: (userId: string) => void;
-  totalUsers: number;
+  onSelectUser: (state: UserType) => void;
   connected: boolean;
-  onlineUsers: Object[] | undefined;
-  heading: string;
-  ws: WebSocket;
+  onlineUsers: onlineUsersType[] | undefined;
+  ws: WebSocket | null;
+  logedInUser:UserType
 }
-
+type ChatUser = {
+  chatId: string;
+  createdAt: string; // If using Date objects, change to `Date`
+  email: string;
+  id: string;
+  lastMessage: string;
+  lastMessageCreatedAt: string; // Change to `Date` if needed
+  name: string;
+  password: string; // Consider removing this for security
+  profileUrl: string;
+}
 const UserList = ({
-  users,
   logedInUser,
   selectedUser,
   onSelectUser,
@@ -23,8 +31,7 @@ const UserList = ({
   ws,
   onlineUsers,
 }: UserListProps) => {
-  const [recentChatUsers, setRecentChatUsers] = useState([]);
-
+  const [recentChatUsers, setRecentChatUsers] = useState<ChatUser[]>([]);
   useEffect(() => {
     const getTotalUsers = async () => {
       const res = await axios.get(
@@ -40,7 +47,7 @@ const UserList = ({
 
   useEffect(() => {
     if (!ws) return;
-    const messageHandler = (m) => {
+    const messageHandler = (m:any) => {
       const data = JSON.parse(m.data);
       if (data.type === "recent-chats") {
         setRecentChatUsers(data.chats);
@@ -52,7 +59,7 @@ const UserList = ({
       ws.removeEventListener("message", messageHandler);
     };
   }, [ws]);
-  function formatToLocalDateTime(dateString) {
+  function formatToLocalDateTime(dateString:string) {
     const date = new Date(dateString);  
     const hours = String(date.getHours()).padStart(2, "0");
     const minutes = String(date.getMinutes()).padStart(2, "0");
@@ -77,6 +84,7 @@ const UserList = ({
                     ? "bg-[#008080d6] text-white"
                     : "bg-gray-200 "
                 }`}
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 onClick={() => onSelectUser(user)}
               >
                 <div className="flex   w-[3rem]  justify-start items-center gap-3 ">

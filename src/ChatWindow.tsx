@@ -3,23 +3,38 @@ import { useEffect, useRef, useState } from "react";
 import { MdOutlineAttachment } from "react-icons/md";
 import { IoMdSearch } from "react-icons/io";
 import SearchBarForChat from "./components/SearchBarForChat";
+import { UserType } from "./slices/userSlice";
+export type MessageType ={
+  id?:string
+  senderId :String,
+  receiverId:String,
+  content:string,
+  createdAt:number,
+}
+
+interface ChatWindowProps {
+  ws:WebSocket | null,
+  senderId:string,
+  user:UserType,
+  selectedUser:UserType,
+  setSelectedUser:(state:null) =>void
+}
+
 const ChatWindow = ({
   ws,
   user,
   senderId,
   selectedUser,
   setSelectedUser
-}: {
-  ws: WebSocket;
-}) => {
+}: ChatWindowProps) => {
   const [input, setInput] = useState<string>("");
-  const chatWindowRef = useRef<HTMLDivElement>(null);
+  const chatWindowRef: React.RefObject<HTMLDivElement | null> = useRef(null);
 
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<MessageType[] | []>([]);
   const [openSearchBar, setOpenSearchBar] = useState<boolean>(false);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-  const [findMessagesIds, setFindMessagesIds] = useState([]);
-  const newMessage = (sender, content, receiver) => {
+  const [findMessagesIds, setFindMessagesIds] = useState<string[]>([]);
+  const newMessage = (sender:string, content:string, receiver:string) => {
     return {
       senderId: sender,
       content: content,
@@ -29,6 +44,7 @@ const ChatWindow = ({
   };
 console.log("re render")
   const sendMessage = async () => {
+    if(!ws) return
     ws.send(
       JSON.stringify({
         type: "personal-msg",
@@ -37,7 +53,7 @@ console.log("re render")
         senderId,
       })
     );
-    const msg = newMessage(senderId, input, user.id);
+    const msg = newMessage(senderId, input, user.id!);
     setMessages((prev) => [...prev, msg]);
     setInput("");
 
@@ -56,6 +72,7 @@ console.log("re render")
       }
     };
     getChats();
+    if(!ws) return
     ws.onmessage = (m) => {
       const data = JSON.parse(m.data);
       if (data.type === "personal-msg") {
@@ -64,7 +81,7 @@ console.log("re render")
       }
     };
   }, [user]);
-  const formatDate = (newDate: string) => {
+  const formatDate = (newDate: number) => {
     const date = new Date(newDate);
 
     const options = {
@@ -72,6 +89,7 @@ console.log("re render")
       minute: "numeric",
       hour12: true,
     };
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const formattedTime = date.toLocaleTimeString("en-US", options);
 
     return formattedTime;
@@ -88,14 +106,16 @@ console.log("re render")
     }
   };
 
-  const setRefs = (el, messageId, isLast) => {
+const setRefs = (el: HTMLElement | null, messageId: string, isLast: boolean) => {
     if (el) {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       messageRefs.current[messageId] = el;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       if (isLast) chatWindowRef.current = el;
     }
   };
 
-  const findMessages = (text) => {
+  const findMessages = (text:string) => {
     const findMessageIds = Object.keys(messageRefs.current).filter((id) =>
       messageRefs.current[id]?.textContent
         ?.toLocaleLowerCase()
@@ -105,7 +125,7 @@ console.log("re render")
       setFindMessagesIds(findMessageIds);
     }
   };
-  const [messageIndex, setMessageIndex] = useState(null);
+  const [messageIndex, setMessageIndex] = useState<number | null>(null);
   const scrollToFindMessageForward = () => {
     if (findMessagesIds.length === 0) return;
     setMessageIndex((prevIndex) => {
@@ -170,7 +190,7 @@ console.log("re render")
           return (
             <div
               key={message.id}
-              ref={(el) => setRefs(el, message.id, isLast)}
+              ref={(el) => setRefs(el, message.id!, isLast)}
               className={`mb-4 ${
                 message.senderId === senderId ? "text-right" : "text-left"
               }`}

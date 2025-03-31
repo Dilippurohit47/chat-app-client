@@ -9,9 +9,9 @@ import {
   TabsList,
   TabsTrigger,
 } from "../components/ui/tabs";
-import TotalUserList from "../components/totalUserList";
+import TotalUserList, { onlineUsersType } from "../components/totalUserList";
 import { useDispatch, useSelector } from "react-redux";
-import { saveUser } from "../slices/userSlice";
+import { saveUser, UserType } from "../slices/userSlice";
 import { RootState } from "../store";
 
 function Home() {
@@ -19,9 +19,9 @@ function Home() {
   const dispatch = useDispatch()
 
   const [connected, setConnected] = useState<boolean>(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [onlineUsers, setOnlineUsers] = useState();
-  const [message, setMessage] = useState([]);
+  const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
+  const [onlineUsers, setOnlineUsers] = useState<onlineUsersType []>([]);
+
 
   const user = useSelector((state:RootState) => state.user);
   
@@ -44,14 +44,9 @@ function Home() {
       setConnected(false);
     };
     ws.current.onmessage = (m) => {
-      const data = JSON.parse(m.data);
-      if (data.type === "personal-msg") {
-        setMessage((prev) => [...prev, data.message]);
-      }
-
-   
+      const data = JSON.parse(m.data);   
       if (data.type === "online-users") {
-        const filterData = data?.onlineUsers.filter((c) => c.id !== user.id);
+        const filterData = data?.onlineUsers.filter((c:onlineUsersType) => c.id !== user.id);
         setOnlineUsers(filterData);
       }
     };
@@ -87,7 +82,6 @@ function Home() {
           </TabsList>
           <TabsContent value="online-users">
             <UserList 
-            users={onlineUsers}
             selectedUser={selectedUser}
             onSelectUser={setSelectedUser}
             connected={connected}
@@ -110,10 +104,9 @@ function Home() {
       <div className="w-3/4 bg-gray-50">
         {selectedUser ? (
           <ChatWindow
-            messages={message}
             user={selectedUser}
             ws={ws.current}
-            senderId={user.id}
+            senderId={user.id!}
             selectedUser={selectedUser}
             setSelectedUser={setSelectedUser}
           />
