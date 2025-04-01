@@ -29,7 +29,7 @@ const SignUp = () => {
     e.preventDefault();
     try {
       const res = await axios.post(
-        "http://localhost:8000/user/sign-up",
+       `${import.meta.env.VITE_BASE_URL_HTTP}/user/sign-up`,
         {
           name,
           email,
@@ -67,7 +67,7 @@ const SignUp = () => {
     try {
       setImageUploading(true);
       const res = await axios.post(
-        "http://localhost:8000/aws/get-presigned-url-s3",
+        `${import.meta.env.VITE_BASE_URL_HTTP}/aws/get-presigned-url-s3`,
         {},
         {
           withCredentials: true,

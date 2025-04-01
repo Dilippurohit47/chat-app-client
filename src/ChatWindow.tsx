@@ -42,7 +42,6 @@ const ChatWindow = ({
       createdAt: Date.now(),
     };
   };
-console.log("re render")
   const sendMessage = async () => {
     if(!ws) return
     ws.send(
@@ -61,7 +60,7 @@ console.log("re render")
 
   useEffect(() => {
     const getChats = async () => {
-      const res = await axios.get("http://localhost:8000/chat/get-messages", {
+      const res = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`, {
         params: {
           senderId: senderId,
           receiverId: user.id,

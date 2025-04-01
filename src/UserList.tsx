@@ -35,7 +35,7 @@ const UserList = ({
   useEffect(() => {
     const getTotalUsers = async () => {
       const res = await axios.get(
-        "http://localhost:8000/chat/get-recent-chats",
+        `${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-recent-chats`,
         { params: { userId: logedInUser.id }, withCredentials: true }
       );
       if (res.status === 200) {
@@ -66,7 +66,6 @@ const UserList = ({
   
     return `${hours}:${minutes}`;
   }
-  
   return (
     <div className="p-4 gb-[#3F3D56]">
       <h2 className="text-lg  flex justify-center items-center gap-2 font-semibold mb-2">
@@ -74,7 +73,7 @@ const UserList = ({
         {connected ? "" : "connecting..."}{" "}
       </h2>
       <ul className="flex flex-col gap-2 transition-all ">
-        {recentChatUsers.length > 0 &&
+        {recentChatUsers?.length > 0 &&
           recentChatUsers.map((user) => {
             return (
               <li
