@@ -29,7 +29,7 @@ const TotalUserList = ({
   console.log("online",totalUsers)
   useEffect(() => {
     const getTotalUsers = async () => {
-      const res = await axios.get("http://localhost:8000/user/all-users", {
+      const res = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/user/all-users`, {
         withCredentials: true,
       });
       if (res.status === 200) {

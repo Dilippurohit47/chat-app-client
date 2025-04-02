@@ -17,7 +17,7 @@ const Navbar = () => {
   const user = useSelector((state:RootState) =>state.user)
   const dispatch = useDispatch()
   const logoutUser =async() =>{
-    const res = await axios.post("http://localhost:8000/user/sign-out",{},{
+    const res = await axios.post(`${import.meta.env.VITE_BASE_URL_HTTP}/user/sign-out`,{},{
       withCredentials:true
     })
     if(res.status === 200){
