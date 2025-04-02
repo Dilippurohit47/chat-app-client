@@ -81,6 +81,7 @@ const SignUp = () => {
         });
         if (uploadRes.status !== 200) {
           console.log("failed to upload image to s3");
+          setError("Failed to upload image try again")
         } else {
           console.log("image successfully uploaded to s3");
           setImage(uploadUrl?.split("?")[0]);

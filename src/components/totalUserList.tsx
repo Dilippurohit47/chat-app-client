@@ -26,7 +26,7 @@ const TotalUserList = ({
   logedInUser,
 }: UserListProps) => {
   const [totalUsers, setTotalUSers] = useState<UserType[]>([]);
-  console.log("online",totalUsers)
+  console.log("totalusers",totalUsers)
   useEffect(() => {
     const getTotalUsers = async () => {
       const res = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/user/all-users`, {
