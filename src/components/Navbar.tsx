@@ -14,17 +14,18 @@ import { logout } from "../slices/userSlice";
 import axios from "axios";
 const Navbar = () => {
 
-  const user = useSelector((state:RootState) =>state.user)
-  const dispatch = useDispatch()
-  const logoutUser =async() =>{
-    const res = await axios.post(`${import.meta.env.VITE_BASE_URL_HTTP}/user/sign-out`,{},{
-      withCredentials:true
-    })
-    if(res.status === 200){
-      dispatch(logout())
-      console.log("log out successfully")
+    const user = useSelector((state:RootState) =>state.user)
+    const dispatch = useDispatch()
+    const logoutUser =async() =>{
+      const res = await axios.post(`${import.meta.env.VITE_BASE_URL_HTTP}/user/sign-out`,{},{
+        withCredentials:true
+      })
+      if(res.status === 200){
+        dispatch(logout())
+        console.log("log out successfully")
+        
+      }
     }
-  }
 
   return (
     <div className="bg-[#3F3D56]  text-white mb-2 rounded-md py-2 flex justify-between px-5 items-center min-h-[3rem]">

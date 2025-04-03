@@ -16,18 +16,17 @@ import { RootState } from "../store";
 
 function Home() {
   const ws = useRef<WebSocket | null>(null);
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
   const [connected, setConnected] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
-  const [onlineUsers, setOnlineUsers] = useState<onlineUsersType []>([]);
+  const [onlineUsers, setOnlineUsers] = useState<onlineUsersType[]>([]);
 
+  const user = useSelector((state: RootState) => state.user);
 
-  const user = useSelector((state:RootState) => state.user);
-  
   useEffect(() => {
     if (!user.isLogin) return;
-    ws.current = new WebSocket(`${import.meta.env.VITE_BASE_URL_WS }`);
+    ws.current = new WebSocket(`${import.meta.env.VITE_BASE_URL_WS}`);
     ws.current.onopen = () => {
       console.log("WebSocket connection opened");
       ws.current!.send(
@@ -44,9 +43,11 @@ function Home() {
       setConnected(false);
     };
     ws.current.onmessage = (m) => {
-      const data = JSON.parse(m.data);   
+      const data = JSON.parse(m.data);
       if (data.type === "online-users") {
-        const filterData = data?.onlineUsers.filter((c:onlineUsersType) => c.id !== user.id);
+        const filterData = data?.onlineUsers.filter(
+          (c: onlineUsersType) => c.id !== user.id
+        );
         setOnlineUsers(filterData);
       }
     };
@@ -63,11 +64,14 @@ function Home() {
   }, [user]);
   useEffect(() => {
     const getUser = async () => {
-      const res = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/user/get-user`, {
-        withCredentials: true,
-      });
+      const res = await axios.get(
+        `${import.meta.env.VITE_BASE_URL_HTTP}/user/get-user`,
+        {
+          withCredentials: true,
+        }
+      );
       if (res.status === 200) {
-        dispatch(saveUser(res.data))
+        dispatch(saveUser(res.data));
       }
     };
     getUser();
@@ -77,25 +81,35 @@ function Home() {
       <div className="w-1/4 shadow-2xl rounded-md border-r border-gray-300 border-2 mr-2">
         <Tabs defaultValue="online-users" className="w-[300px]">
           <TabsList className="w-full border-2 ">
-            <TabsTrigger value="online-users"       className="cursor-pointer data-[state=active]:bg-[#008080] data-[state=active]:text-white">Recent</TabsTrigger>
-            <TabsTrigger value="total-users"  className="cursor-pointer data-[state=active]:bg-blue-500 data-[state=active]:text-white">Total</TabsTrigger>
+            <TabsTrigger
+              value="online-users"
+              className="cursor-pointer data-[state=active]:bg-[#008080] data-[state=active]:text-white"
+            >
+              Recent
+            </TabsTrigger>
+            <TabsTrigger
+              value="total-users"
+              className="cursor-pointer data-[state=active]:bg-blue-500 data-[state=active]:text-white"
+            >
+              Total
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="online-users">
-            <UserList 
-            selectedUser={selectedUser}
-            onSelectUser={setSelectedUser}
-            connected={connected}
-            logedInUser={user}
-            ws={ws.current}
-            onlineUsers={onlineUsers}
+            <UserList
+              selectedUser={selectedUser}
+              onSelectUser={setSelectedUser}
+              connected={connected}
+              logedInUser={user}
+              ws={ws.current}
+              onlineUsers={onlineUsers}
             />
           </TabsContent>
           <TabsContent value="total-users">
-          <TotalUserList
-            selectedUser={selectedUser}
-            onSelectUser={setSelectedUser}
-            onlineUsers={onlineUsers}
-            logedInUser={user}
+            <TotalUserList
+              selectedUser={selectedUser}
+              onSelectUser={setSelectedUser}
+              onlineUsers={onlineUsers}
+              logedInUser={user}
             />
           </TabsContent>
         </Tabs>
@@ -104,7 +118,7 @@ function Home() {
       <div className="w-3/4 bg-gray-50">
         {selectedUser ? (
           <ChatWindow
-            user={selectedUser}
+            logedInUser={user}
             ws={ws.current}
             senderId={user.id!}
             selectedUser={selectedUser}
@@ -112,7 +126,9 @@ function Home() {
           />
         ) : (
           <div className="flex bg-[#1e1e2e] items-center justify-center h-full text-gray-200 rounded-md text-[1.1rem] ">
-            Select a user to start chatting
+            {user.isLogin
+              ? "Select a user to start chatting"
+              : "Log in first to start chatting"}
           </div>
         )}
       </div>

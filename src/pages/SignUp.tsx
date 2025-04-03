@@ -19,12 +19,28 @@ const SignUp = () => {
   const dispatch = useDispatch();
 
   const navigate = useNavigate();
-  useEffect(() => {
-    if (user.isLogin) {
-      navigate("/");
-    }
-  }, [user]);
+  // useEffect(() => {
+  //   if (user.isLogin) {
+  //     navigate("/");
+  //   }
+  // }, [user]);
 
+  useEffect(() => {
+    const getUser = async () => {
+      const res = await axios.get(
+        `${import.meta.env.VITE_BASE_URL_HTTP}/user/get-user`,
+        {
+          withCredentials: true,
+        }
+      );
+      if (res.status === 200) {
+        dispatch(saveUser(res.data));
+        navigate("/")
+      }
+    };
+    getUser();
+  }, []);
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {

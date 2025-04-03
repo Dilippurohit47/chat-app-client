@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { saveUser } from "../slices/userSlice";
+import { toast } from "react-toastify";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,6 +27,7 @@ const dispatch = useDispatch()
       );
       if (res.status === 200) {
         dispatch(saveUser(res.data.user))
+        toast.success("Login successfull")
         navigate("/");
       }
     } catch (err) {
@@ -33,6 +35,22 @@ const dispatch = useDispatch()
       console.error("Login error:", err);
     }
   };
+
+  useEffect(() => {
+    const getUser = async () => {
+      const res = await axios.get(
+        `${import.meta.env.VITE_BASE_URL_HTTP}/user/get-user`,
+        {
+          withCredentials: true,
+        }
+      );
+      if (res.status === 200) {
+        dispatch(saveUser(res.data));
+        navigate("/")
+      }
+    };
+    getUser();
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600">
@@ -83,7 +101,7 @@ const dispatch = useDispatch()
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="w-full cursor-pointer bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Login
           </button>

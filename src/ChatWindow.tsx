@@ -4,6 +4,7 @@ import { MdOutlineAttachment } from "react-icons/md";
 import { IoMdSearch } from "react-icons/io";
 import SearchBarForChat from "./components/SearchBarForChat";
 import { UserType } from "./slices/userSlice";
+import { toast } from "react-toastify";
 export type MessageType ={
   id?:string
   senderId :String,
@@ -15,17 +16,17 @@ export type MessageType ={
 interface ChatWindowProps {
   ws:WebSocket | null,
   senderId:string,
-  user:UserType,
   selectedUser:UserType,
   setSelectedUser:(state:null) =>void
+  logedInUser:UserType
 }
 
 const ChatWindow = ({
   ws,
-  user,
   senderId,
   selectedUser,
-  setSelectedUser
+  setSelectedUser,
+  logedInUser
 }: ChatWindowProps) => {
   const [input, setInput] = useState<string>("");
   const chatWindowRef: React.RefObject<HTMLDivElement | null> = useRef(null);
@@ -43,27 +44,35 @@ const ChatWindow = ({
     };
   };
   const sendMessage = async () => {
-    if(!ws) return
+   if(!logedInUser.isLogin) return toast.error("Login first ") 
+    if(!ws) return toast.error("server error!")
     ws.send(
       JSON.stringify({
         type: "personal-msg",
         message: input,
-        receiverId: user.id,
+        receiverId: selectedUser.id,
         senderId,
       })
     );
-    const msg = newMessage(senderId, input, user.id!);
+    const msg = newMessage(senderId, input, selectedUser.id!);
     setMessages((prev) => [...prev, msg]);
     setInput("");
 
   };
+useEffect(() =>{
+  if(!logedInUser.isLogin){
+    setMessages([])
+    // setSelectedUser(null)
+  }
 
+},[logedInUser])
   useEffect(() => {
+    if(!selectedUser) return
     const getChats = async () => {
       const res = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`, {
         params: {
           senderId: senderId,
-          receiverId: user.id,
+          receiverId: selectedUser.id,
         },
       });
       if (res.status === 200) {
@@ -79,7 +88,7 @@ const ChatWindow = ({
         setMessages((prev) => [...prev, msg]);
       }
     };
-  }, [user]);
+  }, [selectedUser]);
   const formatDate = (newDate: number) => {
     const date = new Date(newDate);
 
@@ -234,7 +243,7 @@ const setRefs = (el: HTMLElement | null, messageId: string, isLast: boolean) => 
         />
         <button
           className="ml-2 p-2 bg-blue-500 hover:bg-blue-700 text-white
-        rounded-lg focus:outline-none focus:bg-blue-700"
+        rounded-lg focus:outline-none focus:bg-blue-700 cursor-pointer"
           onClick={sendMessage}
           disabled={!input.length}
         >
