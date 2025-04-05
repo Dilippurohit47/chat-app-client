@@ -26,7 +26,7 @@ const SearchBarForChat = ({
     if (inputRef.current && isOpen) {
       inputRef?.current?.focus();
     }
-  });
+  },[isOpen]);
   const [searchInput, setSearchInput] = useState("");
   return (
     <div

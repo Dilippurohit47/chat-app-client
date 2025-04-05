@@ -50,6 +50,7 @@ const ChatWindow = ({
   const [openSearchBar, setOpenSearchBar] = useState<boolean>(false);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [findMessagesIds, setFindMessagesIds] = useState<string[]>([]);
+  const [searchMessageInput ,setSearchMessageInput] = useState<string | null>(null)
   const newMessage = (sender: string, content: string, receiver: string) => {
     return {
       senderId: sender,
@@ -112,6 +113,7 @@ const ChatWindow = ({
 
     getChats();
     updateUnreadCount()
+    setOpenSearchBar(false)
   }, [selectedUser]);
   useEffect(() => {
     if (!ws || !selectedUser) return; 
@@ -245,7 +247,7 @@ const ChatWindow = ({
         </div>
         <div
           className="cursor-pointer"
-          onClick={() => setOpenSearchBar(!openSearchBar)}
+          onClick={() => {setOpenSearchBar(!openSearchBar),setFindMessagesIds([])}}
         >
           <IoMdSearch size={24} />
         </div>
