@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import axios from "axios";
 import { UserType } from "./slices/userSlice";
 import { onlineUsersType } from "./components/totalUserList";
 
 interface UserListProps {
   selectedUser: any;
-  onSelectUser: (state:  | null) => void;
+  onSelectUser: (state: null) => void;
   connected: boolean;
   onlineUsers: onlineUsersType[] | undefined;
   ws: WebSocket | null;
@@ -31,7 +31,7 @@ const UserList = ({
   onlineUsers,
 }: UserListProps) => {
   const [recentChatUsers, setRecentChatUsers] = useState<ChatUser[]>([]);
-  useEffect(() => { 
+  useEffect(() => {
     const getTotalUsers = async () => {
       const res = await axios.get(
         `${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-recent-chats`,
@@ -44,7 +44,7 @@ const UserList = ({
     getTotalUsers();
     if (!logedInUser.isLogin) {
       setRecentChatUsers([]);
-      onSelectUser(null)
+      onSelectUser(null);
     }
   }, [logedInUser]);
 
@@ -56,12 +56,18 @@ const UserList = ({
         setRecentChatUsers(data.chats);
       }
     };
+    ws.send(JSON.stringify({
+      type:"get-recent-chats",
+      userId:logedInUser.id
+    }))
     ws.addEventListener("message", messageHandler);
     return () => {
-      console.log("Cleaning up previous WS listener");
       ws.removeEventListener("message", messageHandler);
     };
-  }, [ws]);
+  }, [ws,selectedUser]);
+
+
+
   function formatToLocalDateTime(dateString: string) {
     const date = new Date(dateString);
     const hours = String(date.getHours()).padStart(2, "0");
@@ -110,23 +116,30 @@ const UserList = ({
                       </div>
                       {onlineUsers &&
                       onlineUsers.map((u) => u.userId).includes(user.id) ? (
-                        <div className="bg-green-500  rounded-4xl h-3 w-3"></div>
+                        <div className="bg-green-500  rounded-4xl h-2 w-2"></div>
                       ) : (
-                        <div className="bg-gray-500  rounded-4xl h-3 w-3"></div>
+                        <div className="bg-gray-500  rounded-4xl h-2 w-2"></div>
                       )}
                     </div>
                     <div
-                      className={`text-sm flex  justify-between w-full overflow-hidden truncate max-w-[10rem] ${
+                      className={`text-sm flex    justify-between w-full overflow-hidden truncate  ${
                         selectedUser?.id === user.id
-                          ? "text-gray-2 00"
+                          ? "text-gray-200"
                           : "text-gray-500"
                       }`}
                     >
-                      <span> {user?.lastMessage}</span>
-                      <span>
-                        {" "}
-                        {formatToLocalDateTime(user.lastMessageCreatedAt)}
-                      </span>
+                      <span className="max-w-[8rem] overflow-hidden truncate"> {user?.lastMessage}</span>
+                      <div className="flex gap-1 justify-center items-center ">
+                       { user.chatId !== selectedUser?.chatId  && user?.unreadCount?.userId === logedInUser.id ? (user.unreadCount !== null && user.unreadCount?.unreadMessages !== 0 &&
+                          <div className="text-white bg-blue-400 rounded-full h-4 w-4 flex items-center justify-center text-[0.6rem] p-2 text-center">
+                          {user.unreadCount?.unreadMessages}
+                        </div>) :""
+                        }
+                        <span>
+                          {" "}
+                          {formatToLocalDateTime(user.lastMessageCreatedAt)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </li>

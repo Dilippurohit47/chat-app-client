@@ -5,20 +5,35 @@ import { IoMdSearch } from "react-icons/io";
 import SearchBarForChat from "./components/SearchBarForChat";
 import { UserType } from "./slices/userSlice";
 import { toast } from "react-toastify";
-export type MessageType ={
-  id?:string
-  senderId :String,
-  receiverId:String,
-  content:string,
-  createdAt:number,
-}
+export type MessageType = {
+  id?: string;
+  senderId: String;
+  receiverId: String;
+  content: string;
+  createdAt: number;
+};
+type selectedChat = {
+  chatId: string;
+  createdAt: string; // or `Date` if parsed
+  email: string;
+  id: string;
+  lastMessage: string;
+  lastMessageCreatedAt: string; // or `Date` if parsed
+  name: string;
+  password: string;
+  profileUrl: string;
+  unreadMessages: {
+    userId: string;
+    unreadMessages: number;
+  };
+};
 
 interface ChatWindowProps {
-  ws:WebSocket | null,
-  senderId:string,
-  selectedUser:UserType,
-  setSelectedUser:(state:null) =>void
-  logedInUser:UserType
+  ws: WebSocket | null;
+  senderId: string;
+  selectedUser: selectedChat;
+  setSelectedUser: (state: null) => void;
+  logedInUser: UserType;
 }
 
 const ChatWindow = ({
@@ -26,7 +41,7 @@ const ChatWindow = ({
   senderId,
   selectedUser,
   setSelectedUser,
-  logedInUser
+  logedInUser,
 }: ChatWindowProps) => {
   const [input, setInput] = useState<string>("");
   const chatWindowRef: React.RefObject<HTMLDivElement | null> = useRef(null);
@@ -35,7 +50,7 @@ const ChatWindow = ({
   const [openSearchBar, setOpenSearchBar] = useState<boolean>(false);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [findMessagesIds, setFindMessagesIds] = useState<string[]>([]);
-  const newMessage = (sender:string, content:string, receiver:string) => {
+  const newMessage = (sender: string, content: string, receiver: string) => {
     return {
       senderId: sender,
       content: content,
@@ -44,8 +59,8 @@ const ChatWindow = ({
     };
   };
   const sendMessage = async () => {
-   if(!logedInUser.isLogin) return toast.error("Login first ") 
-    if(!ws) return toast.error("server error!")
+    if (!logedInUser.isLogin) return toast.error("Login first ");
+    if (!ws) return toast.error("server error!");
     ws.send(
       JSON.stringify({
         type: "personal-msg",
@@ -57,38 +72,68 @@ const ChatWindow = ({
     const msg = newMessage(senderId, input, selectedUser.id!);
     setMessages((prev) => [...prev, msg]);
     setInput("");
-
   };
-useEffect(() =>{
-  if(!logedInUser.isLogin){
-    setMessages([])
-    // setSelectedUser(null)
-  }
-
-},[logedInUser])
   useEffect(() => {
-    if(!selectedUser) return
+    if (!logedInUser.isLogin) {
+      setMessages([]);
+      // setSelectedUser(null)
+    }
+  }, [logedInUser]);
+  useEffect(() => {
+    if (!selectedUser) return;
     const getChats = async () => {
-      const res = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`, {
-        params: {
-          senderId: senderId,
-          receiverId: selectedUser.id,
-        },
-      });
-      if (res.status === 200) {
-        setMessages([...res.data]);
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`,
+          {
+            params: {
+              senderId: senderId,
+              receiverId: selectedUser.id,
+            },
+          }
+        );
+        if (res.status === 200) {
+          setMessages([...res.data]);
+        }
+      } catch (error) {
+        console.log(error);
       }
     };
+
+    const updateUnreadCount = async () => {
+      const res = await axios.put(
+        `${import.meta.env.VITE_BASE_URL_HTTP}/chat/update-unreadmessage-count`,
+        {
+          userId: logedInUser.id,
+          chatId: selectedUser.chatId,
+        }
+      );
+    };
+
     getChats();
-    if(!ws) return
-    ws.onmessage = (m) => {
+    updateUnreadCount()
+  }, [selectedUser]);
+  useEffect(() => {
+    if (!ws || !selectedUser) return; 
+    const getMessage = (m) => {
       const data = JSON.parse(m.data);
       if (data.type === "personal-msg") {
-        const msg = newMessage(data.senderId, data.message, data.receiverId);
-        setMessages((prev) => [...prev, msg]);
+        if (
+          (data.receiverId === logedInUser.id && data.senderId === selectedUser.id) ||
+          (data.senderId === logedInUser.id && data.receiverId === selectedUser.id)
+        ) {
+          const msg = newMessage(data.senderId, data.message, data.receiverId);
+          setMessages((prev) => [...prev, msg]);
+        } 
       }
     };
-  }, [selectedUser]);
+  
+    ws.addEventListener("message", getMessage);
+
+    return () => {
+      ws.removeEventListener("message", getMessage);
+    };
+  }, [ws, selectedUser]); 
   const formatDate = (newDate: number) => {
     const date = new Date(newDate);
 
@@ -97,7 +142,7 @@ useEffect(() =>{
       minute: "numeric",
       hour12: true,
     };
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const formattedTime = date.toLocaleTimeString("en-US", options);
 
     return formattedTime;
@@ -106,6 +151,17 @@ useEffect(() =>{
     setTimeout(() => {
       chatWindowRef.current?.scrollIntoView({ behavior: "instant" });
     }, 0);
+
+    const updateUnreadCount = async () => {
+      const res = await axios.put(
+        `${import.meta.env.VITE_BASE_URL_HTTP}/chat/update-unreadmessage-count`,
+        {
+          userId: logedInUser.id,
+          chatId: selectedUser.chatId,
+        }
+      );
+    };
+    updateUnreadCount()
   }, [messages]);
 
   const handleKeyDown = (e: any) => {
@@ -114,16 +170,20 @@ useEffect(() =>{
     }
   };
 
-const setRefs = (el: HTMLElement | null, messageId: string, isLast: boolean) => {
+  const setRefs = (
+    el: HTMLElement | null,
+    messageId: string,
+    isLast: boolean
+  ) => {
     if (el) {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       messageRefs.current[messageId] = el;
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       if (isLast) chatWindowRef.current = el;
     }
   };
 
-  const findMessages = (text:string) => {
+  const findMessages = (text: string) => {
     const findMessageIds = Object.keys(messageRefs.current).filter((id) =>
       messageRefs.current[id]?.textContent
         ?.toLocaleLowerCase()
@@ -165,6 +225,7 @@ const setRefs = (el: HTMLElement | null, messageId: string, isLast: boolean) => 
       return newIndex < findMessagesIds.length ? newIndex : prevIndex;
     });
   };
+
   return (
     <div className="flex relative  flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl  ">
       <div className=" px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
@@ -174,7 +235,13 @@ const setRefs = (el: HTMLElement | null, messageId: string, isLast: boolean) => 
             className="h-8 w-8 object-cover rounded-full"
             alt=""
           />
-          <h1 className="text-black font-semibold" onClick={() =>setSelectedUser(null)}> {selectedUser?.name}</h1>
+          <h1
+            className="text-black font-semibold"
+            onClick={() => setSelectedUser(null)}
+          >
+            {" "}
+            {selectedUser?.name}
+          </h1>
         </div>
         <div
           className="cursor-pointer"
