@@ -5,6 +5,7 @@ import { IoMdSearch } from "react-icons/io";
 import SearchBarForChat from "./components/SearchBarForChat";
 import { UserType } from "./slices/userSlice";
 import { toast } from "react-toastify";
+import { CloudFog } from "lucide-react";
 export type MessageType = {
   id?: string;
   senderId: String;
@@ -50,7 +51,10 @@ const ChatWindow = ({
   const [openSearchBar, setOpenSearchBar] = useState<boolean>(false);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [findMessagesIds, setFindMessagesIds] = useState<string[]>([]);
-  const [searchMessageInput ,setSearchMessageInput] = useState<string | null>(null)
+  const [cursorId, setCursorId] = useState<string | null>(null);
+  const [loadingMoreChat,setLoadingMoreChat] = useState<boolean>(false)
+  const messageContainerRef = useRef<HTMLDivElement>(null);
+
   const newMessage = (sender: string, content: string, receiver: string) => {
     return {
       senderId: sender,
@@ -77,9 +81,9 @@ const ChatWindow = ({
   useEffect(() => {
     if (!logedInUser.isLogin) {
       setMessages([]);
-      // setSelectedUser(null)
     }
   }, [logedInUser]);
+
   useEffect(() => {
     if (!selectedUser) return;
     const getChats = async () => {
@@ -90,11 +94,15 @@ const ChatWindow = ({
             params: {
               senderId: senderId,
               receiverId: selectedUser.id,
+              limit: 20,
+              cursor: cursorId,
             },
           }
         );
         if (res.status === 200) {
-          setMessages([...res.data]);
+          setMessages([...res.data.messages.reverse()]);
+          console.log("setting id", res.data.cursor);
+          setCursorId(res.data.cursor);
         }
       } catch (error) {
         console.log(error);
@@ -112,30 +120,68 @@ const ChatWindow = ({
     };
 
     getChats();
-    updateUnreadCount()
-    setOpenSearchBar(false)
+    updateUnreadCount();
+    setOpenSearchBar(false);
   }, [selectedUser]);
+
   useEffect(() => {
-    if (!ws || !selectedUser) return; 
+    if (!messageContainerRef.current) return;
+    const handleScroll = async () => {
+      if (messageContainerRef.current?.scrollTop === 0 && cursorId) {
+        setLoadingMoreChat(true)
+        try {
+          const res = await axios.get(
+            `${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`,
+            {
+              params: {
+                senderId: senderId,
+                receiverId: selectedUser.id,
+                limit: 20,
+                cursor: cursorId,
+              },
+            }
+          );
+          if (res.status === 200) {
+            setMessages((prev) => [...res.data.messages, ...prev]);
+            setCursorId(res.data.cursor);
+          }
+        } catch (error) {
+          console.log(error);
+        }finally{
+          setLoadingMoreChat(false)
+        }
+      }
+    };
+    messageContainerRef.current.addEventListener("scroll", handleScroll);
+
+    return () => {
+      messageContainerRef.current?.removeEventListener("scroll", handleScroll);
+    };
+  }, [selectedUser, cursorId]);
+
+  useEffect(() => {
+    if (!ws || !selectedUser) return;
     const getMessage = (m) => {
       const data = JSON.parse(m.data);
       if (data.type === "personal-msg") {
         if (
-          (data.receiverId === logedInUser.id && data.senderId === selectedUser.id) ||
-          (data.senderId === logedInUser.id && data.receiverId === selectedUser.id)
+          (data.receiverId === logedInUser.id &&
+            data.senderId === selectedUser.id) ||
+          (data.senderId === logedInUser.id &&
+            data.receiverId === selectedUser.id)
         ) {
           const msg = newMessage(data.senderId, data.message, data.receiverId);
           setMessages((prev) => [...prev, msg]);
-        } 
+        }
       }
     };
-  
+
     ws.addEventListener("message", getMessage);
 
     return () => {
       ws.removeEventListener("message", getMessage);
     };
-  }, [ws, selectedUser]); 
+  }, [ws, selectedUser]);
   const formatDate = (newDate: number) => {
     const date = new Date(newDate);
 
@@ -163,7 +209,7 @@ const ChatWindow = ({
         }
       );
     };
-    updateUnreadCount()
+    updateUnreadCount();
   }, [messages]);
 
   const handleKeyDown = (e: any) => {
@@ -171,7 +217,6 @@ const ChatWindow = ({
       sendMessage();
     }
   };
-
   const setRefs = (
     el: HTMLElement | null,
     messageId: string,
@@ -247,7 +292,9 @@ const ChatWindow = ({
         </div>
         <div
           className="cursor-pointer"
-          onClick={() => {setOpenSearchBar(!openSearchBar),setFindMessagesIds([])}}
+          onClick={() => {
+            setOpenSearchBar(!openSearchBar), setFindMessagesIds([]);
+          }}
         >
           <IoMdSearch size={24} />
         </div>
@@ -261,7 +308,17 @@ const ChatWindow = ({
         scrollToFindMessageForward={scrollToFindMessageForward}
         scrollToFindMessageBackward={scrollToFindMessageBackward}
       />
-      <div className="flex-1 overflow-y-auto hide-scrollbar  mt-2 ">
+ {
+  loadingMoreChat &&  <div className="flex justify-center">
+  <svg className="loader" viewBox="25 25 50 50">
+  <circle r="20" cy="50" cx="50"></circle>
+</svg>
+  </div>
+ }
+      <div
+        ref={messageContainerRef}
+        className="flex-1 overflow-y-auto hide-scrollbar  mt-2 "
+      >
         {messages.map((message, index) => {
           const isLast = index === messages.length - 1;
           return (
