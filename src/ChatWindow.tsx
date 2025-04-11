@@ -54,7 +54,7 @@ const ChatWindow = ({
   const [cursorId, setCursorId] = useState<string | null>(null);
   const [loadingMoreChat,setLoadingMoreChat] = useState<boolean>(false)
   const messageContainerRef = useRef<HTMLDivElement>(null);
-
+const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
   const newMessage = (sender: string, content: string, receiver: string) => {
     return {
       senderId: sender,
@@ -75,7 +75,7 @@ const ChatWindow = ({
       })
     );
     const msg = newMessage(senderId, input, selectedUser.id!);
-    setMessages((prev) => [...prev, msg]);
+    setMessages((prev) => [msg,...prev]);
     setInput("");
   };
   useEffect(() => {
@@ -88,23 +88,21 @@ const ChatWindow = ({
     if (!selectedUser) return;
     const getChats = async () => {
       try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`,
-          {
-            params: {
-              senderId: senderId,
-              receiverId: selectedUser.id,
-              limit: 20,
-              cursor: cursorId,
-            },
-          }
-        );
+        const res = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`, {
+          params: {
+            senderId: senderId,
+            receiverId: selectedUser.id,
+            limit: 20,
+            cursor: cursorId ? JSON.stringify(cursorId) : undefined,
+          },
+        });
         if (res.status === 200) {
-          setMessages([...res.data.messages.reverse()]);
-          console.log("setting id", res.data.cursor);
+          // Store messages in reverse order for display
+          setMessages(res.data.messages);
           setCursorId(res.data.cursor);
+          setHasMoreMsg(res.data.hasMore);
         }
-      } catch (error) {
+      } catch (error) { 
         console.log(error);
       }
     };
@@ -127,37 +125,36 @@ const ChatWindow = ({
   useEffect(() => {
     if (!messageContainerRef.current) return;
     const handleScroll = async () => {
-      if (messageContainerRef.current?.scrollTop === 0 && cursorId) {
-        setLoadingMoreChat(true)
+      const container = messageContainerRef.current;
+      if (container.scrollTop === 0 && cursorId && hasMoreMsg) {
+        setLoadingMoreChat(true);
         try {
-          const res = await axios.get(
-            `${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`,
-            {
-              params: {
-                senderId: senderId,
-                receiverId: selectedUser.id,
-                limit: 20,
-                cursor: cursorId,
-              },
-            }
-          );
+          const res = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`, {
+            params: {
+              senderId: senderId,
+              receiverId: selectedUser.id,
+              limit: 20,
+              cursor: JSON.stringify(cursorId),
+            },
+          });
           if (res.status === 200) {
-            setMessages((prev) => [...res.data.messages, ...prev]);
+            // Prepend older messages to the top
+            setMessages(prev => [ ...prev, ...res.data.messages]);
             setCursorId(res.data.cursor);
+            setHasMoreMsg(res.data.hasMore);
           }
         } catch (error) {
           console.log(error);
-        }finally{
-          setLoadingMoreChat(false)
+        } finally {
+          setLoadingMoreChat(false);
         }
       }
     };
     messageContainerRef.current.addEventListener("scroll", handleScroll);
-
     return () => {
       messageContainerRef.current?.removeEventListener("scroll", handleScroll);
     };
-  }, [selectedUser, cursorId]);
+  }, [selectedUser, cursorId, hasMoreMsg]);
 
   useEffect(() => {
     if (!ws || !selectedUser) return;
@@ -319,7 +316,7 @@ const ChatWindow = ({
         ref={messageContainerRef}
         className="flex-1 overflow-y-auto hide-scrollbar  mt-2 "
       >
-        {messages.map((message, index) => {
+        {messages.slice().reverse().map((message, index) => {
           const isLast = index === messages.length - 1;
           return (
             <div
