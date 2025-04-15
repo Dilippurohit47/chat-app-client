@@ -97,7 +97,6 @@ const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
           },
         });
         if (res.status === 200) {
-          // Store messages in reverse order for display
           setMessages(res.data.messages);
           setCursorId(res.data.cursor);
           setHasMoreMsg(res.data.hasMore);
@@ -129,6 +128,8 @@ const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
       if (container.scrollTop === 0 && cursorId && hasMoreMsg) {
         setLoadingMoreChat(true);
         try {
+          const scrollHeightBefore = container.scrollHeight;
+          const scrollTopBefore = container.scrollTop;
           const res = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`, {
             params: {
               senderId: senderId,
@@ -138,10 +139,13 @@ const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
             },
           });
           if (res.status === 200) {
-            // Prepend older messages to the top
             setMessages(prev => [ ...prev, ...res.data.messages]);
             setCursorId(res.data.cursor);
             setHasMoreMsg(res.data.hasMore);
+            requestAnimationFrame(() => {
+              if (!messageContainerRef.current) return;
+              container.scrollTop = container.scrollHeight - scrollHeightBefore + scrollTopBefore;
+            });
           }
         } catch (error) {
           console.log(error);
@@ -155,7 +159,10 @@ const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
       messageContainerRef.current?.removeEventListener("scroll", handleScroll);
     };
   }, [selectedUser, cursorId, hasMoreMsg]);
-
+useEffect(() =>{
+  if(!chatWindowRef.current) return
+  chatWindowRef.current?.scrollIntoView({ behavior: "instant" });
+},[chatWindowRef.current])
   useEffect(() => {
     if (!ws || !selectedUser) return;
     const getMessage = (m) => {
@@ -193,10 +200,6 @@ const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
     return formattedTime;
   };
   useEffect(() => {
-    setTimeout(() => {
-      chatWindowRef.current?.scrollIntoView({ behavior: "instant" });
-    }, 0);
-
     const updateUnreadCount = async () => {
       const res = await axios.put(
         `${import.meta.env.VITE_BASE_URL_HTTP}/chat/update-unreadmessage-count`,
@@ -269,6 +272,7 @@ const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
       return newIndex < findMessagesIds.length ? newIndex : prevIndex;
     });
   };
+
 
   return (
     <div className="flex relative  flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl  ">

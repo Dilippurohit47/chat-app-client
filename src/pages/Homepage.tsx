@@ -77,7 +77,7 @@ function Home() {
     getUser();
   }, []);
   return (
-    <div className="flex h-[84.5vh]  bg-gray-100  hide-scrollbar">
+    <div className="flex h-[84.5vh]  bg-black  hide-scrollbar">
       <div className="w-1/4 shadow-2xl rounded-md border-r border-gray-300 border-2 mr-2">
         <Tabs defaultValue="online-users" className="w-[300px]">
           <TabsList className="w-full border-2 ">
