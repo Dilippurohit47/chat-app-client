@@ -5,7 +5,7 @@ import { IoMdSearch } from "react-icons/io";
 import SearchBarForChat from "./components/SearchBarForChat";
 import { UserType } from "./slices/userSlice";
 import { toast } from "react-toastify";
-import { CloudFog } from "lucide-react";
+import { CloudFog, Turtle } from "lucide-react";
 export type MessageType = {
   id?: string;
   senderId: String;
@@ -55,6 +55,8 @@ const ChatWindow = ({
   const [loadingMoreChat,setLoadingMoreChat] = useState<boolean>(false)
   const messageContainerRef = useRef<HTMLDivElement>(null);
 const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
+const [initialLoad ,setInitialLoad] = useState(true)
+
   const newMessage = (sender: string, content: string, receiver: string) => {
     return {
       senderId: sender,
@@ -86,6 +88,7 @@ const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
 
   useEffect(() => {
     if (!selectedUser) return;
+    // chatWindowRef.current?.scrollIntoView({ behavior: "instant" });
     const getChats = async () => {
       try {
         const res = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`, {
@@ -93,10 +96,12 @@ const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
             senderId: senderId,
             receiverId: selectedUser.id,
             limit: 20,
-            cursor: cursorId ? JSON.stringify(cursorId) : undefined,
+            cursor: undefined,
           },
         });
         if (res.status === 200) {
+          console.log("from res",res.data.messages)
+
           setMessages(res.data.messages);
           setCursorId(res.data.cursor);
           setHasMoreMsg(res.data.hasMore);
@@ -115,7 +120,7 @@ const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
         }
       );
     };
-
+    setInitialLoad(true)
     getChats();
     updateUnreadCount();
     setOpenSearchBar(false);
@@ -138,13 +143,15 @@ const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
               cursor: JSON.stringify(cursorId),
             },
           });
+          console.log(container?.scrollTop ,container?.scrollHeight ,scrollHeightBefore ,scrollTopBefore)
           if (res.status === 200) {
             setMessages(prev => [ ...prev, ...res.data.messages]);
             setCursorId(res.data.cursor);
             setHasMoreMsg(res.data.hasMore);
             requestAnimationFrame(() => {
-              if (!messageContainerRef.current) return;
+              if (messageContainerRef.current){
               container.scrollTop = container.scrollHeight - scrollHeightBefore + scrollTopBefore;
+              } 
             });
           }
         } catch (error) {
@@ -159,10 +166,14 @@ const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
       messageContainerRef.current?.removeEventListener("scroll", handleScroll);
     };
   }, [selectedUser, cursorId, hasMoreMsg]);
+
+
+
 useEffect(() =>{
-  if(!chatWindowRef.current) return
+  if(!chatWindowRef.current || !initialLoad) return
   chatWindowRef.current?.scrollIntoView({ behavior: "instant" });
-},[chatWindowRef.current])
+  setInitialLoad(false)
+},[messages])
   useEffect(() => {
     if (!ws || !selectedUser) return;
     const getMessage = (m) => {
@@ -240,6 +251,28 @@ useEffect(() =>{
       setFindMessagesIds(findMessageIds);
     }
   };
+
+
+
+
+  useEffect(() => {
+    const container = messageContainerRef.current;
+    if (!container) return;
+  
+
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 500;
+    console.log(isNearBottom)
+    if (isNearBottom && messages.length > 0) {
+      setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+      }, 0);
+    }
+  }, [messages]); 
+  
+
+
+
+
   const [messageIndex, setMessageIndex] = useState<number | null>(null);
   const scrollToFindMessageForward = () => {
     if (findMessagesIds.length === 0) return;
@@ -272,7 +305,7 @@ useEffect(() =>{
       return newIndex < findMessagesIds.length ? newIndex : prevIndex;
     });
   };
-
+// console.log(messages)
 
   return (
     <div className="flex relative  flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl  ">
