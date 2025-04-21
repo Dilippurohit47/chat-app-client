@@ -6,6 +6,7 @@ import { RootState } from "../store";
 import { saveUser } from "../slices/userSlice";
 import { GoPlus } from "react-icons/go";
 import { RxCross2 } from "react-icons/rx";
+import { toast } from "react-toastify";
 const SignUp = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,15 +17,8 @@ const SignUp = () => {
   const [imageUploading, setImageUploading] = useState<boolean>(false);
   const user = useSelector((state: RootState) => state.user);
   const [isImageUploaded, setIsImageUploaded] = useState(false);
-  const dispatch = useDispatch();
-
+  const dispatch = useDispatch();     
   const navigate = useNavigate();
-  // useEffect(() => {
-  //   if (user.isLogin) {
-  //     navigate("/");
-  //   }
-  // }, [user]);
-
   useEffect(() => {
     const getUser = async () => {
       const res = await axios.get(
@@ -57,12 +51,15 @@ const SignUp = () => {
         }
       );
       if (res.status === 200) {
-        console.log(res.data);
         dispatch(saveUser(res.data.user));
+        toast.success("Signup Successfully")
+        navigate("/")
+      }else{
+        console.log(res.data.errors[0])
       }
     } catch (err) {
-      setError("Invalid email or password");
-      console.error("Login error:", err);
+        setError(err.response.data?.message)
+      console.log("Login error:", err.response);
     }
   };
 

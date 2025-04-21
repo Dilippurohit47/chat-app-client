@@ -31,8 +31,9 @@ const dispatch = useDispatch()
         navigate("/");
       }
     } catch (err) {
-      setError("Invalid email or password");
-      console.error("Login error:", err);
+      console.log(err.response.data.message)
+      setError(err.response.data.message);
+      console.log("Login error:", err);
     }
   };
 
