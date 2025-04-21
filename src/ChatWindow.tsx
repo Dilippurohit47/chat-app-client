@@ -179,6 +179,7 @@ useEffect(() =>{
     const getMessage = (m) => {
       const data = JSON.parse(m.data);
       if (data.type === "personal-msg") {
+        console.log("data",data)
         if (
           (data.receiverId === logedInUser.id &&
             data.senderId === selectedUser.id) ||
@@ -186,7 +187,7 @@ useEffect(() =>{
             data.receiverId === selectedUser.id)
         ) {
           const msg = newMessage(data.senderId, data.message, data.receiverId);
-          setMessages((prev) => [...prev, msg]);
+          setMessages((prev) => [msg,...prev]);
         }
       }
     };
