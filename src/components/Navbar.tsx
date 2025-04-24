@@ -8,12 +8,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 import { logout } from "../slices/userSlice";
 import axios from "axios";
+import { useState } from "react";
+import CreateGroupDialogBox from "./createGroupDialogBox";
 const Navbar = () => {
-
+// const  [createGroupDialog,setCreateGroupDialog] = useState<boolean>(false)
     const user = useSelector((state:RootState) =>state.user)
     const dispatch = useDispatch()
     const logoutUser =async() =>{
@@ -31,7 +34,8 @@ const Navbar = () => {
     <div className="bg-[#3F3D56]  text-white mb-2 rounded-md py-2 flex justify-between px-5 items-center min-h-[3rem]">
      <a href="/"> <h1 className="font-[500]">{user.isLogin ?  user.name : "Chat-App"}  </h1></a> 
     {
-      user.isLogin ?   <div className=" flex justify-center items-center">
+      user.isLogin ?   <div className=" flex justify-center items-center gap-6">
+<CreateGroupDialogBox />
       <DropdownMenu>
         <DropdownMenuTrigger>
           <Avatar className="cursor-pointer" >
