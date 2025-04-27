@@ -1,9 +1,9 @@
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import { UserType } from "./slices/userSlice";
-import { onlineUsersType } from "./components/totalUserList";
+import { UserType } from "../slices/userSlice";
+import { onlineUsersType } from "../components/totalUserList";
 
-interface UserListProps {
+export interface UserListProps {
   selectedUser: any;
   onSelectUser: (state: null) => void;
   connected: boolean;
@@ -76,7 +76,7 @@ const UserList = ({
     return `${hours}:${minutes}`;
   }
   return (
-    <div className="p-4 gb-[#3F3D56]">
+    <div className="px-3 py-1">
       <h2 className="text-[1.2rem]  flex justify-center items-center gap-2 font-semibold mb-2">
         {" "}
         {logedInUser.isLogin

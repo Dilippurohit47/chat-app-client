@@ -26,7 +26,6 @@ const TotalUserList = ({
   logedInUser,
 }: UserListProps) => {
   const [totalUsers, setTotalUSers] = useState<UserType[]>([]);
-  console.log("totalusers",totalUsers)
   useEffect(() => {
     const getTotalUsers = async () => {
       const res = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/user/all-users`, {
@@ -43,7 +42,7 @@ const TotalUserList = ({
   }, []);
 
   return (
-    <div className="p-4  ">
+    <div className="px-3 py-1">
       <ul className="flex flex-col gap-2">
         {totalUsers &&
           totalUsers?.map((user) => (

@@ -2,8 +2,8 @@ import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { MdOutlineAttachment } from "react-icons/md";
 import { IoMdSearch } from "react-icons/io";
-import SearchBarForChat from "./components/SearchBarForChat";
-import { UserType } from "./slices/userSlice";
+import SearchBarForChat from "../components/SearchBarForChat";
+import { UserType } from "../slices/userSlice";
 import { toast } from "react-toastify";
 import { CloudFog, Turtle } from "lucide-react";
 export type MessageType = {
@@ -54,9 +54,9 @@ const ChatWindow = ({
   const [cursorId, setCursorId] = useState<string | null>(null);
   const [loadingMoreChat,setLoadingMoreChat] = useState<boolean>(false)
   const messageContainerRef = useRef<HTMLDivElement>(null);
-const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
-const [initialLoad ,setInitialLoad] = useState(true)
-
+  const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
+  const [initialLoad ,setInitialLoad] = useState(true)
+  const messageInputRef = useRef<HTMLInputElement | null>(null)
   const newMessage = (sender: string, content: string, receiver: string) => {
     return {
       senderId: sender,
@@ -120,6 +120,11 @@ const [initialLoad ,setInitialLoad] = useState(true)
         }
       );
     };
+
+    if(messageInputRef.current){
+      messageInputRef.current.focus()
+    }
+
     setInitialLoad(true)
     getChats();
     updateUnreadCount();
@@ -166,7 +171,6 @@ const [initialLoad ,setInitialLoad] = useState(true)
       messageContainerRef.current?.removeEventListener("scroll", handleScroll);
     };
   }, [selectedUser, cursorId, hasMoreMsg]);
-
 
 
 useEffect(() =>{
@@ -306,14 +310,13 @@ useEffect(() =>{
       return newIndex < findMessagesIds.length ? newIndex : prevIndex;
     });
   };
-// console.log(messages)
 
   return (
     <div className="flex relative  flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl  ">
       <div className=" px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
         <div className="flex justify-between items-center gap-3">
           <img
-            src={selectedUser?.profileUrl}
+           src={selectedUser?.profileUrl ? selectedUser.profileUrl : "https://github.com/shadcn.png"}
             className="h-8 w-8 object-cover rounded-full"
             alt=""
           />
@@ -389,6 +392,7 @@ useEffect(() =>{
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none text-white focus:border-blue-500"
+          ref={messageInputRef}
         />
 
         <label htmlFor="file-input">
