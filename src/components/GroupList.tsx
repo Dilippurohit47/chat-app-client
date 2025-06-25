@@ -5,23 +5,24 @@ type GroupListType = {
   connected: boolean;
   logedInUser: onlineUsersType;
 };
-const GroupList = ({ logedInUser, connected }: GroupListType) => {
+const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: GroupListType) => {
   const [groupList, setGroupList] = useState([]);
   useEffect(() => {
     const fetchGroups = async () => {
-      console.log("run")
       try {
         const response = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/group`,{
           withCredentials:true
         });
         console.log(response)
+        setGroupList(response.data.groups)
       } catch (error) {
-
+        console.log("err in getting groups",error)
       }
     };
 
     fetchGroups();
   },[]);
+
   return (
     <div className="px-3 py-1">
       <h2 className="text-[1.2rem]  flex justify-center items-center gap-2 font-semibold mb-2">
@@ -34,22 +35,24 @@ const GroupList = ({ logedInUser, connected }: GroupListType) => {
       </h2>
       <ul className="flex flex-col gap-2 transition-all ">
         {groupList?.length > 0
-          ? groupList.map((user) => {
+          ? groupList.map((group) => {
               return (
                 <li
-                  key={user.chatId}
-                  className={`p-3 cursor-pointer rounded-lg  flex   ${
-                    selectedUser?.id === user.id
+                  key={group.chatId}
+                  className={`p-3 cursor-pointer rounded-lg  flex  
+                      ${
+                    selectedGroup?.id === group.id
                       ? "bg-[#008080d6] text-white"
                       : "bg-gray-200 "
-                  }`}
-                  onClick={() => onSelectUser(user)}
+                  }`
+                }
+                  onClick={() => setSelectedGroup(group)}
                 >
                   <div className="flex   w-[3rem]  justify-start items-center gap-3 ">
                     <img
                       src={
-                        user.profileUrl
-                          ? user.profileUrl
+                        group.profileUrl
+                          ? group.profileUrl
                           : "https://github.com/shadcn.png"
                       }
                       className="rounded-full h-9 w-9 object-cover"
@@ -59,41 +62,31 @@ const GroupList = ({ logedInUser, connected }: GroupListType) => {
                   <div className="flex flex-col justify-center bg   w-full items-start  px-3">
                     <div className="flex justify-between    w-full   items-center gap-3 ">
                       <div className="font-medium max-w-[10rem]   overflow-hidden truncate">
-                        {user?.name}
+                        {group?.name}
                       </div>
-                      {onlineUsers &&
+                      {/* {onlineUsers &&
                       onlineUsers.map((u) => u.userId).includes(user.id) ? (
                         <div className="bg-green-500  rounded-4xl h-2 w-2"></div>
                       ) : (
                         <div className="bg-gray-500  rounded-4xl h-2 w-2"></div>
-                      )}
+                      )} */}
                     </div>
                     <div
-                      className={`text-sm flex    justify-between w-full overflow-hidden truncate  ${
-                        selectedUser?.id === user.id
+                      className={`text-sm flex    justify-between w-full overflow-hidden truncate
+                        
+                      ${
+                        selectedGroup?.id === group.id
                           ? "text-gray-200"
                           : "text-gray-500"
-                      }`}
+                      }`
+                    
+                    }
                     >
                       <span className="max-w-[8rem] overflow-hidden truncate">
                         {" "}
-                        {user?.lastMessage}
+                        {group?.lastMessage}
                       </span>
-                      <div className="flex gap-1 justify-center items-center ">
-                        {user.chatId !== selectedUser?.chatId &&
-                        user?.unreadCount?.userId === logedInUser.id
-                          ? user.unreadCount !== null &&
-                            user.unreadCount?.unreadMessages !== 0 && (
-                              <div className="text-white bg-blue-400 rounded-full h-4 w-4 flex items-center justify-center text-[0.6rem] p-2 text-center">
-                                {user.unreadCount?.unreadMessages}
-                              </div>
-                            )
-                          : ""}
-                        <span>
-                          {" "}
-                          {formatToLocalDateTime(user.lastMessageCreatedAt)}
-                        </span>
-                      </div>
+                 
                     </div>
                   </div>
                 </li>

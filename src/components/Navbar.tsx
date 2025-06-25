@@ -35,7 +35,7 @@ const Navbar = () => {
      <a href="/"> <h1 className="font-[500]">{user.isLogin ?  user.name : "Chat-App"}  </h1></a> 
     {
       user.isLogin ?   <div className=" flex justify-center items-center gap-6">
-<CreateGroupDialogBox />
+<CreateGroupDialogBox userId={user.id} />
       <DropdownMenu>
         <DropdownMenuTrigger>
           <Avatar className="cursor-pointer" >

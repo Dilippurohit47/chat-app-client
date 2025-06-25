@@ -195,7 +195,6 @@ useEffect(() =>{
         }
       }
     };
-
     ws.addEventListener("message", getMessage);
 
     return () => {

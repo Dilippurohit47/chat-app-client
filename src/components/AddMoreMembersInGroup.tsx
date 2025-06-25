@@ -17,7 +17,6 @@ import { FiPlus } from "react-icons/fi";
 import { FiMinus } from "react-icons/fi";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { UserListProps } from "./UserList";
 
 export interface UserTypes {
   id: string;
