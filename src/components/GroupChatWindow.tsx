@@ -7,7 +7,7 @@ import { UserType } from "../slices/userSlice";
 import { toast } from "react-toastify";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import { FiUserPlus } from "react-icons/fi";  
-import { HiUserPlus } from "react-icons/hi2";
+import AddMoreMembersInGroupDialogBox from "./AddMoreMembersInGroupDialogBox";
 export type MessageType = {
   id?: string;
   senderId: String;
@@ -92,7 +92,7 @@ useEffect(() =>{
     ws.removeEventListener("message",handleMessage)
   }
 },[])
-const [addMoreMembersDialog,setAddMoreMembersDialog] = useState()
+const [addMoreMembersDialog,setAddMoreMembersDialog] = useState(false)
   return (
     <div className="flex relative  flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl  ">
       <div className=" px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
@@ -114,9 +114,8 @@ const [addMoreMembersDialog,setAddMoreMembersDialog] = useState()
         <FaArrowLeftLong  size={20}/>
 
 </div>
-<div className="cursor-pointer">
-  <HiUserPlus size={20}/>
-  </div>
+      <AddMoreMembersInGroupDialogBox userId={logedInUser.id} selectedGroup={selectedGroup}/>
+
      <div
           className="cursor-pointer"
           onClick={() => {
