@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { HiUserPlus } from "react-icons/hi2";
-
+import { FaSearch } from "react-icons/fa";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 
@@ -29,6 +29,7 @@ export interface UserTypes {
 
 const AddMoreMembersInGroupDialogBox = ({ userId, selectedGroup }: string) => {
   const [totalUsers, setTotalUsers] = useState<UserTypes[]>([]);
+  const [filterUsers,setFilterUsers] = useState<UserTypes[]>([])
   const [addedMembers, setAddedMembers] = useState<string[]>([userId]);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   useEffect(() => {
@@ -46,6 +47,7 @@ const AddMoreMembersInGroupDialogBox = ({ userId, selectedGroup }: string) => {
           return !memberIds.has(user.id)
         });
           setTotalUsers(filterData);
+          setFilterUsers(filterData);
         }
       } catch (error) {
         console.log(error);
@@ -78,12 +80,21 @@ const AddMoreMembersInGroupDialogBox = ({ userId, selectedGroup }: string) => {
       );
       if (res.status === 200) {
         toast.success(" New memebers Added");
+        setDialogOpen(false)
       }
     } catch (error) {
       toast.error(error?.data?.message);
     }
   };
 
+  const filterUsersForSearch =(name:string) =>{
+    const newArray = totalUsers.map((user) =>{
+      if(user.name.toLocaleLowerCase().includes(name.toLocaleLowerCase())){
+        return user
+      }
+    }).filter((i)=> i)
+setFilterUsers(newArray)
+  }
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
@@ -108,9 +119,18 @@ const AddMoreMembersInGroupDialogBox = ({ userId, selectedGroup }: string) => {
           <div className="text-red-500">{error && error}</div>
         </div>
         <DialogFooter className=" justify-between!  ">
-          <div className=" bg-zinc-300  rounded-sm p-1 w-[80%] h-[18rem] hide-scrollbar overflow-y-auto gap-2 flex flex-col ">
-            {totalUsers.length > 0 &&
-              totalUsers.map((u) => {
+          <div className=" bg-zinc-300  rounded-sm p-1 w-[80%]  hide-scrollbar  gap-2 flex flex-col ">
+            <div className="relative  w-full ">
+          <input  onChange={(e)=>filterUsersForSearch(e.target.value)} className="bg-white   w-full rounded-[0.5rem] border-none focus-within:outline-0  top-0  px-1  py-1 " id="search-bar"/>
+          <div className="absolute right-2 top-1 ">
+            <FaSearch size={22} className="text-blue-400"/>
+          </div>
+            </div>
+
+<div className="overflow-y-auto hide-scrollbar h-[18rem]  gap-2 flex flex-col ">
+
+            {filterUsers.length > 0 ?
+              filterUsers.map((u) => {
                 if (u.id === userId) {
                   return;
                 }
@@ -141,8 +161,10 @@ const AddMoreMembersInGroupDialogBox = ({ userId, selectedGroup }: string) => {
                     </button>
                   </div>
                 );
-              })}
+              }) : <div className="px-2"> no users available</div>}
           </div>
+</div>
+
           <Button className="cursor-pointer" onClick={AddNewMembersInGroup}>
             Add
           </Button>
