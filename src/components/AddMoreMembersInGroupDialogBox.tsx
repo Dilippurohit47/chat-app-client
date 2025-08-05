@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { XIcon } from "lucide-react";
+
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -11,7 +15,6 @@ import {
 } from "./ui/dialog";
 import { HiUserPlus } from "react-icons/hi2";
 import { FaSearch } from "react-icons/fa";
-import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 
 import { FiPlus } from "react-icons/fi";
@@ -30,7 +33,7 @@ export interface UserTypes {
 const AddMoreMembersInGroupDialogBox = ({ userId, selectedGroup }: string) => {
   const [totalUsers, setTotalUsers] = useState<UserTypes[]>([]);
   const [filterUsers,setFilterUsers] = useState<UserTypes[]>([])
-  const [addedMembers, setAddedMembers] = useState<string[]>([userId]);
+  const [addedMembers, setAddedMembers] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   useEffect(() => {
     const getTotalUser = async () => {
@@ -55,18 +58,21 @@ const AddMoreMembersInGroupDialogBox = ({ userId, selectedGroup }: string) => {
     };
     getTotalUser();
   }, []);
-  const addMembers = (id: string) => {
-    if (id === userId) {
-      toast.error("Admin cannot be removed");
-      return;
-    }
-    if (addedMembers.includes(id)) {
-      const filterArray = addedMembers.filter((userId) => userId !== id);
-      setAddedMembers(filterArray);
+const addMembers = (id: string) => {
+  if (id === userId) {
+    toast.error("Admin cannot be removed");
+    return;
+  }
+
+  setAddedMembers((prev) => {
+    if (prev.includes(id)) {
+      return prev.filter((userId) => userId !== id);
     } else {
-      setAddedMembers((prev) => [...prev, id]);
+      return [...prev, id];
     }
-  };
+  });
+};
+console.log(addedMembers)
   const [error, setError] = useState<string>("");
  
   const AddNewMembersInGroup = async () => {
@@ -95,20 +101,29 @@ const AddMoreMembersInGroupDialogBox = ({ userId, selectedGroup }: string) => {
     }).filter((i)=> i)
 setFilterUsers(newArray)
   }
+
+  const handleDialogClose = () =>{
+    setAddedMembers([])
+  }
+
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+    <Dialog open={dialogOpen} onOpenChange={(open) =>{setDialogOpen(open);if(!open){handleDialogClose()} }} >
       <DialogTrigger asChild>
         <button className="cursor-pointer " onClick={() => setDialogOpen(true)}>
           <HiUserPlus />
         </button>
       </DialogTrigger>
+         
       <DialogContent className="sm:max-w-[425px] h-[30rem]! gap-2 ">
         <DialogHeader>
           <DialogTitle>Add new members</DialogTitle>
           <DialogDescription>
             Add your favourites members and talk with all .
+   
           </DialogDescription>
+   
         </DialogHeader>
+ 
         <div className="grid gap-4 py-2 ">
           <div className="flex items-center gap-4">
             <Label htmlFor="name" className="text-right">
@@ -164,6 +179,7 @@ setFilterUsers(newArray)
               }) : <div className="px-2"> no users available</div>}
           </div>
 </div>
+
 
           <Button className="cursor-pointer" onClick={AddNewMembersInGroup}>
             Add

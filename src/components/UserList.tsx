@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { UserType } from "../slices/userSlice";
 import { onlineUsersType } from "../components/totalUserList";
+import ContextMenuDialogBox from "./contextMenuDialogBox";
 
 export interface UserListProps {
   selectedUser: any;
@@ -29,6 +30,8 @@ const UserList = ({
   connected,
   ws,
   onlineUsers,
+  setChatId,
+  setMessages,
 }: UserListProps) => {
   const [recentChatUsers, setRecentChatUsers] = useState<ChatUser[]>([]);
   useEffect(() => {
@@ -38,6 +41,7 @@ const UserList = ({
         { params: { userId: logedInUser.id }, withCredentials: true }
       );
       if (res.status === 200) {
+        console.log(res.data.chats)
         setRecentChatUsers(res.data.chats);
       }
     };
@@ -56,17 +60,17 @@ const UserList = ({
         setRecentChatUsers(data.chats);
       }
     };
-    ws.send(JSON.stringify({
-      type:"get-recent-chats",
-      userId:logedInUser.id
-    }))
+    ws.send(
+      JSON.stringify({
+        type: "get-recent-chats",
+        userId: logedInUser.id,
+      })
+    );
     ws.addEventListener("message", messageHandler);
     return () => {
       ws.removeEventListener("message", messageHandler);
     };
-  }, [ws,selectedUser]);
-
-
+  }, [ws, selectedUser]);
 
   function formatToLocalDateTime(dateString: string) {
     const date = new Date(dateString);
@@ -74,6 +78,17 @@ const UserList = ({
     const minutes = String(date.getMinutes()).padStart(2, "0");
 
     return `${hours}:${minutes}`;
+  }
+  const [openContextMenu, setOpenContextMenu] = useState<null | string >("");
+
+  const handleContextMenu = (e: Event, user: UserListProps) => {
+    e.preventDefault();
+    setOpenContextMenu((prev) => (prev === user.id ? "" : user.id));
+  
+  };
+
+  const deletechat = (deletedChatId:string) =>{
+    setRecentChatUsers((prev) =>prev.filter(({chatId}) => chatId !== deletedChatId ))
   }
   return (
     <div className="px-3 py-1">
@@ -89,60 +104,81 @@ const UserList = ({
         {recentChatUsers?.length > 0
           ? recentChatUsers.map((user) => {
               return (
-                <li
-                  key={user.chatId}
-                  className={`p-3 cursor-pointer rounded-lg  flex   ${
-                    selectedUser?.id === user.id
-                      ? "bg-[#008080d6] text-white"
-                      : "bg-gray-200 "
-                  }`}
-                  onClick={() => onSelectUser(user)}
-                >
-                  <div className="flex   w-[3rem]  justify-start items-center gap-3 ">
-                    <img
-                      src={
-                        user.profileUrl
-                          ? user.profileUrl
-                          : "https://github.com/shadcn.png"
-                      }
-                      className="rounded-full h-9 w-9 object-cover"
-                      alt=""
-                    />
-                  </div>
-                  <div className="flex flex-col justify-center bg   w-full items-start  px-3">
-                    <div className="flex justify-between    w-full   items-center gap-3 ">
-                      <div className="font-medium max-w-[10rem]   overflow-hidden truncate">
-                        {user?.name}
-                      </div>
-                      {onlineUsers &&
-                      onlineUsers.map((u) => u.userId).includes(user.id) ? (
-                        <div className="bg-green-500  rounded-4xl h-2 w-2"></div>
-                      ) : (
-                        <div className="bg-gray-500  rounded-4xl h-2 w-2"></div>
-                      )}
-                    </div>
-                    <div
-                      className={`text-sm flex    justify-between w-full overflow-hidden truncate  ${
-                        selectedUser?.id === user.id
-                          ? "text-gray-200"
-                          : "text-gray-500"
-                      }`}
-                    >
-                      <span className="max-w-[8rem] overflow-hidden truncate"> {user?.lastMessage}</span>
-                      <div className="flex gap-1 justify-center items-center ">
-                       { user.chatId !== selectedUser?.chatId  && user?.unreadCount?.userId === logedInUser.id ? (user.unreadCount !== null && user.unreadCount?.unreadMessages !== 0 &&
-                          <div className="text-white bg-blue-400 rounded-full h-4 w-4 flex items-center justify-center text-[0.6rem] p-2 text-center">
-                          {user.unreadCount?.unreadMessages}
-                        </div>) :""
+               <div className="relative">
+                  <li
+                    onContextMenu={(e) => handleContextMenu(e, user)}
+                    key={user.chatId}
+                    className={`p-3 cursor-pointer rounded-lg  flex    ${
+                      selectedUser?.id === user.id
+                        ? "bg-[#008080d6] text-white"
+                        : "bg-gray-200 "
+                    }`}
+                    onClick={() => {onSelectUser(user) ;setOpenContextMenu(null) ;setChatId(user.chatId)}}
+                  >
+                    <div className="flex   w-[3rem]  justify-start items-center gap-3 ">
+                      <img
+                        src={
+                          user.profileUrl
+                            ? user.profileUrl
+                            : "https://github.com/shadcn.png"
                         }
-                        <span>
+                        className="rounded-full h-9 w-9 object-cover"
+                        alt=""
+                      />
+                    </div>
+                    <div className="flex flex-col justify-center bg   w-full items-start  px-3">
+                      <div className="flex justify-between    w-full   items-center gap-3 ">
+                        <div className="font-medium max-w-[10rem]   overflow-hidden truncate">
+                          {user?.name}
+                        </div>
+                        {onlineUsers &&
+                        onlineUsers.map((u) => u.userId).includes(user.id) ? (
+                          <div className="bg-green-500  rounded-4xl h-2 w-2"></div>
+                        ) : (
+                          <div className="bg-gray-500  rounded-4xl h-2 w-2"></div>
+                        )}
+                      </div>
+                      <div
+                        className={`text-sm flex    justify-between w-full overflow-hidden truncate  ${
+                          selectedUser?.id === user.id
+                            ? "text-gray-200"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        <span className="max-w-[8rem] overflow-hidden truncate">
                           {" "}
-                          {formatToLocalDateTime(user.lastMessageCreatedAt)}
+                          {user?.lastMessage}
                         </span>
+                        <div className="flex gap-1 justify-center items-center ">
+                          {user.chatId !== selectedUser?.chatId &&
+                          user?.unreadCount?.userId === logedInUser.id
+                            ? user.unreadCount !== null &&
+                              user.unreadCount?.unreadMessages !== 0 && (
+                                <div className="text-white bg-blue-400 rounded-full h-4 w-4 flex items-center justify-center text-[0.6rem] p-2 text-center">
+                                  {user.unreadCount?.unreadMessages}
+                                </div>
+                              )
+                            : ""}
+                          <span>
+                            {" "}
+                            {formatToLocalDateTime(user.lastMessageCreatedAt)}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </li>
+                  </li>
+                  {openContextMenu === user.id && (
+                    <ContextMenuDialogBox
+                      open={openContextMenu}
+                      setOpen={setOpenContextMenu}
+                      userId={user.id}
+                      deletechat={deletechat}
+                      chatId={user.chatId}
+                      setMessages={setMessages}
+                      onSelectUser={onSelectUser}
+                    />
+                  )}
+               </div>
               );
             })
           : connected

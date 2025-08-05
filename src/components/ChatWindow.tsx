@@ -35,6 +35,7 @@ interface ChatWindowProps {
   selectedUser: selectedChat;
   setSelectedUser: (state: null) => void;
   logedInUser: UserType;
+  chatId:string;
 }
 
 const ChatWindow = ({
@@ -43,11 +44,13 @@ const ChatWindow = ({
   selectedUser,
   setSelectedUser,
   logedInUser,
+  chatId,
+  messages,
+  setMessages,
 }: ChatWindowProps) => {
   const [input, setInput] = useState<string>("");
   const chatWindowRef: React.RefObject<HTMLDivElement | null> = useRef(null);
 
-  const [messages, setMessages] = useState<MessageType[] | []>([]);
   const [openSearchBar, setOpenSearchBar] = useState<boolean>(false);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [findMessagesIds, setFindMessagesIds] = useState<string[]>([]);
@@ -62,6 +65,7 @@ const ChatWindow = ({
       senderId: sender,
       content: content,
       receiverId: receiver,
+      chatId:chatId,
       createdAt: Date.now(),
     };
   };
@@ -74,6 +78,7 @@ const ChatWindow = ({
         message: input,
         receiverId: selectedUser.id,
         senderId,
+        chatId,
       })
     );
     const msg = newMessage(senderId, input, selectedUser.id!);
@@ -224,7 +229,7 @@ useEffect(() =>{
         }
       );
     };
-    updateUnreadCount();
+    // updateUnreadCount();
   }, [messages]);
 
   const handleKeyDown = (e: any) => {

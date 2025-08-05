@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import "../App.css";
 import UserList from "../components/UserList";
-import ChatWindow from "../components/ChatWindow";
+import ChatWindow, { MessageType } from "../components/ChatWindow";
 import axios from "axios";
 import {
   Tabs,
@@ -79,6 +79,9 @@ function Home() {
     getUser();
   }, []);
   const [selectedTab,setSelectedTab] = useState("")
+  const [chatId,setChatId] = useState<string | null>("")
+  const [messages, setMessages] = useState<MessageType[] | []>([]);
+
   return (
     <div className="flex h-[84.5vh]  hide-scrollbar">
       <div className="w-1/4 shadow-2xl rounded-md border-r border-gray-300 border-2 mr-2">
@@ -115,6 +118,8 @@ function Home() {
               logedInUser={user}
               ws={ws.current}
               onlineUsers={onlineUsers}
+              setChatId={setChatId}
+              setMessages={setMessages}
             />
           </TabsContent>
           <TabsContent value="total-users">
@@ -145,6 +150,9 @@ function Home() {
             senderId={user.id!}
             selectedUser={selectedUser}
             setSelectedUser={setSelectedUser}
+            chatId={chatId}
+            messages={messages}
+            setMessages={setMessages}
           /> )}
     {
       !selectedUser && !selectedGroup &&    <div className="flex bg-[#1e1e2e] items-center justify-center h-full text-gray-200 rounded-md text-[1.1rem] ">

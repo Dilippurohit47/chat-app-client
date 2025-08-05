@@ -7,7 +7,9 @@ import { UserType } from "../slices/userSlice";
 import { toast } from "react-toastify";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import { FiUserPlus } from "react-icons/fi";  
+import { HiMiniUserGroup } from "react-icons/hi2";
 import AddMoreMembersInGroupDialogBox from "./AddMoreMembersInGroupDialogBox";
+import GroupInfoDialog from "./GroupInfoDialog";
 export type MessageType = {
   id?: string;
   senderId: String;
@@ -53,7 +55,7 @@ const GroupChatWindow = ({
   const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
   const [initialLoad ,setInitialLoad] = useState(true)
   const messageInputRef = useRef<HTMLInputElement | null>(null)
-
+const [showGroupInfo,setShowGroupInfo] = useState<boolean>(false)
 const newMessage =(senderId,input) =>{
   return {
     senderId:senderId,
@@ -77,6 +79,10 @@ if(e.key === "Enter"){
   sendMessage()
 }
 }
+const groupWork =() =>{
+  console.log("clciked")
+  setShowGroupInfo((prev) =>!prev)
+}
 useEffect(() =>{
   const handleMessage =(e) =>{
     const data = JSON.parse(e.data)
@@ -94,7 +100,7 @@ useEffect(() =>{
 },[])
 const [addMoreMembersDialog,setAddMoreMembersDialog] = useState(false)
   return (
-    <div className="flex relative  flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl  ">
+    <div className="flex relative  flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl  overflow-hidden ">
       <div className=" px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
         <div className="flex justify-between items-center gap-3">
           <img
@@ -114,6 +120,9 @@ const [addMoreMembersDialog,setAddMoreMembersDialog] = useState(false)
         <FaArrowLeftLong  size={20}/>
 
 </div>
+<div onClick={()=>setShowGroupInfo(prev =>!prev)} className="cursor-pointer ">
+<HiMiniUserGroup size={20} />
+</div>
       <AddMoreMembersInGroupDialogBox userId={logedInUser.id} selectedGroup={selectedGroup}/>
 
      <div
@@ -127,6 +136,7 @@ const [addMoreMembersDialog,setAddMoreMembersDialog] = useState(false)
         </div>
    
       </div>
+      <GroupInfoDialog group={selectedGroup} showGroupInfo={showGroupInfo} />
       <SearchBarForChat
         // messageIndex={messageIndex}
         totalFindmessages={findMessagesIds.length}
