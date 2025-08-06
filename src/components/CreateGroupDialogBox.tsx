@@ -97,7 +97,7 @@ const [error,setError] = useState<string>("")
       <DialogTrigger asChild>
         <button className="cursor-pointer " onClick={()=>setDialogOpen(true)}>New Group</button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] h-[30rem]! gap-2 ">
+      <DialogContent className=" h-[30rem]! gap-2 bg-white w-[30%] ">
         <DialogHeader>
           <DialogTitle>Create Group</DialogTitle>
           <DialogDescription>

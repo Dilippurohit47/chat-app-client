@@ -13,7 +13,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 import { logout } from "../slices/userSlice";
 import axios from "axios";
-import { useState } from "react";
 import CreateGroupDialogBox from "./createGroupDialogBox";
 const Navbar = () => {
 // const  [createGroupDialog,setCreateGroupDialog] = useState<boolean>(false)
@@ -31,10 +30,10 @@ const Navbar = () => {
     }
 
   return (
-    <div className="bg-[#3F3D56]  text-white mb-2 rounded-md py-2 flex justify-between px-5 items-center min-h-[3rem]">
+    <div className="bg-[#3F3D56]   text-white mb-2  rounded-md py-2 flex justify-between px-5 items-center min-h-[3rem] md:px-2 md:mb-0 md:rounded-none">
      <a href="/"> <h1 className="font-[500]">{user.isLogin ?  user.name : "Chat-App"}  </h1></a> 
     {
-      user.isLogin ?   <div className=" flex justify-center items-center gap-6">
+      user.isLogin ?   <div className="   flex justify-center items-center gap-6">
 <CreateGroupDialogBox userId={user.id} />
       <DropdownMenu>
         <DropdownMenuTrigger>

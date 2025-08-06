@@ -6,6 +6,8 @@ import SearchBarForChat from "../components/SearchBarForChat";
 import { UserType } from "../slices/userSlice";
 import { toast } from "react-toastify";
 import { CloudFog, Turtle } from "lucide-react";
+
+import { BiSolidSend } from "react-icons/bi";
 export type MessageType = {
   id?: string;
   senderId: String;
@@ -318,7 +320,7 @@ useEffect(() =>{
   };
 
   return (
-    <div className="flex relative  flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl  ">
+    <div className="flex  relative md:w-full  md:h-full   flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl md:p-0  md:rounded-[0] ">
       <div className=" px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
         <div className="flex justify-between items-center gap-3">
           <img
@@ -353,7 +355,7 @@ useEffect(() =>{
         scrollToFindMessageBackward={scrollToFindMessageBackward}
       />
  {
-  loadingMoreChat &&  <div className="flex justify-center">
+  loadingMoreChat &&  <div className="flex justify-center ">
   <svg className="loader" viewBox="25 25 50 50">
   <circle r="20" cy="50" cx="50"></circle>
 </svg>
@@ -361,7 +363,7 @@ useEffect(() =>{
  }
       <div
         ref={messageContainerRef}
-        className="flex-1 overflow-y-auto hide-scrollbar  mt-2 "
+        className="flex-1 md:flex-none overflow-y-auto hide-scrollbar md:px-1 md:py-1   mt-2  md:h-[75vh]  "
       >
         {messages.slice().reverse().map((message, index) => {
           const isLast = index === messages.length - 1;
@@ -390,35 +392,33 @@ useEffect(() =>{
           );
         })}
       </div>
-      <div className="mt-4 flex gap-2 justify-center items-center ">
+      <div className="mt-4 flex gap-2 justify-center items-center md:p-2 md:mt-2 md:absolute bottom-0  md:w-full sm:gap-1 ">
         <input
           value={input}
           type="text"
           placeholder="Type a message..."
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none text-white focus:border-blue-500"
+          className="w-full p-3 border sm:p-2 border-gray-300 rounded-lg focus:outline-none text-black focus:border-blue-500"
           ref={messageInputRef}
         />
 
         <label htmlFor="file-input">
           <MdOutlineAttachment
-            className="text-gray-300 rotate-120 hover:text-gray-500 cursor-pointer"
-            size={26}
+            className="text-gray-300 rotate-120 hover:text-gray-500 cursor-pointer text-[1.8rem] sm:text-[1.5rem] sm:hover:text-gray-300"
           />
         </label>
         <input
           id="file-input"
           type="file"
-          className="hidden w-0 h-0 bg-red-500"
+          className="hidden w-0 h-0 "
         />
         <button
           className="ml-2 p-2 bg-blue-500 hover:bg-blue-700 text-white
-        rounded-lg focus:outline-none focus:bg-blue-700 cursor-pointer"
-          onClick={sendMessage}
+        rounded-lg focus:outline-none  focus:bg-blue-700 cursor-pointer text-[1.3rem] sm:text-sm md:bg-gray-500 sm:hover:bg-gray-500"          onClick={sendMessage}
           disabled={!input.length}
         >
-          Send
+        <BiSolidSend />
         </button>
       </div>
     </div>

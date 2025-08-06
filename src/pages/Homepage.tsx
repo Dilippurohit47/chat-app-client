@@ -102,8 +102,8 @@ function Home() {
   const [messages, setMessages] = useState<MessageType[] | []>([]);
 
   return (
-    <div className="flex h-[84.5vh]  hide-scrollbar">
-      <div className="w-1/4 shadow-2xl rounded-md border-r border-gray-300 border-2 mr-2">
+    <div className="flex h-[84.5vh] md:flex-col  md:h-[calc(100vh-3rem)]  justify-center mx-auto my-auto hide-scrollbar">
+      <div className="w-1/4 md:hidden shadow-2xl rounded-md border-r border-gray-300 border-2 mr-2">
         <Tabs defaultValue="online-users" className="w-[300px]">
           <TabsList className="w-full border-2 ">
             <TabsTrigger
@@ -164,7 +164,7 @@ function Home() {
         </Tabs>
       </div>
       {/* Chat Window Section */}
-      <div className="w-3/4 bg-gray-50">
+      <div className="w-3/4 md:w-full bg-gray-500  md:flex-1 ">
         {selectedUser && (
           <ChatWindow
             logedInUser={user}
@@ -178,7 +178,7 @@ function Home() {
           />
         )}
         {!selectedUser && !selectedGroup && (
-          <div className="flex bg-[#1e1e2e] items-center justify-center h-full text-gray-200 rounded-md text-[1.1rem] ">
+          <div className="flex bg-[#1e1e2e] items-center justify-center h-full text-gray-200 rounded-md text-[1.1rem] md:rounded-none  ">
             {user.isLogin
               ? selectedTab !== "group-list"
                 ? "select a user and start chating"
@@ -197,6 +197,7 @@ function Home() {
           />
         )}
       </div>
+     
     </div>
   );
 }

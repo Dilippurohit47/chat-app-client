@@ -1,5 +1,8 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+  
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));
@@ -114,14 +117,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
+
 
 /* From Uiverse.io by barisdogansutcu */ 
 .loader {

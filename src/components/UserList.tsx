@@ -91,7 +91,7 @@ const UserList = ({
     setRecentChatUsers((prev) =>prev.filter(({chatId}) => chatId !== deletedChatId ))
   }
   return (
-    <div className="px-3 py-1">
+    <div className="px-3 py-1 w-full md:px-1 ">
       <h2 className="text-[1.2rem]  flex justify-center items-center gap-2 font-semibold mb-2">
         {" "}
         {logedInUser.isLogin
@@ -100,7 +100,7 @@ const UserList = ({
             : "connecting..."
           : "Login first "}{" "}
       </h2>
-      <ul className="flex flex-col gap-2 transition-all ">
+      <ul className="flex flex-col gap-2 transition-all  ">
         {recentChatUsers?.length > 0
           ? recentChatUsers.map((user) => {
               return (
@@ -108,9 +108,9 @@ const UserList = ({
                   <li
                     onContextMenu={(e) => handleContextMenu(e, user)}
                     key={user.chatId}
-                    className={`p-3 cursor-pointer rounded-lg  flex    ${
+                    className={`p-3 md:p-1 cursor-pointer lg:w-[20vw]  rounded-lg  b flex  ${
                       selectedUser?.id === user.id
-                        ? "bg-[#008080d6] text-white"
+                        ? "bg-[#008080d6] text-white" 
                         : "bg-gray-200 "
                     }`}
                     onClick={() => {onSelectUser(user) ;setOpenContextMenu(null) ;setChatId(user.chatId)}}
@@ -128,7 +128,7 @@ const UserList = ({
                     </div>
                     <div className="flex flex-col justify-center bg   w-full items-start  px-3">
                       <div className="flex justify-between    w-full   items-center gap-3 ">
-                        <div className="font-medium max-w-[10rem]   overflow-hidden truncate">
+                        <div className="font-medium max-w-[10rem] text-primary2   overflow-hidden truncate">
                           {user?.name}
                         </div>
                         {onlineUsers &&
