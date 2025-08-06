@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -13,9 +13,9 @@ const SignUp = () => {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [image, setImage] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<string | null>(null);
   const [selectedFile, setSelctedFile] = useState();
   const [imageUploading, setImageUploading] = useState<boolean>(false);
-  const user = useSelector((state: RootState) => state.user);
   const [isImageUploaded, setIsImageUploaded] = useState(false);
   const dispatch = useDispatch();     
   const navigate = useNavigate();
@@ -62,22 +62,25 @@ const SignUp = () => {
       console.log("Login error:", err.response);
     }
   };
+  
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     setSelctedFile(file);
     if (file) {
       const imageUrl = URL.createObjectURL(file);
-      setImage(imageUrl);
+      setImageFile(imageUrl);
     }
   };
   const removeImage = () => {
     setImage(null);
+    setImageFile(null)
     setIsImageUploaded(false);
   };
 
   const uploadImageToS3 = async () => {
     try {
+      console.log("uploading")
       setImageUploading(true);
       const res = await axios.post(
         `${import.meta.env.VITE_BASE_URL_HTTP}/aws/get-presigned-url-s3`,
@@ -110,6 +113,13 @@ const SignUp = () => {
     }
   };
 
+
+useEffect(() =>{
+if(imageFile){
+uploadImageToS3()
+}
+},[imageFile])
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
@@ -119,7 +129,7 @@ const SignUp = () => {
 
         <div className=" flex flex-col  justify-center relative items-center gap-2">
           <img
-            src={image ? image : "./profile.jpg"}
+            src={imageFile ? imageFile : "./profile.jpg"}
             alt=""
             className="h-28 w-28 object-cover  rounded-full"
           />
@@ -133,8 +143,9 @@ const SignUp = () => {
           )}
           {image ? (
             <button
-              className="bg-blue-600 rounded-md text-white px-6 py-1 cursor-pointer text-[1.1rem]"
+              className={` rounded-md text-white px-6 py-1 cursor-pointer text-[1.1rem] ${isImageUploaded ? "bg-zinc-400":'bg-blue-600'}`}
               onClick={uploadImageToS3}
+              disabled={image  ? true : false}
             >
               {isImageUploaded
                 ? "Uploaded"
@@ -148,16 +159,19 @@ const SignUp = () => {
                 htmlFor="select-profile"
                 className="bg-gray-200 rounded-sm px-3 py-1 flex justify-center items-center gap-1 cursor-pointer"
               >
-                {image ? (
-                  <>
-                    Change profile <GoPlus className="" size={20} />{" "}
-                  </>
-                ) : (
+                {!imageFile && (
                   <>
                     Upload profile <GoPlus className="" size={20} />{" "}
                   </>
                 )}
               </label>
+              {
+                imageFile && !image && <label
+                className="bg-gray-200 rounded-sm px-3 py-1 flex justify-center items-center gap-1 cursor-pointer"
+              >
+                    Uploading..
+              </label>
+              }
               <input
                 type="file"
                 className="hidden"

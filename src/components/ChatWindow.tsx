@@ -228,8 +228,10 @@ useEffect(() =>{
           chatId: selectedUser.chatId,
         }
       );
+    console.log(res)
+
     };
-    // updateUnreadCount();
+    updateUnreadCount();
   }, [messages]);
 
   const handleKeyDown = (e: any) => {

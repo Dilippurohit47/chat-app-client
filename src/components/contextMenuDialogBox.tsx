@@ -7,10 +7,7 @@ import { RootState } from "../store";
 const ContextMenuDialogBox = ({ open, setOpen,userId ,chatId ,onSelectUser ,deletechat ,setMessages}:{open:null | string , userId:string ,setOpen:()=>void,setMessages:(state:[])=>void,onSelectUser:(state:null)=>void}) => {
   const isOpen = !!open;
 
-console.log(userId)     
- const user = useSelector((state:RootState) =>state.user)
- console.log(user)
-  
+ const user = useSelector((state:RootState) =>state.user)  
   const clearChat =  async() =>{
     const res = await axios.delete(`${import.meta.env.VITE_BASE_URL_HTTP}/chat-setting/clear-chat`,{
         withCredentials:true,
