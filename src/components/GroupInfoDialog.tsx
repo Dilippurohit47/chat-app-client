@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useEffect, useRef } from "react";
 import { toast } from "react-toastify";
+import { useWebSocket } from "../context/webSocket";
 
 
 type groupInfoProps = {
@@ -8,9 +9,10 @@ group:object[],
 showGroupInfo:boolean,
 setShowGroupInfo:(State:boolean)=>void;
 groupInfoButtonRef:React.RefObject<HTMLDivElement>;
+userId:string
 }
 
-const GroupInfoDialog = ({ group, showGroupInfo ,setShowGroupInfo ,groupInfoButtonRef }:groupInfoProps) => {
+const GroupInfoDialog = ({ userId, group, showGroupInfo ,setShowGroupInfo ,groupInfoButtonRef }:groupInfoProps) => {
 
   const infoRef = useRef<HTMLDivElement | null>(null)
 
@@ -29,6 +31,8 @@ setShowGroupInfo(false)
     }
   },[])
 
+  const {ws} = useWebSocket()
+
 const deleteGroup = async () =>{
   try {
     const res = await axios.delete(`${import.meta.env.VITE_BASE_URL_HTTP}/group/delete-group/${group.id}`,{
@@ -37,6 +41,12 @@ const deleteGroup = async () =>{
     if(res.status === 200){
       toast.success("Group Delete")
       setShowGroupInfo(false)
+      ws.current.send(
+        JSON.stringify({
+          type:"send-groups",
+          userId:userId
+        })
+      )
     }
   } catch (error) {
     console.log(error)

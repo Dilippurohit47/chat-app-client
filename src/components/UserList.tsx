@@ -133,9 +133,9 @@ const UserList = ({
                         </div>
                         {onlineUsers &&
                         onlineUsers.map((u) => u.userId).includes(user.id) ? (
-                          <div className="bg-green-500  rounded-4xl h-2 w-2"></div>
+                          <div className="bg-green-500  rounded-3xl h-2 w-2"></div>
                         ) : (
-                          <div className="bg-gray-500  rounded-4xl h-2 w-2"></div>
+                          <div className="bg-gray-500  rounded-3xl h-2 w-2"></div>
                         )}
                       </div>
                       <div

@@ -3,7 +3,7 @@ import userReducer from "./slices/userSlice"; // Adjust the path if needed
 
 export const store = configureStore({
   reducer: {
-    user: userReducer, // Add other reducers here if needed
+    user: userReducer, // Add other reducers here if needed 
   },
 });
 

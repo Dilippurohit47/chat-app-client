@@ -15,25 +15,20 @@ import { saveUser, UserType } from "../slices/userSlice";
 import { RootState } from "../store";
 import GroupList from "../components/GroupList";
 import GroupChatWindow from "../components/GroupChatWindow";
+import { useWebSocket } from "../context/webSocket";
 
 function Home() {
-  const ws = useRef<WebSocket | null>(null);
   const dispatch = useDispatch();
 
-  const [connected, setConnected] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
   const [onlineUsers, setOnlineUsers] = useState<onlineUsersType[]>([]);
   const [selectedGroup, setSelectedGroup] = useState();
-  const user = useSelector((state: RootState) => state.user);
+  const user = useSelector((state: RootState) => state.user); 
 
-  const connectionBooleanRef = useRef<boolean>(false);
-
+const {ws ,connected ,setConnected ,connectionBooleanRef} = useWebSocket()
   useEffect(() => {
-    if (!user.isLogin) return;
-
-    const connect = async () => {
-      ws.current = new WebSocket(`${import.meta.env.VITE_BASE_URL_WS}`);
-      ws.current.onopen = () => {
+    if(!ws.current) return
+         ws.current.onopen = () => {
         console.log("WebSocket connection opened");
         if (ws.current?.readyState === WebSocket.OPEN) {
           ws.current!.send(
@@ -42,7 +37,6 @@ function Home() {
               userId: user.id,
             })
           );
-          setConnected(true);
           connectionBooleanRef.current = true;
         }
       };
@@ -60,29 +54,8 @@ function Home() {
           setOnlineUsers(filterData);
         }
       };
-      ws.current.onclose = () => {
-        console.log("WebSocket connection closed");
-        setConnected(false);
-        connectionBooleanRef.current = false;
-        const intervalId = setInterval(() => {
-          if (!connectionBooleanRef.current) {
-            console.log("trying");
-            connect();
-          } else {
-            clearInterval(intervalId);
-          }
-        }, 500);
-      };
-    };
 
-    connect();
-
-    return () => {
-      if (ws.current) {
-        ws.current.close(1000);
-      }
-    };
-  }, [user]);
+  }, [connected]);
   useEffect(() => {
     const getUser = async () => {
       const res = await axios.get(

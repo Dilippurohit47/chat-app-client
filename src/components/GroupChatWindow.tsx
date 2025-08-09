@@ -79,10 +79,7 @@ if(e.key === "Enter"){
   sendMessage()
 }
 }
-const groupWork =() =>{
-  console.log("clciked")
-  setShowGroupInfo((prev) =>!prev)
-}
+
 useEffect(() =>{
   const handleMessage =(e) =>{
     const data = JSON.parse(e.data)
@@ -93,12 +90,12 @@ useEffect(() =>{
     }
   }
   ws.addEventListener("message",handleMessage)
-
   return () =>{
     ws.removeEventListener("message",handleMessage)
   }
 },[])
 const [addMoreMembersDialog,setAddMoreMembersDialog] = useState(false)
+const groupInfonButtonRef = useRef<HTMLDivElement | null>(null)
   return (
     <div className="flex relative  flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl  overflow-hidden ">
       <div className=" px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
@@ -118,12 +115,11 @@ const [addMoreMembersDialog,setAddMoreMembersDialog] = useState(false)
         <div className="flex gap-5 justify-center items-center">
 <div onClick={()=>setSelectedGroup(null)} className="cursor-pointer">
         <FaArrowLeftLong  size={20}/>
-
 </div>
-<div onClick={()=>setShowGroupInfo(prev =>!prev)} className="cursor-pointer ">
+<div onClick={()=>setShowGroupInfo(prev =>!prev)} className="cursor-pointer" ref={groupInfonButtonRef}>
 <HiMiniUserGroup size={20} />
 </div>
-      <AddMoreMembersInGroupDialogBox userId={logedInUser.id} selectedGroup={selectedGroup}/>
+      <AddMoreMembersInGroupDialogBox userId={logedInUser.id} selectedGroup={selectedGroup} />
 
      <div
           className="cursor-pointer"
@@ -136,7 +132,7 @@ const [addMoreMembersDialog,setAddMoreMembersDialog] = useState(false)
         </div>
    
       </div>
-      <GroupInfoDialog group={selectedGroup} showGroupInfo={showGroupInfo} />
+      <GroupInfoDialog  group={selectedGroup} userId={logedInUser.id} showGroupInfo={showGroupInfo}  setShowGroupInfo={setShowGroupInfo} groupInfoButtonRef={groupInfonButtonRef}/>
       <SearchBarForChat
         // messageIndex={messageIndex}
         totalFindmessages={findMessagesIds.length}
@@ -191,7 +187,7 @@ const [addMoreMembersDialog,setAddMoreMembersDialog] = useState(false)
           placeholder="Type a message..."
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none text-white focus:border-blue-500"
+          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none text-black focus:border-blue-500"
           ref={messageInputRef}
         />
 

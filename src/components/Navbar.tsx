@@ -1,5 +1,4 @@
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,15 +7,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
-import { logout } from "../slices/userSlice";
 import axios from "axios";
-import CreateGroupDialogBox from "./createGroupDialogBox";
+import CreateGroupDialogBox from "./CreateGroupDialogBox";
+import { useWebSocket } from "../context/webSocket";
 const Navbar = () => {
-// const  [createGroupDialog,setCreateGroupDialog] = useState<boolean>(false)
-    const user = useSelector((state:RootState) =>state.user)
+    const user = useSelector((state:RootState) =>state.user)      
     const dispatch = useDispatch()
     const logoutUser =async() =>{
       const res = await axios.post(`${import.meta.env.VITE_BASE_URL_HTTP}/user/sign-out`,{},{
@@ -25,7 +22,6 @@ const Navbar = () => {
       if(res.status === 200){
         dispatch(logout())
         console.log("log out successfully")
-        
       }
     }
 
@@ -34,15 +30,15 @@ const Navbar = () => {
      <a href="/"> <h1 className="font-[500]">{user.isLogin ?  user.name : "Chat-App"}  </h1></a> 
     {
       user.isLogin ?   <div className="   flex justify-center items-center gap-6">
-<CreateGroupDialogBox userId={user.id} />
-      <DropdownMenu>
+<CreateGroupDialogBox userId={user.id}  />
+      <DropdownMenu >
         <DropdownMenuTrigger>
           <Avatar className="cursor-pointer" >
             <AvatarImage src={user.profileUrl ? user.profileUrl : "https://github.com/shadcn.png"} alt="profile-img"  className="object-cover"/>
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
         </DropdownMenuTrigger>
-        <DropdownMenuContent >
+        <DropdownMenuContent className="bg-white" >
           <DropdownMenuLabel>{user?.name}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem className="cursor-pointer">Profile</DropdownMenuItem>

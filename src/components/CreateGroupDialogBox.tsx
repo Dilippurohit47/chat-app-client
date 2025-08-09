@@ -18,6 +18,9 @@ import { FiMinus } from "react-icons/fi";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { UserListProps } from "./UserList";
+import { RootState } from "../store";
+import { useSelector } from "react-redux";
+import { useWebSocket } from "../context/webSocket";
 
 export interface UserTypes {
   id: string;
@@ -32,6 +35,9 @@ const CreateGroupDialogBox = ({userId}:string) => {
   const [addedMembers, setAddedMembers] = useState<string[]>([userId]);
   const [groupName, setGroupName] = useState<String | null>(null);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+    const {ws ,connected} = useWebSocket()
+
+
   useEffect(() => {
     const getTotalUser = async () => {
       try {
@@ -80,12 +86,17 @@ const [error,setError] = useState<string>("")
           members: addedMembers,
         }
       );
-      console.log(res.data.message)
       if (res.status === 200) {
         setDialogOpen(false)
         toast.success(res.data.message);
         setGroupName(null)
         setAddedMembers([])
+        ws.current.send(
+          JSON.stringify({
+            type:"send-groups",
+            userId:userId
+          })
+        )
       }
     } catch (error) {
         toast.error(error.response.data.message)
@@ -97,7 +108,7 @@ const [error,setError] = useState<string>("")
       <DialogTrigger asChild>
         <button className="cursor-pointer " onClick={()=>setDialogOpen(true)}>New Group</button>
       </DialogTrigger>
-      <DialogContent className=" h-[30rem]! gap-2 bg-white w-[30%] ">
+      <DialogContent className=" h-[30rem]! gap-2 bg-white w-[30%] md:w-[90%] ">
         <DialogHeader>
           <DialogTitle>Create Group</DialogTitle>
           <DialogDescription>
@@ -116,16 +127,20 @@ const [error,setError] = useState<string>("")
               className="border-2 border-gray-300 w-[70%] focus:outline-0! focus:ring-0!  focus:border-gray-300"
             />
           </div>
+          <div>
+            selected {addedMembers?.length - 1}
+          </div>
         <div className="text-red-500">{
           error && error
 }</div>
 
         </div>
-        <DialogFooter className=" justify-between!  ">
-          <div className=" bg-zinc-300  rounded-sm p-1 w-[80%] h-[18rem] hide-scrollbar overflow-y-auto gap-2 flex flex-col ">
+        <DialogFooter className=" justify-between! md:flex-col">
+          <div className=" bg-zinc-300  rounded-sm p-1 w-[80%] md:w-[100%] h-[18rem] hide-scrollbar overflow-y-auto gap-2 flex flex-col ">
             {totalUsers.length > 0 &&
-              totalUsers.map((u) => (
-                <div className="bg-white px-2 py-3 rounded-sm flex justify-between items-center">
+              totalUsers.map((u) => {
+
+              if(u.id !== userId)   return <div className="bg-white px-2 py-3 rounded-sm flex justify-between items-center">
                   <div className="flex gap-2">
                     <img
                       src={u.profileUrl}
@@ -136,8 +151,7 @@ const [error,setError] = useState<string>("")
                   </div>
                   <button
                     className="   text-white  text-[0.8rem] text-center cursor-pointer "
-                    onClick={() => addMembers(u.id)}
-                  >
+                    onClick={() => addMembers(u.id)}>
                     {!addedMembers.includes(u.id) ? (
                       <div className="  rounded-sm  px-2 py-1  bg-blue-500 flex gap-1 justify-center items-center">
                         Add
@@ -149,10 +163,10 @@ const [error,setError] = useState<string>("")
                       </div>
                     )}
                   </button>
-                </div>
-              ))}
+                </div> }
+              )}
           </div>
-          <Button onClick={createGroup}>Save</Button>
+          <Button onClick={createGroup} className="bg-blue-500 w-full md:mt-5">Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

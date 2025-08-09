@@ -56,9 +56,9 @@ const TotalUserList = ({
                  <img src={user.profileUrl ? user.profileUrl : "https://github.com/shadcn.png" } className="rounded-full object-cover h-9 w-9" alt="" />
               <div className="font-medium  max-w-[10rem]  overflow-hidden truncate">{user?.name}</div>
               { onlineUsers && onlineUsers.map((u:onlineUsersType) => u.userId).includes(user.id!) ? (
-                <div className="bg-green-500 rounded-4xl h-3 w-3"></div>
+                <div className="bg-green-500 rounded-3xl h-2 w-2"></div>
               ) : (
-                <div className="bg-gray-500 rounded-4xl h-3 w-3"></div>
+                <div className="bg-gray-500 rounded-3xl h-2 w-2"></div>
               )}
               {/* <div className="text-sm text-gray-500">{user?.lastMessage}</div> */}
             </li>

@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { onlineUsersType } from "./totalUserList";
 import axios from "axios";
+import { useWebSocket } from "../context/webSocket";
 type GroupListType = {
   connected: boolean;
   logedInUser: onlineUsersType;
 };
 const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: GroupListType) => {
   const [groupList, setGroupList] = useState([]);
+  const {ws } = useWebSocket()
   useEffect(() => {
     const fetchGroups = async () => {
       try {
@@ -21,10 +23,22 @@ const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: 
     };
 
     fetchGroups();
+
+    const getRefreshedGroups =(e) =>{
+    const data = JSON.parse(e.data)
+  if(data.type === "get-groups-ws"){
+    setGroupList(data.groups)
+  }
+    }
+
+    ws.current.addEventListener("message",getRefreshedGroups)
+    return () =>{ 
+      ws.current.removeEventListener("message",getRefreshedGroups)
+    }
   },[]);
 
   return (
-    <div className="px-3 py-1">
+    <div className="px-3 py-1  overflow-y-auto">
       <h2 className="text-[1.2rem]  flex justify-center items-center gap-2 font-semibold mb-2">
         {" "}
         {logedInUser.isLogin
@@ -33,7 +47,7 @@ const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: 
             : "connecting..."
           : "Login first "}{" "}
       </h2>
-      <ul className="flex flex-col gap-2 transition-all ">
+      <ul className=" overflow-y-auto max-h-[75vh] flex-1   flex flex-col gap-2 transition-all ">
         {groupList?.length > 0
           ? groupList.map((group) => {
               return (
