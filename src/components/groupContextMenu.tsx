@@ -4,52 +4,49 @@ import { LuMessageSquareOff } from "react-icons/lu";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import { useEffect, useRef } from "react";
+import { useWebSocket } from "../context/webSocket";
+import { toast } from "react-toastify";
 
-const ContextMenuDialogBox = ({ open, setOpen,userId ,chatId ,onSelectUser ,deletechat ,setMessages}:{open:null | string , userId:string ,setOpen:()=>void,setMessages:(state:[])=>void,onSelectUser:(state:null)=>void}) => {
+const GroupContextMenuDialogBox = ({ open, setOpen ,groupId ,setSelectedGroup}:{open:null | string , userId:string ,setOpen:()=>void,setMessages:(state:[])=>void,onSelectUser:(state:null)=>void}) => {
   const isOpen = !!open;
 
- const user = useSelector((state:RootState) =>state.user)  
-  const clearChat =  async() =>{
-    const res = await axios.delete(`${import.meta.env.VITE_BASE_URL_HTTP}/chat-setting/clear-chat`,{
-        withCredentials:true,
-        data:{
- userId:userId
-        }
+  
+const {ws} = useWebSocket()
+const user = useSelector((state:RootState)=>state.user)
+console.log()
+const deleteGroup = async () =>{
+  try {
+    const res = await axios.delete(`${import.meta.env.VITE_BASE_URL_HTTP}/group/delete-group/${groupId}`,{
+      withCredentials:true
     })
-if(res.status === 200){
-  setMessages([])
-}
-
-}
-
-const deleteChat =  async() =>{
-  const res = await axios.delete(`${import.meta.env.VITE_BASE_URL_HTTP}/chat-setting/delete-chat`,{
-    withCredentials:true,
-    data:{
-        userId:user.id,
-        chatId:chatId
-
+    if(res.status === 200){
+      toast.success("Group Delete")
+      setSelectedGroup(null)
+      ws.current.send(
+        JSON.stringify({
+          type:"send-groups",
+          userId:user.id
+        })
+      )
     }
-  })
-if(res.status === 200){
-deletechat(chatId)
-onSelectUser(null)
-}
+  } catch (error) {
+    console.log(error)
+  }
 }
 
 
   const options = [
-  { label: "Clear Chat", icon: <LuMessageSquareOff />, onClick: () => {clearChat()} },
-  { label: "Delete Chat", icon: <FiTrash />, onClick: () => {deleteChat()} },
-  { label: "Block User", icon: <FiUserX />, onClick: () => {} },
+  { label: "delete group", icon: <LuMessageSquareOff />, onClick: () => deleteGroup()},
+  { label: "Delete Chat", icon: <FiTrash />, onClick: () => {} },
   { label: "Close", icon: <FiX />, onClick: () => {} },
 ];
 
-const contextMenuRef = useRef<HTMLDivElement | null >(null)
+const contextMenuRef = useRef<HTMLDivElement  | null>(null)
+ 
 
 useEffect(() =>{
     const handleClickOutside =(e)=>{
-        
+        console.log('cli')
         if(contextMenuRef.current && !contextMenuRef.current.contains(e.target)){
             setOpen(null)
         }
@@ -63,12 +60,9 @@ useEffect(() =>{
 },[])
 
 
-
-
   return (
     <div
-    ref={contextMenuRef}
-      className={`absolute top-15 right-0 z-50 rounded shadow bg-white overflow-hidden transition-all duration-200
+   ref={contextMenuRef}    className={`absolute top-15 right-0 z-10 rounded shadow bg-white overflow-hidden transition-all duration-200
       ${isOpen ? "w-[12rem] py-2 opacity-100" : "w-0 py-0 opacity-0 pointer-events-none"}`}
     >
       {options.map((option, index) => (
@@ -88,4 +82,4 @@ useEffect(() =>{
   );
 };
 
-export default ContextMenuDialogBox;
+export default GroupContextMenuDialogBox;

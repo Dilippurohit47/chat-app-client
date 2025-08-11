@@ -132,7 +132,7 @@ const groupInfonButtonRef = useRef<HTMLDivElement | null>(null)
         </div>
    
       </div>
-      <GroupInfoDialog  group={selectedGroup} userId={logedInUser.id} showGroupInfo={showGroupInfo}  setShowGroupInfo={setShowGroupInfo} groupInfoButtonRef={groupInfonButtonRef}/>
+      <GroupInfoDialog  setSelectedGroup={setSelectedGroup} group={selectedGroup} userId={logedInUser.id} showGroupInfo={showGroupInfo}  setShowGroupInfo={setShowGroupInfo} groupInfoButtonRef={groupInfonButtonRef}/>
       <SearchBarForChat
         // messageIndex={messageIndex}
         totalFindmessages={findMessagesIds.length}

@@ -32,7 +32,7 @@ export interface UserTypes {
 
 const CreateGroupDialogBox = ({userId}:string) => {
   const [totalUsers, setTotalUsers] = useState<UserTypes[]>([]);
-  const [addedMembers, setAddedMembers] = useState<string[]>([userId]);
+  const [addedMembers, setAddedMembers] = useState<string[]>([]);
   const [groupName, setGroupName] = useState<String | null>(null);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
     const {ws ,connected} = useWebSocket()
@@ -75,7 +75,7 @@ const [error,setError] = useState<string>("")
         setError("Group name cannot be empty!")
         return
       }
-      if(addedMembers.length <= 1){
+      if(addedMembers.length <= 0){
         setError("Atleast one member required to create group!")
         return
       }
@@ -83,7 +83,7 @@ const [error,setError] = useState<string>("")
         `${import.meta.env.VITE_BASE_URL_HTTP}/group/create-group`,
         {
           name: groupName,
-          members: addedMembers,
+          members: [...addedMembers,userId],
         }
       );
       if (res.status === 200) {
@@ -115,7 +115,7 @@ const [error,setError] = useState<string>("")
             Add your favourites members and talk with all .
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-2 ">
+        <div className="grid gap-4 py-1">
           <div className="flex items-center gap-4">
             <Label htmlFor="name" className="text-right">
               Name
@@ -128,11 +128,13 @@ const [error,setError] = useState<string>("")
             />
           </div>
           <div>
-            selected {addedMembers?.length - 1}
+            selected {addedMembers.length}
           </div>
-        <div className="text-red-500">{
-          error && error
-}</div>
+ {error && (
+  <div className="text-red-500">
+    {error}
+  </div>
+)}
 
         </div>
         <DialogFooter className=" justify-between! md:flex-col">
@@ -166,7 +168,7 @@ const [error,setError] = useState<string>("")
                 </div> }
               )}
           </div>
-          <Button onClick={createGroup} className="bg-blue-500 w-full md:mt-5">Save</Button>
+          <Button onClick={createGroup} disabled={addedMembers.length <= 0} className="bg-blue-600 text-white w-full md:mt-5">Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -28,18 +28,8 @@ function Home() {
 const {ws ,connected ,setConnected ,connectionBooleanRef} = useWebSocket()
   useEffect(() => {
     if(!ws.current) return
-         ws.current.onopen = () => {
-        console.log("WebSocket connection opened");
-        if (ws.current?.readyState === WebSocket.OPEN) {
-          ws.current!.send(
-            JSON.stringify({
-              type: "user-info",
-              userId: user.id,
-            })
-          );
-          connectionBooleanRef.current = true;
-        }
-      };
+    console.log("rund")
+     
 
       ws.current.onerror = (e) => {
         console.error("WebSocket error:", e);

@@ -2,12 +2,15 @@ import { useEffect, useState } from "react";
 import { onlineUsersType } from "./totalUserList";
 import axios from "axios";
 import { useWebSocket } from "../context/webSocket";
+import { ContextMenu } from "@radix-ui/react-context-menu";
+import GroupContextMenuDialogBox from "./groupContextMenu";
 type GroupListType = {
   connected: boolean;
   logedInUser: onlineUsersType;
 };
 const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: GroupListType) => {
   const [groupList, setGroupList] = useState([]);
+  const [openContextMenu , setOpenContextMenu] = useState<string | null>(null)
   const {ws } = useWebSocket()
   useEffect(() => {
     const fetchGroups = async () => {
@@ -36,6 +39,7 @@ const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: 
       ws.current.removeEventListener("message",getRefreshedGroups)
     }
   },[]);
+    console.log(openContextMenu)
 
   return (
     <div className="px-3 py-1  overflow-y-auto">
@@ -47,13 +51,16 @@ const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: 
             : "connecting..."
           : "Login first "}{" "}
       </h2>
-      <ul className=" overflow-y-auto max-h-[75vh] flex-1   flex flex-col gap-2 transition-all ">
+      <ul className=" overflow-y-auto h-[75vh] flex-1   flex flex-col gap-2 transition-all ">
         {groupList?.length > 0
           ? groupList.map((group) => {
               return (
+                <div className="relative ">
+                
                 <li
+                onContextMenu={(e) =>{ e.preventDefault() ;  setOpenContextMenu(group.id)}}
                   key={group.chatId}
-                  className={`p-3 cursor-pointer rounded-lg  flex  
+                  className={`p-3 cursor-pointer rounded-lg  z-0  flex  
                       ${
                     selectedGroup?.id === group.id
                       ? "bg-[#008080d6] text-white"
@@ -104,6 +111,10 @@ const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: 
                     </div>
                   </div>
                 </li>
+                {
+                  openContextMenu === group.id && <GroupContextMenuDialogBox  groupId={group.id} open={openContextMenu} setOpen={setOpenContextMenu} setSelectedGroup={setSelectedGroup} />
+                }
+                </div>
               );
             })
           : connected

@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { CloudFog, Turtle } from "lucide-react";
 
 import { BiSolidSend } from "react-icons/bi";
+import { useWebSocket } from "../context/webSocket";
 export type MessageType = {
   id?: string;
   senderId: String;
@@ -41,7 +42,6 @@ interface ChatWindowProps {
 }
 
 const ChatWindow = ({
-  ws,
   senderId,
   selectedUser,
   setSelectedUser,
@@ -52,7 +52,8 @@ const ChatWindow = ({
 }: ChatWindowProps) => {
   const [input, setInput] = useState<string>("");
   const chatWindowRef: React.RefObject<HTMLDivElement | null> = useRef(null);
-
+const {ws:websocket} = useWebSocket()
+const ws = websocket.current
   const [openSearchBar, setOpenSearchBar] = useState<boolean>(false);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [findMessagesIds, setFindMessagesIds] = useState<string[]>([]);
@@ -107,7 +108,6 @@ const ChatWindow = ({
           },
         });
         if (res.status === 200) {
-          console.log("from res",res.data.messages)
 
           setMessages(res.data.messages);
           setCursorId(res.data.cursor);
@@ -155,7 +155,6 @@ const ChatWindow = ({
               cursor: JSON.stringify(cursorId),
             },
           });
-          console.log(container?.scrollTop ,container?.scrollHeight ,scrollHeightBefore ,scrollTopBefore)
           if (res.status === 200) {
             setMessages(prev => [ ...prev, ...res.data.messages]);
             setCursorId(res.data.cursor);
@@ -186,6 +185,7 @@ useEffect(() =>{
   setInitialLoad(false)
 },[messages])
   useEffect(() => {
+    console.log("from wssss",ws)
     if (!ws || !selectedUser) return;
     const getMessage = (m) => {
       const data = JSON.parse(m.data);
@@ -207,7 +207,7 @@ useEffect(() =>{
     return () => {
       ws.removeEventListener("message", getMessage);
     };
-  }, [ws, selectedUser]);
+  }, [selectedUser]);
   const formatDate = (newDate: number) => {
     const date = new Date(newDate);
 
@@ -230,7 +230,6 @@ useEffect(() =>{
           chatId: selectedUser.chatId,
         }
       );
-    console.log(res)
 
     };
     updateUnreadCount();
@@ -274,7 +273,6 @@ useEffect(() =>{
   
 
     const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 500;
-    console.log(isNearBottom)
     if (isNearBottom && messages.length > 0) {
       setTimeout(() => {
         container.scrollTop = container.scrollHeight;

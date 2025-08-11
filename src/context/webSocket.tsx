@@ -18,9 +18,20 @@ useEffect(() =>{
 
     const connect = async () => {
       ws.current = new WebSocket(`${import.meta.env.VITE_BASE_URL_WS}`);
-      ws.current.onopen=() =>{
-        setConnected(true)
-      }
+     ws.current.onopen = () => {
+         if (ws.current?.readyState === WebSocket.OPEN) {
+           ws.current.send(
+             JSON.stringify({
+               type: "user-info",
+               userId: user.id,
+             })
+           );
+           connectionBooleanRef.current = true;
+           setConnected(true)
+         }
+       };
+
+
       ws.current.onclose = () => {
         console.log("WebSocket connection closed");
         setConnected(false);

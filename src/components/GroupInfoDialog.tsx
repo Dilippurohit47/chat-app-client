@@ -12,7 +12,7 @@ groupInfoButtonRef:React.RefObject<HTMLDivElement>;
 userId:string
 }
 
-const GroupInfoDialog = ({ userId, group, showGroupInfo ,setShowGroupInfo ,groupInfoButtonRef }:groupInfoProps) => {
+const GroupInfoDialog = ({  setSelectedGroup ,userId, group, showGroupInfo ,setShowGroupInfo ,groupInfoButtonRef }:groupInfoProps) => {
 
   const infoRef = useRef<HTMLDivElement | null>(null)
 
@@ -40,6 +40,7 @@ const deleteGroup = async () =>{
     })
     if(res.status === 200){
       toast.success("Group Delete")
+      setSelectedGroup(null)
       setShowGroupInfo(false)
       ws.current.send(
         JSON.stringify({
