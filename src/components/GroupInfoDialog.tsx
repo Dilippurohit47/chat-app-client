@@ -35,11 +35,11 @@ setShowGroupInfo(false)
 
 const deleteGroup = async () =>{
   try {
-    const res = await axios.delete(`${import.meta.env.VITE_BASE_URL_HTTP}/group/delete-group/${group.id}`,{
+    const res = await axios.delete(`${import.meta.env.VITE_BASE_URL_HTTP}/group/delete-group/${group.id}/${userId}`,{
       withCredentials:true
     })
     if(res.status === 200){
-      toast.success("Group Delete")
+      toast.success("Group Deleted")
       setSelectedGroup(null)
       setShowGroupInfo(false)
       ws.current.send(

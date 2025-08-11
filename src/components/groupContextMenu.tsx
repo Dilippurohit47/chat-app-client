@@ -16,7 +16,7 @@ const user = useSelector((state:RootState)=>state.user)
 console.log()
 const deleteGroup = async () =>{
   try {
-    const res = await axios.delete(`${import.meta.env.VITE_BASE_URL_HTTP}/group/delete-group/${groupId}`,{
+    const res = await axios.delete(`${import.meta.env.VITE_BASE_URL_HTTP}/group/delete-group/${groupId}/${user.id}`,{
       withCredentials:true
     })
     if(res.status === 200){

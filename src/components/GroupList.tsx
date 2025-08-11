@@ -13,6 +13,7 @@ const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: 
   const [openContextMenu , setOpenContextMenu] = useState<string | null>(null)
   const {ws } = useWebSocket()
   useEffect(() => {
+    if(!ws.current) return
     const fetchGroups = async () => {
       try {
         const response = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/group`,{

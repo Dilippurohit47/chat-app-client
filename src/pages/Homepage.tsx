@@ -144,7 +144,7 @@ console.log(selectedUser, isMobile);
         </Tabs>
       </div>
       {/* Chat Window Section */}
-      <div className="w-3/4 md:w-[100vw] bg-red-500  ">
+      <div className="w-3/4 md:w-[100vw] ">
         {selectedUser && (
           <ChatWindow
             logedInUser={user}
