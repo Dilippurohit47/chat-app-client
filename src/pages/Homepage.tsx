@@ -63,11 +63,28 @@ const {ws ,connected ,setConnected ,connectionBooleanRef} = useWebSocket()
   const [selectedTab, setSelectedTab] = useState("");
   const [chatId, setChatId] = useState<string | null>("");
   const [messages, setMessages] = useState<MessageType[] | []>([]);
+  const [isMobile,setIsMobile] = useState<boolean>(false)
+
+useEffect(() => {
+  const handleScreenSize = () => {
+    setIsMobile(window.innerWidth < 521);
+  };
+
+  // Run once on mount to set initial state
+  handleScreenSize();
+
+  window.addEventListener("resize", handleScreenSize);
+  return () => {
+    window.removeEventListener("resize", handleScreenSize);
+  };
+}, []);
+
+console.log(selectedUser, isMobile);
 
   return (
-    <div className="flex h-[84.5vh] md:flex-col  md:h-[calc(100vh-3rem)]  justify-center mx-auto my-auto hide-scrollbar">
-      <div className="w-1/4 md:hidden shadow-2xl rounded-md border-r border-gray-300 border-2 mr-2">
-        <Tabs defaultValue="online-users" className="w-[300px]">
+    <div className="flex h-[84.5vh] md:h-[calc(100vh-3rem)]  justify-center mx-auto my-auto sm:mx-0 hide-scrollbar ">
+      <div className={` shadow-2xl rounded-md border-r border-gray-300 border-2  sm:mr-0  ${isMobile && !(selectedUser === null) ? " hidden -translate-x-[100%] w-0" :"w-1/4  sm:w-full"} `}>
+        <Tabs  defaultValue="online-users" className={`w-[300px] sm:w-full`}>
           <TabsList className="w-full border-2 ">
             <TabsTrigger
               value="online-users"
@@ -127,7 +144,7 @@ const {ws ,connected ,setConnected ,connectionBooleanRef} = useWebSocket()
         </Tabs>
       </div>
       {/* Chat Window Section */}
-      <div className="w-3/4 md:w-full bg-gray-500  md:flex-1 ">
+      <div className="w-3/4 md:w-[100vw] bg-red-500  ">
         {selectedUser && (
           <ChatWindow
             logedInUser={user}
@@ -141,7 +158,7 @@ const {ws ,connected ,setConnected ,connectionBooleanRef} = useWebSocket()
           />
         )}
         {!selectedUser && !selectedGroup && (
-          <div className="flex bg-[#1e1e2e] items-center justify-center h-full text-gray-200 rounded-md text-[1.1rem] md:rounded-none  ">
+          <div className="flex bg-[#1e1e2e] sm:hidden  items-center justify-center h-full text-gray-200 rounded-md text-[1.1rem] md:rounded-none  ">
             {user.isLogin
               ? selectedTab !== "group-list"
                 ? "select a user and start chating"

@@ -91,7 +91,7 @@ const UserList = ({
     setRecentChatUsers((prev) =>prev.filter(({chatId}) => chatId !== deletedChatId ))
   }
   return (
-    <div className="px-3 py-1 w-full md:px-1 ">
+    <div className="px-3 py-1 w-full md:px-1  ">
       <h2 className="text-[1.2rem]  flex justify-center items-center gap-2 font-semibold mb-2">
         {" "}
         {logedInUser.isLogin
@@ -104,11 +104,11 @@ const UserList = ({
         {recentChatUsers?.length > 0
           ? recentChatUsers.map((user) => {
               return (
-               <div className="relative">
+               <div className="relative w-full ">
                   <li
                     onContextMenu={(e) => handleContextMenu(e, user)}
                     key={user.chatId}
-                    className={`p-3 md:p-1 cursor-pointer lg:w-[20vw]  rounded-lg  b flex  ${
+                    className={`p-3 md:p-1 cursor-pointer w-[20vw] sm:w-full   rounded-lg  b flex  ${
                       selectedUser?.id === user.id
                         ? "bg-[#008080d6] text-white" 
                         : "bg-gray-200 "
