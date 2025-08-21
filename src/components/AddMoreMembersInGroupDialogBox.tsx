@@ -5,7 +5,6 @@ import { XIcon } from "lucide-react";
 
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -72,7 +71,6 @@ const addMembers = (id: string) => {
     }
   });
 };
-console.log(addedMembers)
   const [error, setError] = useState<string>("");
  
   const AddNewMembersInGroup = async () => {
@@ -87,6 +85,7 @@ console.log(addedMembers)
       if (res.status === 200) {
         toast.success(" New memebers Added");
         setDialogOpen(false)
+        setAddedMembers([])
       }
     } catch (error) {
       toast.error(error?.data?.message);
@@ -114,7 +113,7 @@ setFilterUsers(newArray)
         </button>
       </DialogTrigger>
          
-      <DialogContent className="sm:max-w-[425px] h-[30rem]! gap-2 ">
+      <DialogContent className="sm:max-w-[425px] h-[30rem]! gap-2  bg-white max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Add new members</DialogTitle>
           <DialogDescription>
@@ -127,9 +126,9 @@ setFilterUsers(newArray)
         <div className="grid gap-4 py-2 ">
           <div className="flex items-center gap-4">
             <Label htmlFor="name" className="text-right">
-              Name
+              Name :
             </Label>
-            {selectedGroup.name}
+           <span className=" after:content-['']   after:block after:h-[1px] after:bg-gray-400 ">{selectedGroup.name}</span>
           </div>
           <div className="text-red-500">{error && error}</div>
         </div>
@@ -157,7 +156,7 @@ setFilterUsers(newArray)
                         alt=""
                         className="w-8 h-8 rounded-full object-cover"
                       />
-                      <h1> {u.name}</h1>
+                      <h1 className=""> {u.name}</h1>
                     </div>
                     <button
                       className="   text-white  text-[0.8rem] text-center cursor-pointer "
@@ -181,7 +180,7 @@ setFilterUsers(newArray)
 </div>
 
 
-          <Button className="cursor-pointer" onClick={AddNewMembersInGroup}>
+          <Button className="cursor-pointer bg-blue-500 text-white max-w-[100%]" onClick={AddNewMembersInGroup}>
             Add
           </Button>
         </DialogFooter>

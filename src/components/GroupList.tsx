@@ -119,7 +119,7 @@ const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: 
               );
             })
           : connected
-          ? "oops no groups available"
+          ? "create new group"
           : ""}
       </ul>
     </div>
