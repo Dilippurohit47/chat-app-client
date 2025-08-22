@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../store";
+import { useDispatch } from "react-redux";
 import { saveUser } from "../slices/userSlice";
 import { GoPlus } from "react-icons/go";
 import { RxCross2 } from "react-icons/rx";
@@ -80,7 +79,6 @@ const SignUp = () => {
 
   const uploadImageToS3 = async () => {
     try {
-      console.log("uploading")
       setImageUploading(true);
       const res = await axios.post(
         `${import.meta.env.VITE_BASE_URL_HTTP}/aws/get-presigned-url-s3`,

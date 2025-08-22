@@ -43,7 +43,6 @@ useEffect(() =>{
           setOnlineUsers(filterData);
         }
         }
-
       ws.current.onclose = () => {
         console.log("WebSocket connection closed");
         setConnected(false);

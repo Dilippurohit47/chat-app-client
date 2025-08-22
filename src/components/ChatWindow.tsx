@@ -5,7 +5,7 @@ import { IoMdSearch } from "react-icons/io";
 import SearchBarForChat from "../components/SearchBarForChat";
 import { UserType } from "../slices/userSlice";
 import { toast } from "react-toastify";
-import { CloudFog, Turtle } from "lucide-react";
+import { RxCross2 } from "react-icons/rx";
 
 import { BiSolidSend } from "react-icons/bi";
 import { useWebSocket } from "../context/webSocket";
@@ -63,29 +63,44 @@ const ws = websocket.current
   const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
   const [initialLoad ,setInitialLoad] = useState(true)
   const messageInputRef = useRef<HTMLInputElement | null>(null)
-  const newMessage = (sender: string, content: string, receiver: string) => {
+const  [mediaFile,setMediaFile] = useState([])
+
+  const newMessage = (sender: string, content: string, receiver: string,isMedia:boolean) => {
     return {
       senderId: sender,
       content: content,
       receiverId: receiver,
       chatId:chatId,
       createdAt: Date.now(),
+      isMedia:isMedia,
     };
   };
   const sendMessage = async () => {
     if (!logedInUser.isLogin) return toast.error("Login first ");
     if (!ws) return toast.error("server error!");
-    ws.send(
-      JSON.stringify({
-        type: "personal-msg",
-        message: input,
-        receiverId: selectedUser.id,
-        senderId,
-        chatId,
-      })
-    );
-    const msg = newMessage(senderId, input, selectedUser.id!);
+    // ws.send(
+    //   JSON.stringify({
+    //     type: "personal-msg",
+    //     message: input,
+    //     receiverId: selectedUser.id,
+    //     senderId,
+    //     chatId,
+    //   })
+    // );
+
+    if(mediaFile.length > 0){
+    mediaFile.forEach((url) =>{
+        const msg = newMessage(senderId, url, selectedUser.id!,true);
     setMessages((prev) => [msg,...prev]);
+    setMediaFile((prev) =>prev.filter((currentUrl) => currentUrl !== url))
+    })
+
+    }else{
+      const msg = newMessage(senderId, input, selectedUser.id! ,false);
+    setMessages((prev) => [msg,...prev]);
+
+    }
+  
     setInput("");
   };
   useEffect(() => {
@@ -185,12 +200,10 @@ useEffect(() =>{
   setInitialLoad(false)
 },[messages])
   useEffect(() => {
-    console.log("from wssss",ws)
     if (!ws || !selectedUser) return;
     const getMessage = (m) => {
       const data = JSON.parse(m.data);
       if (data.type === "personal-msg") {
-        console.log("data",data)
         if (
           (data.receiverId === logedInUser.id &&
             data.senderId === selectedUser.id) ||
@@ -316,7 +329,18 @@ useEffect(() =>{
       return newIndex < findMessagesIds.length ? newIndex : prevIndex;
     });
   };
+const handleFileChange = (e) => {
+  const files = Array.from(e.target.files || []); 
 
+  setMediaFile((prev) => [
+    ...prev,
+    ...files.map(file => URL.createObjectURL(file)) 
+  ]);
+};
+
+const removeImage =(imageUrl:string) =>{
+  setMediaFile((prev) =>prev.filter((url) => url !== imageUrl))
+}
   return (
     <div className="flex  relative    md:h-full   flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl md:p-0  md:rounded-[0] ">
       <div className=" px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
@@ -369,11 +393,23 @@ useEffect(() =>{
             <div
               key={message.id}
               ref={(el) => setRefs(el, message.id!, isLast)}
-              className={`mb-4 ${
-                message.senderId === senderId ? "text-right" : "text-left"
+              className={`mb-4 flex    gap-2 ${
+                message.senderId === senderId ? "justify-end" : "justify-start"
               }`}
             >
-              <div
+          <div> 
+               {
+              message.isMedia ?  <img
+              src={message.content}
+                className={`block p-3 rounded-lg object-cover ${
+                  message.senderId === senderId
+                    ? " h-[200px] w-[200px]"
+                    : " h-[200px] w-[200px]"
+                }
+              `}
+              />
+              
+              :  <div
                 className={`inline-block p-3 rounded-lg ${
                   message.senderId === senderId
                     ? "bg-blue-500 text-white"
@@ -383,24 +419,50 @@ useEffect(() =>{
               >
                 {message.content}
               </div>
-              <div className="text-xs text-gray-500 mt-1">
+
+             }
+              <div className="text-xs  text-end text-gray-500 mt-1">
                 {formatDate(message.createdAt)}
               </div>
+          </div>
             </div>
+
+            
           );
         })}
       </div>
       <div className="mt-4 flex gap-2 justify-center items-center md:p-2 md:mt-2 md:absolute bottom-0  md:w-full sm:gap-1 ">
-        <input
+        {
+          mediaFile.length <= 0 ? <input
           value={input}
           type="text"
           placeholder="Type a message..."
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="w-full p-3 border sm:p-2 border-gray-300 rounded-lg focus:outline-none text-black focus:border-blue-500"
+          className="w-full p-3 border sm:p-2  border-gray-300 rounded-lg focus:outline-none text-black focus:border-blue-500"
           ref={messageInputRef}
         />
 
+ : 
+ <div
+          className="w-full  border p-2  gap-4 flex justify-start rounded-lg focus:outline-none bg-white text-black focus:border-blue-500"
+ 
+ > 
+{
+  mediaFile?.map((img) =>{
+   return   <div className="relative inline-block ">
+   <img
+ src={img}
+          className=" h-20 w-20 border object-cover relative  rounded-lg "
+        />
+       <div className="absolute top-1 right-1 cursor-pointer " onClick={() =>removeImage(img)}>
+         <RxCross2 className="text-white"/>
+        </div>
+  </div>
+  })
+}
+</div>
+        }
         <label htmlFor="file-input">
           <MdOutlineAttachment
             className="text-gray-300 rotate-120 hover:text-gray-500 cursor-pointer text-[1.8rem] sm:text-[1.5rem] sm:hover:text-gray-300"
@@ -409,12 +471,14 @@ useEffect(() =>{
         <input
           id="file-input"
           type="file"
-          className="hidden w-0 h-0 "
+          className="hidden w-0 h-0"
+          onChange={handleFileChange}
+          multiple
         />
         <button
           className="ml-2 p-2 bg-blue-500 hover:bg-blue-700 text-white
         rounded-lg focus:outline-none  focus:bg-blue-700 cursor-pointer text-[1.3rem] sm:text-sm md:bg-gray-500 sm:hover:bg-gray-500"          onClick={sendMessage}
-          disabled={!input.length}
+          disabled={!input.length && !mediaFile.length}
         >
         <BiSolidSend />
         </button>
@@ -422,5 +486,4 @@ useEffect(() =>{
     </div>
   );
 };
-
 export default ChatWindow;
