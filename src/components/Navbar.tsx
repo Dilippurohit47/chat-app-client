@@ -12,6 +12,7 @@ import { RootState } from "../store";
 import axios from "axios";
 import CreateGroupDialogBox from "./CreateGroupDialogBox";
 import { useWebSocket } from "../context/webSocket";
+import {logout} from "../slices/userSlice"
 const Navbar = () => {
     const user = useSelector((state:RootState) =>state.user)      
     const dispatch = useDispatch()

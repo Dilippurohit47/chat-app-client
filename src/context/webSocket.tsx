@@ -2,12 +2,15 @@
 import { createContext, useRef, useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
+import { onlineUsersType } from "../components/totalUserList";
 
 const WebSocketContext = createContext<WebSocket | null>(null);
 
 export const WebSocketProvider = ({ children }) => {
   const ws = useRef<WebSocket | null>(null);
   const connectionBooleanRef = useRef<boolean>(false);
+  const [onlineUsers, setOnlineUsers] = useState<onlineUsersType[]>([]);
+
   const user = useSelector((state: RootState) => state.user);
   const [connected, setConnected] = useState<boolean>(false);
 
@@ -30,6 +33,16 @@ useEffect(() =>{
          }
        };
 
+         ws.current.onmessage=(m) =>{
+ const data = JSON.parse(m.data);
+        console.log("online data",data)
+        if (data.type === "online-users") {
+          const filterData = data?.onlineUsers.filter(
+            (c: onlineUsersType) => c.id !== user.id
+          );
+          setOnlineUsers(filterData);
+        }
+        }
 
       ws.current.onclose = () => {
         console.log("WebSocket connection closed");
@@ -56,7 +69,7 @@ useEffect(() =>{
 
 },[user])
   return (
-    <WebSocketContext.Provider value={{ws , connected ,setConnected ,connectionBooleanRef}}>
+    <WebSocketContext.Provider value={{ws , connected ,setConnected ,connectionBooleanRef ,onlineUsers}}>
       {children}
     </WebSocketContext.Provider>
   );

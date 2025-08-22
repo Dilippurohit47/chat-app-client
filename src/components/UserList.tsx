@@ -90,6 +90,7 @@ const UserList = ({
   const deletechat = (deletedChatId:string) =>{
     setRecentChatUsers((prev) =>prev.filter(({chatId}) => chatId !== deletedChatId ))
   }
+  // console.log("online",onlineUsers)
   return (
     <div className="px-3 py-1 w-full md:px-1  ">
       <h2 className="text-[1.2rem]  flex justify-center items-center gap-2 font-semibold mb-2">
@@ -104,11 +105,11 @@ const UserList = ({
         {recentChatUsers?.length > 0
           ? recentChatUsers.map((user) => {
               return (
-               <div className="relative w-full ">
+               <div className="relative w-full  ">
                   <li
                     onContextMenu={(e) => handleContextMenu(e, user)}
                     key={user.chatId}
-                    className={`p-3 md:p-1 cursor-pointer w-[20vw] sm:w-full   rounded-lg  b flex  ${
+                    className={`p-3 md:p-1 cursor-pointer  sm:w-full rounded-lg  b flex  ${
                       selectedUser?.id === user.id
                         ? "bg-[#008080d6] text-white" 
                         : "bg-gray-200 "
@@ -132,7 +133,7 @@ const UserList = ({
                           {user?.name}
                         </div>
                         {onlineUsers &&
-                        onlineUsers.map((u) => u.userId).includes(user.id) ? (
+                        onlineUsers.map((u) => u).includes(user.id) ? (
                           <div className="bg-green-500  rounded-3xl h-2 w-2"></div>
                         ) : (
                           <div className="bg-gray-500  rounded-3xl h-2 w-2"></div>

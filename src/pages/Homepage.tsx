@@ -21,29 +21,24 @@ function Home() {
   const dispatch = useDispatch();
 
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
-  const [onlineUsers, setOnlineUsers] = useState<onlineUsersType[]>([]);
   const [selectedGroup, setSelectedGroup] = useState();
   const user = useSelector((state: RootState) => state.user); 
 
-const {ws ,connected ,setConnected ,connectionBooleanRef} = useWebSocket()
+const {ws ,connected ,setConnected ,connectionBooleanRef ,onlineUsers} = useWebSocket()
   useEffect(() => {
     if(!ws.current) return
     console.log("rund")
      
-
       ws.current.onerror = (e) => {
         console.error("WebSocket error:", e);
         setConnected(false);
       };
-      ws.current.onmessage = (m) => {
-        const data = JSON.parse(m.data);
-        if (data.type === "online-users") {
-          const filterData = data?.onlineUsers.filter(
-            (c: onlineUsersType) => c.id !== user.id
-          );
-          setOnlineUsers(filterData);
-        }
+     const  messageHandler = (m) => {
+       
       };
+
+    ws.current.addEventListener("message", messageHandler);
+      
 
   }, [connected]);
   useEffect(() => {
