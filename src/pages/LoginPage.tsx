@@ -4,12 +4,14 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { saveUser } from "../slices/userSlice";
 import { toast } from "react-toastify";
+import { LuEyeClosed } from "react-icons/lu";
+import { MdOutlineRemoveRedEye } from "react-icons/md";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-
+  const [showPassword,setShowPassword] = useState(false)
 
 const dispatch = useDispatch()
   const handleSubmit = async (e) => {
@@ -83,7 +85,7 @@ const dispatch = useDispatch()
               required
             />
           </div>
-          <div className="mb-6">
+          <div className="mb-6 relative">
             <label
               htmlFor="password"
               className="block text-sm font-medium text-gray-700"
@@ -91,7 +93,7 @@ const dispatch = useDispatch()
               Password
             </label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -99,6 +101,9 @@ const dispatch = useDispatch()
               placeholder="Enter your password"
               required
             />
+            {
+              !showPassword ? <div className="cursor-pointer absolute right-4 top-9" onClick={()=>setShowPassword(true)}>  <LuEyeClosed /></div> : <div className="cursor-pointer absolute right-4 top-9"  onClick={()=>setShowPassword(false)}>  <MdOutlineRemoveRedEye /></div>
+            }
           </div>
           <button
             type="submit"

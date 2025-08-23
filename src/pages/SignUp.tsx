@@ -6,6 +6,8 @@ import { saveUser } from "../slices/userSlice";
 import { GoPlus } from "react-icons/go";
 import { RxCross2 } from "react-icons/rx";
 import { toast } from "react-toastify";
+import { LuEyeClosed } from "react-icons/lu";
+import { MdOutlineRemoveRedEye } from "react-icons/md";
 const SignUp = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,6 +18,8 @@ const SignUp = () => {
   const [selectedFile, setSelctedFile] = useState();
   const [imageUploading, setImageUploading] = useState<boolean>(false);
   const [isImageUploaded, setIsImageUploaded] = useState(false);
+    const [showPassword,setShowPassword] = useState(false)
+  
   const dispatch = useDispatch();     
   const navigate = useNavigate();
   useEffect(() => {
@@ -220,7 +224,7 @@ uploadImageToS3()
               required
             />
           </div>
-          <div className="mb-6">
+          <div className="mb-6 relative">
             <label
               htmlFor="password"
               className="block text-sm font-medium text-gray-700 text-start"
@@ -228,7 +232,7 @@ uploadImageToS3()
               Password
             </label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -236,6 +240,12 @@ uploadImageToS3()
               placeholder="Enter your password"
               required
             />
+
+
+            {
+              !showPassword ? <div className="cursor-pointer absolute right-4 top-9" onClick={()=>setShowPassword(true)}>  <LuEyeClosed /></div> : <div className="cursor-pointer absolute right-4 top-9"  onClick={()=>setShowPassword(false)}>  <MdOutlineRemoveRedEye /></div>
+            }
+
           </div>
           <button
             type="submit"
