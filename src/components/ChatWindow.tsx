@@ -67,19 +67,34 @@ const ws = websocket.current
 const  [mediaFile,setMediaFile] = useState([])
 const [sendedFiles,setSendedFiles] = useState([])
 
-const newMessage = (sender: string, content: string, receiver: string,isMedia:boolean ,
-  tempId:string,uploading:boolean) => {
+function newMessage({
+  senderId,
+  content,
+  receiverId,
+  tempId,
+  isMedia = false,
+  uploading = false,
+  error = false
+}: {
+  senderId: string;
+  content: string;
+  receiverId: string;
+  tempId?: string;
+  uploading?:boolean;
+  isMedia?: boolean;
+  error?:boolean;
+}) {
 
     return {
       tempId:tempId || 0,
-      senderId: sender,
+      senderId: senderId,
       content: content,
-      receiverId: receiver,
+      receiverId: receiverId,
       chatId:chatId,
       createdAt: Date.now(),
       isMedia:isMedia,
       uploading:uploading,
-      error:false
+      error:error
     };
   };
   const sendMessage = async () => {
@@ -100,7 +115,7 @@ if(sendedFiles.length <= 0){
     if(sendedFiles.length > 0){
     sendedFiles.forEach(async(img) =>{
       const tempId = uuid()
-        const msg = newMessage(senderId, img.url, selectedUser.id!,true ,tempId,true);
+        const msg = newMessage({senderId, content:img.url, receiverId:selectedUser.id!,isMedia:true ,tempId:tempId,error:false ,uploading:true});
     setMessages((prev) => [msg,...prev]);
     setMediaFile((prev) =>prev.filter((img) => img.imageId !== img.imageId))
 
@@ -160,7 +175,8 @@ if(sendedFiles.length <= 0){
     })
 
     }else{
-      const msg = newMessage(senderId, input, selectedUser.id! ,false);
+        const msg = newMessage({senderId, content:input, receiverId:selectedUser.id!,isMedia:false ,tempId:"0",error:false,uploading:false});
+
     setMessages((prev) => [msg,...prev]);
 
     }
@@ -275,7 +291,8 @@ useEffect(() =>{
           (data.senderId === logedInUser.id &&
             data.receiverId === selectedUser.id)
         ) {
-          const msg = newMessage(data.senderId, data.message, data.receiverId,data.isMedia,false);
+        const msg = newMessage({senderId:data.senderId, content:data.message, receiverId:data.receiverId,isMedia:data.isMedia ,tempId:"0",error:false,uploading:false});
+
           setMessages((prev) => [msg,...prev]);
         }
       }
