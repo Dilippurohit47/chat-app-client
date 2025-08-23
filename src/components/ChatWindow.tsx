@@ -5,6 +5,7 @@ import { IoMdSearch } from "react-icons/io";
 import SearchBarForChat from "../components/SearchBarForChat";
 import { UserType } from "../slices/userSlice";
 import { toast } from "react-toastify";
+import {v4 as uuid} from "uuid"
 import { RxCross2 } from "react-icons/rx";
 
 import { BiSolidSend } from "react-icons/bi";
@@ -64,35 +65,98 @@ const ws = websocket.current
   const [initialLoad ,setInitialLoad] = useState(true)
   const messageInputRef = useRef<HTMLInputElement | null>(null)
 const  [mediaFile,setMediaFile] = useState([])
+const [sendedFiles,setSendedFiles] = useState([])
 
-  const newMessage = (sender: string, content: string, receiver: string,isMedia:boolean) => {
+const newMessage = (sender: string, content: string, receiver: string,isMedia:boolean ,
+  tempId:string,uploading:boolean) => {
+
     return {
+      tempId:tempId || 0,
       senderId: sender,
       content: content,
       receiverId: receiver,
       chatId:chatId,
       createdAt: Date.now(),
       isMedia:isMedia,
+      uploading:uploading,
+      error:false
     };
   };
   const sendMessage = async () => {
     if (!logedInUser.isLogin) return toast.error("Login first ");
     if (!ws) return toast.error("server error!");
-    // ws.send(
-    //   JSON.stringify({
-    //     type: "personal-msg",
-    //     message: input,
-    //     receiverId: selectedUser.id,
-    //     senderId,
-    //     chatId,
-    //   })
-    // );
+if(sendedFiles.length <= 0){
+      ws.send(
+      JSON.stringify({
+        type: "personal-msg",
+        message: input,
+        receiverId: selectedUser.id,
+        senderId,
+        chatId,
+      })
+    );
+}
 
-    if(mediaFile.length > 0){
-    mediaFile.forEach((url) =>{
-        const msg = newMessage(senderId, url, selectedUser.id!,true);
+    if(sendedFiles.length > 0){
+    sendedFiles.forEach(async(img) =>{
+      const tempId = uuid()
+        const msg = newMessage(senderId, img.url, selectedUser.id!,true ,tempId,true);
     setMessages((prev) => [msg,...prev]);
-    setMediaFile((prev) =>prev.filter((currentUrl) => currentUrl !== url))
+    setMediaFile((prev) =>prev.filter((img) => img.imageId !== img.imageId))
+
+   const res = await axios.post(
+        `${import.meta.env.VITE_BASE_URL_HTTP}/aws/get-presigned-url-s3-media`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+      if(res.status === 200){
+        const signedInUrl = res.data.url
+        const uploadedToAws =  await axios.put(signedInUrl,img.file,{headers:{"Content-Type":img.file.type}}) 
+        if(uploadedToAws.status !== 200){
+          console.log("failed to upload iamge",uploadedToAws)
+          setSendedFiles((prev) =>prev.filter((img) =>img.imageId !== img.imageId))
+
+               setMessages((prev) =>prev.map((msg) => {
+            if(msg?.tempId === tempId){
+              return {
+                ...msg,
+                uploading:false,
+                error:true
+              }
+            }else{
+               return msg
+            }
+          }))
+
+        }else{
+          console.log("image successfully uploaed to s3")
+             ws.send(
+      JSON.stringify({
+        type: "personal-msg",
+        message: signedInUrl?.split("?")[0],
+        receiverId: selectedUser.id,
+        senderId,
+        chatId,
+        isMedia:true
+      })
+    );
+
+          setSendedFiles((prev) =>prev.filter((img) =>img.imageId !== img.imageId))
+                setMessages((prev) =>prev.map((msg) => {
+            if(msg?.tempId === tempId){
+              return {
+                ...msg,
+                uploading:false,
+                error:false
+              }
+            }else{
+               return msg
+            }
+          }))
+        }
+      }
     })
 
     }else{
@@ -204,13 +268,14 @@ useEffect(() =>{
     const getMessage = (m) => {
       const data = JSON.parse(m.data);
       if (data.type === "personal-msg") {
+        console.log(data)
         if (
           (data.receiverId === logedInUser.id &&
             data.senderId === selectedUser.id) ||
           (data.senderId === logedInUser.id &&
             data.receiverId === selectedUser.id)
         ) {
-          const msg = newMessage(data.senderId, data.message, data.receiverId);
+          const msg = newMessage(data.senderId, data.message, data.receiverId,data.isMedia,false);
           setMessages((prev) => [msg,...prev]);
         }
       }
@@ -278,8 +343,6 @@ useEffect(() =>{
   };
 
 
-
-
   useEffect(() => {
     const container = messageContainerRef.current;
     if (!container) return;
@@ -293,10 +356,6 @@ useEffect(() =>{
     }
   }, [messages]); 
   
-
-
-
-
   const [messageIndex, setMessageIndex] = useState<number | null>(null);
   const scrollToFindMessageForward = () => {
     if (findMessagesIds.length === 0) return;
@@ -329,18 +388,37 @@ useEffect(() =>{
       return newIndex < findMessagesIds.length ? newIndex : prevIndex;
     });
   };
+
 const handleFileChange = (e) => {
   const files = Array.from(e.target.files || []); 
+  const uniqueId = uuid()
+setMediaFile((prev) => [
+  ...prev,
+  ...files.map((file) => ({
+    imageId: uniqueId,
+    url: URL.createObjectURL(file)
+  }))
+]);
 
-  setMediaFile((prev) => [
-    ...prev,
-    ...files.map(file => URL.createObjectURL(file)) 
-  ]);
+const mappedFiles = files.map((f) => ({
+  imageId: uniqueId,
+  file: f,  
+  url:URL.createObjectURL(f)
+}));
+
+setSendedFiles((prev) => [...prev,...mappedFiles])
+
+
 };
 
-const removeImage =(imageUrl:string) =>{
-  setMediaFile((prev) =>prev.filter((url) => url !== imageUrl))
+const removeImage =(image) =>{
+  setMediaFile((prev) =>prev.filter((img) => img.imageId !== image.imageId))
+
+  setSendedFiles((prev) =>prev.filter((file) => {
+    return file.imageId !== image.imageId
+  }))
 }
+console.log(messages)
   return (
     <div className="flex  relative    md:h-full   flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl md:p-0  md:rounded-[0] ">
       <div className=" px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
@@ -390,7 +468,7 @@ const removeImage =(imageUrl:string) =>{
         {messages.slice().reverse().map((message, index) => {
           const isLast = index === messages.length - 1;
           return (
-            <div
+            <div 
               key={message.id}
               ref={(el) => setRefs(el, message.id!, isLast)}
               className={`mb-4 flex    gap-2 ${
@@ -399,16 +477,23 @@ const removeImage =(imageUrl:string) =>{
             >
           <div> 
                {
-              message.isMedia ?  <img
+              message.isMedia ? <div className="relative   "> <img
               src={message.content}
-                className={`block p-3 rounded-lg object-cover ${
+                className={`block  rounded-lg object-cover ${
                   message.senderId === senderId
                     ? " h-[200px] w-[200px]"
                     : " h-[200px] w-[200px]"
                 }
               `}
-              />
               
+              />
+  {
+    message?.uploading && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+  <div className="w-10 h-10 border-4 border-t-green-600 border-gray-300 rounded-full animate-spin"></div>
+</div>
+
+  }
+              </div>
               :  <div
                 className={`inline-block p-3 rounded-lg ${
                   message.senderId === senderId
@@ -449,10 +534,10 @@ const removeImage =(imageUrl:string) =>{
  
  > 
 {
-  mediaFile?.map((img) =>{
-   return   <div className="relative inline-block ">
+  mediaFile?.map((img ,index) =>{
+   return   <div className="relative inline-block " key={index}>
    <img
- src={img}
+ src={img.url}
           className=" h-20 w-20 border object-cover relative  rounded-lg "
         />
        <div className="absolute top-1 right-1 cursor-pointer " onClick={() =>removeImage(img)}>
