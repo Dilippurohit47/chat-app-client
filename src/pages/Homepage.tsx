@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import "../App.css";
 import UserList from "../components/UserList";
 import ChatWindow, { MessageType } from "../components/ChatWindow";
-import axios from "axios";
+import { axios } from "../apiClient";
+
 import {
   Tabs,
   TabsContent,
@@ -11,7 +12,7 @@ import {
 } from "../components/ui/tabs";
 import TotalUserList, { onlineUsersType } from "../components/totalUserList";
 import { useDispatch, useSelector } from "react-redux";
-import { saveUser, UserType } from "../slices/userSlice";
+import { saveUser, UserType, saveAccessToken ,logout } from "../slices/userSlice";
 import { RootState } from "../store";
 import GroupList from "../components/GroupList";
 import GroupChatWindow from "../components/GroupChatWindow";
@@ -22,64 +23,105 @@ function Home() {
 
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
   const [selectedGroup, setSelectedGroup] = useState();
-  const user = useSelector((state: RootState) => state.user); 
-
-const {ws ,connected ,setConnected ,connectionBooleanRef ,onlineUsers} = useWebSocket()
+  const user = useSelector((state: RootState) => state.user);
+  const { ws, connected, setConnected, connectionBooleanRef, onlineUsers } = useWebSocket();
   useEffect(() => {
-    if(!ws.current) return
-    console.log("rund")
-     
-      ws.current.onerror = (e) => {
-        console.error("WebSocket error:", e);
-        setConnected(false);
-      };
-     const  messageHandler = (m) => {
-       
-      };
+    if (!ws.current) return;
 
+    ws.current.onerror = (e) => {
+      console.error("WebSocket error:", e);
+      setConnected(false);
+    };
+    const messageHandler = (m) => {};
     ws.current.addEventListener("message", messageHandler);
-      
-
   }, [connected]);
   useEffect(() => {
-    const getUser = async () => {
+    const getAccessToken = async () => {
       const res = await axios.get(
-        `${import.meta.env.VITE_BASE_URL_HTTP}/user/get-user`,
+        `${import.meta.env.VITE_BASE_URL_HTTP}/user/refresh`,
         {
           withCredentials: true,
         }
       );
+
       if (res.status === 200) {
-        dispatch(saveUser(res.data));
+        console.log("get access token",res.data)
+        dispatch(saveAccessToken(res.data));
+      }
+      if(res.status == 403){
+        getAccessToken()
+      }
+      if(res.status !== 403 && res.status !== 200){
+        dispatch(logout())
+      }
+    };
+if(!user.accessToken){
+    getAccessToken();
+}
+  }, []);
+  useEffect(() => {
+    const getUser = async () => {
+      const res = await axios.get(
+        `${import.meta.env.VITE_BASE_URL_HTTP}/user/get-user`,
+{
+  headers:{
+    Authorization:`Bearer ${user.accessToken}`
+  },
+          withCredentials: true,
+          
+        }
+      );
+      if (res.status === 200) {
+        dispatch(saveUser(res.data.user));
       }
     };
     getUser();
-  }, []);
+  }, [user.accessToken]);
   const [selectedTab, setSelectedTab] = useState("");
   const [chatId, setChatId] = useState<string | null>("");
   const [messages, setMessages] = useState<MessageType[] | []>([]);
-  const [isMobile,setIsMobile] = useState<boolean>(false)
+  const [isMobile, setIsMobile] = useState<boolean>(false);
 
-useEffect(() => {
-  const handleScreenSize = () => {
-    setIsMobile(window.innerWidth < 521);
-  };
+  useEffect(() => {
+    const handleScreenSize = () => {
+      setIsMobile(window.innerWidth < 521);
+    };
 
-  // Run once on mount to set initial state
-  handleScreenSize();
+    // Run once on mount to set initial state
+    handleScreenSize();
 
-  window.addEventListener("resize", handleScreenSize);
-  return () => {
-    window.removeEventListener("resize", handleScreenSize);
-  };
-}, []);
+    window.addEventListener("resize", handleScreenSize);
+    return () => {
+      window.removeEventListener("resize", handleScreenSize);
+    };
+  }, []);
 
-console.log(selectedUser, isMobile);
+
+  const lolo = async() =>{
+    console.log("object",user)
+      const res = await axios.get(
+        `${import.meta.env.VITE_BASE_URL_HTTP}/user/checking`,
+{
+  headers:{
+    Authorization:`Bearer ${user.accessToken}`
+  },
+          withCredentials: true,
+          
+        }
+      );
+
+  }
 
   return (
     <div className="flex h-[84.5vh] md:h-[calc(100vh-3rem)]  justify-center mx-auto my-auto sm:mx-0 hide-scrollbar ">
-      <div className={` shadow-2xl rounded-md border-r border-gray-300 border-2  sm:mr-0  ${isMobile && !(selectedUser === null) ? " hidden -translate-x-[100%] w-0" :"w-1/4  sm:w-full"} `}>
-        <Tabs  defaultValue="online-users" className={`w-[300px] sm:w-full`}>
+      <div
+        className={` shadow-2xl rounded-md border-r border-gray-300 border-2  sm:mr-0  ${
+          isMobile && !(selectedUser === null)
+            ? " hidden -translate-x-[100%] w-0"
+            : "w-1/4  sm:w-full"
+        } `}
+      >
+        <Tabs defaultValue="online-users" className={`w-[300px] sm:w-full`}>
           <TabsList className="w-full border-2 ">
             <TabsTrigger
               value="online-users"
@@ -171,8 +213,8 @@ console.log(selectedUser, isMobile);
             setSelectedGroup={setSelectedGroup}
           />
         )}
+        <button onClick={lolo}>lol</button>
       </div>
-     
     </div>
   );
 }

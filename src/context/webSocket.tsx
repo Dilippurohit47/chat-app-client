@@ -22,12 +22,12 @@ useEffect(() =>{
       ws.current = new WebSocket(`ws://localhost:${8000}`);
      ws.current.onopen = () => {
          if (ws.current?.readyState === WebSocket.OPEN) {
-           ws.current.send(
-             JSON.stringify({
-               type: "user-info",
-               userId: user.id,
-             })
-           );
+          //  ws.current.send(
+          //    JSON.stringify({
+          //      type: "user-info",
+          //      userId: user.id,
+          //    })
+          //  );
            connectionBooleanRef.current = true;
            setConnected(true)
          }

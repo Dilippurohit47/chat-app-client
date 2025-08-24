@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { onlineUsersType } from "./totalUserList";
-import axios from "axios";
+import { axios } from "../apiClient";;
 import { useWebSocket } from "../context/webSocket";
 import { ContextMenu } from "@radix-ui/react-context-menu";
 import GroupContextMenuDialogBox from "./groupContextMenu";

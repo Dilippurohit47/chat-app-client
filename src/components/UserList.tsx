@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { axios } from "../apiClient";;
 import { UserType } from "../slices/userSlice";
 import { onlineUsersType } from "../components/totalUserList";
 import ContextMenuDialogBox from "./contextMenuDialogBox";
@@ -53,7 +53,7 @@ const UserList = ({
   }, [logedInUser]);
 
   useEffect(() => {
-    if (!ws) return;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
     const messageHandler = (m: any) => {
       const data = JSON.parse(m.data);
       if (data.type === "recent-chats") {

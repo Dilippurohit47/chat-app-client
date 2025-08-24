@@ -1,4 +1,4 @@
-import axios from "axios";
+import { axios } from "../apiClient";;
 import { useEffect, useRef, useState } from "react";
 import { MdOutlineAttachment } from "react-icons/md";
 import { IoMdSearch } from "react-icons/io";

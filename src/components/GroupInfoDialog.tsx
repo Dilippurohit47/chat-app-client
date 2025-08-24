@@ -1,4 +1,4 @@
-import axios from "axios";
+import { axios } from "../apiClient";;
 import { useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import { useWebSocket } from "../context/webSocket";

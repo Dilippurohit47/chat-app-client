@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { axios } from "../apiClient";
+
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { saveUser } from "../slices/userSlice";
@@ -33,8 +34,8 @@ const dispatch = useDispatch()
         navigate("/");
       }
     } catch (err) {
-      console.log(err.response.data.message)
-      setError(err.response.data.message);
+      console.log(err.response?.data?.message)
+      setError(err.response?.data?.message);
       console.log("Login error:", err);
     }
   };
@@ -48,7 +49,7 @@ const dispatch = useDispatch()
         }
       );
       if (res.status === 200) {
-        dispatch(saveUser(res.data));
+        dispatch(saveUser(res.data)); 
         navigate("/")
       }
     };

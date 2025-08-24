@@ -9,7 +9,7 @@ import {
 } from "./ui/dropdown-menu";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
-import axios from "axios";
+import { axios } from "../apiClient";;
 import CreateGroupDialogBox from "./CreateGroupDialogBox";
 import { useWebSocket } from "../context/webSocket";
 import {logout} from "../slices/userSlice"

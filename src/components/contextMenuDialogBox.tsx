@@ -1,4 +1,4 @@
-import axios from "axios";
+import { axios } from "../apiClient";;
 import { FiTrash, FiX, FiUserX } from "react-icons/fi";
 import { LuMessageSquareOff } from "react-icons/lu";
 import { useSelector } from "react-redux";

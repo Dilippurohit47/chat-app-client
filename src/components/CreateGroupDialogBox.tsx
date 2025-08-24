@@ -15,7 +15,7 @@ import { Label } from "./ui/label";
 
 import { FiPlus } from "react-icons/fi";
 import { FiMinus } from "react-icons/fi";
-import axios from "axios";
+import { axios } from "../apiClient";;
 import { toast } from "react-toastify";
 import { UserListProps } from "./UserList";
 import { RootState } from "../store";
