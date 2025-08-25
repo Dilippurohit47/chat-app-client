@@ -284,7 +284,7 @@ useEffect(() =>{
     const getMessage = (m) => {
       const data = JSON.parse(m.data);
       if (data.type === "personal-msg") {
-        console.log(data)
+        console.log("personal mdg",data)
         if (
           (data.receiverId === logedInUser.id &&
             data.senderId === selectedUser.id) ||
@@ -435,7 +435,6 @@ const removeImage =(image) =>{
     return file.imageId !== image.imageId
   }))
 }
-console.log(messages)
   return (
     <div className="flex  relative    md:h-full   flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl md:p-0  md:rounded-[0] ">
       <div className=" px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">

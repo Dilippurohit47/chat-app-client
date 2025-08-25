@@ -46,7 +46,7 @@ function Home() {
 
       if (res.status === 200) {
         console.log("get access token",res.data)
-        dispatch(saveAccessToken(res.data));
+        dispatch(saveAccessToken({accessToken:res.data.accessToken}));
       }
       if(res.status == 403){
         getAccessToken()
@@ -72,6 +72,7 @@ if(!user.accessToken){
         }
       );
       if (res.status === 200) {
+        console.log("user data",res)
         dispatch(saveUser(res.data.user));
       }
     };
