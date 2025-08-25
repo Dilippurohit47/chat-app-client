@@ -34,6 +34,11 @@ const UserList = ({
   setMessages,
 }: UserListProps) => {
   const [recentChatUsers, setRecentChatUsers] = useState<ChatUser[]>([]);
+
+  const [userIsTyping,setUserIsTyping] = useState([])
+
+
+
   useEffect(() => {
     const getTotalUsers = async () => {
       const res = await axios.get(
@@ -59,6 +64,13 @@ const UserList = ({
       if (data.type === "recent-chats") {
         setRecentChatUsers(data.chats);
       }
+         if(data.type === "user-is-typing"){
+        setUserIsTyping((prev) =>[...prev , data.senderId])
+      }
+         if(data.type === "user-stopped-typing"){
+        setUserIsTyping((prev) =>prev.filter((id) => id !== data.senderId))
+      }
+
     };
     ws.send(
       JSON.stringify({
@@ -90,7 +102,18 @@ const UserList = ({
   const deletechat = (deletedChatId:string) =>{
     setRecentChatUsers((prev) =>prev.filter(({chatId}) => chatId !== deletedChatId ))
   }
-  // console.log("online",onlineUsers)
+
+
+  const typingStop = () => {
+      if(!ws) return
+    ws.send(
+      JSON.stringify({
+        receiverId: selectedUser.id,
+        type: "typing-stop",
+        senderId: logedInUser.id,
+      })
+    );
+  };
   return (
     <div className="px-3 py-1 w-full md:px-1  ">
       <h2 className="text-[1.2rem]  flex justify-center items-center gap-2 font-semibold mb-2">
@@ -148,7 +171,7 @@ const UserList = ({
                       >
                         <span className="max-w-[8rem] overflow-hidden truncate">
                           {" "}
-                          {user?.lastMessage}
+                          {userIsTyping.includes(user.id) ? "Typing..." :user?.lastMessage }
                         </span>
                         <div className="flex gap-1 justify-center items-center ">
                           {user.chatId !== selectedUser?.chatId &&

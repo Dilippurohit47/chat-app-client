@@ -1,11 +1,11 @@
-import { axios } from "../apiClient";;
+import { axios } from "../apiClient";
 import { useEffect, useRef, useState } from "react";
 import { MdOutlineAttachment } from "react-icons/md";
 import { IoMdSearch } from "react-icons/io";
 import SearchBarForChat from "../components/SearchBarForChat";
 import { UserType } from "../slices/userSlice";
 import { toast } from "react-toastify";
-import {v4 as uuid} from "uuid"
+import { v4 as uuid } from "uuid";
 import { RxCross2 } from "react-icons/rx";
 
 import { BiSolidSend } from "react-icons/bi";
@@ -39,7 +39,7 @@ interface ChatWindowProps {
   selectedUser: selectedChat;
   setSelectedUser: (state: null) => void;
   logedInUser: UserType;
-  chatId:string;
+  chatId: string;
 }
 
 const ChatWindow = ({
@@ -53,134 +53,160 @@ const ChatWindow = ({
 }: ChatWindowProps) => {
   const [input, setInput] = useState<string>("");
   const chatWindowRef: React.RefObject<HTMLDivElement | null> = useRef(null);
-const {ws:websocket} = useWebSocket()
-const ws = websocket.current
+  const { ws: websocket } = useWebSocket();
+  const ws: WebSocket = websocket.current;
   const [openSearchBar, setOpenSearchBar] = useState<boolean>(false);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [findMessagesIds, setFindMessagesIds] = useState<string[]>([]);
   const [cursorId, setCursorId] = useState<string | null>(null);
-  const [loadingMoreChat,setLoadingMoreChat] = useState<boolean>(false)
+  const [loadingMoreChat, setLoadingMoreChat] = useState<boolean>(false);
   const messageContainerRef = useRef<HTMLDivElement>(null);
-  const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
-  const [initialLoad ,setInitialLoad] = useState(true)
-  const messageInputRef = useRef<HTMLInputElement | null>(null)
-const  [mediaFile,setMediaFile] = useState([])
-const [sendedFiles,setSendedFiles] = useState([])
+  const [hasMoreMsg, setHasMoreMsg] = useState<boolean>(false);
+  const [initialLoad, setInitialLoad] = useState(true);
+  const messageInputRef = useRef<HTMLInputElement | null>(null);
+  const [mediaFile, setMediaFile] = useState([]);
+  const [sendedFiles, setSendedFiles] = useState([]);
 
-function newMessage({
-  senderId,
-  content,
-  receiverId,
-  tempId,
-  isMedia = false,
-  uploading = false,
-  error = false
-}: {
-  senderId: string;
-  content: string;
-  receiverId: string;
-  tempId?: string;
-  uploading?:boolean;
-  isMedia?: boolean;
-  error?:boolean;
-}) {
-
+  function newMessage({
+    senderId,
+    content,
+    receiverId,
+    tempId,
+    isMedia = false,
+    uploading = false,
+    error = false,
+  }: {
+    senderId: string;
+    content: string;
+    receiverId: string;
+    tempId?: string;
+    uploading?: boolean;
+    isMedia?: boolean;
+    error?: boolean;
+  }) {
     return {
-      tempId:tempId || 0,
+      tempId: tempId || 0,
       senderId: senderId,
       content: content,
       receiverId: receiverId,
-      chatId:chatId,
+      chatId: chatId,
       createdAt: Date.now(),
-      isMedia:isMedia,
-      uploading:uploading,
-      error:error
+      isMedia: isMedia,
+      uploading: uploading,
+      error: error,
     };
-  };
+  }
   const sendMessage = async () => {
     if (!logedInUser.isLogin) return toast.error("Login first ");
     if (!ws) return toast.error("server error!");
-if(sendedFiles.length <= 0){
+    if (sendedFiles.length <= 0) {
       ws.send(
-      JSON.stringify({
-        type: "personal-msg",
-        message: input,
-        receiverId: selectedUser.id,
-        senderId,
-        chatId,
-      })
-    );
-}
-
-    if(sendedFiles.length > 0){
-    sendedFiles.forEach(async(img) =>{
-      const tempId = uuid()
-        const msg = newMessage({senderId, content:img.url, receiverId:selectedUser.id!,isMedia:true ,tempId:tempId,error:false ,uploading:true});
-    setMessages((prev) => [msg,...prev]);
-    setMediaFile((prev) =>prev.filter((img) => img.imageId !== img.imageId))
-
-   const res = await axios.post(
-        `${import.meta.env.VITE_BASE_URL_HTTP}/aws/get-presigned-url-s3-media`,
-        {},
-        {
-          withCredentials: true,
-        }
+        JSON.stringify({
+          type: "personal-msg",
+          message: input,
+          receiverId: selectedUser.id,
+          senderId,
+          chatId,
+        })
       );
-      if(res.status === 200){
-        const signedInUrl = res.data.url
-        const uploadedToAws =  await axios.put(signedInUrl,img.file,{headers:{"Content-Type":img.file.type}}) 
-        if(uploadedToAws.status !== 200){
-          console.log("failed to upload iamge",uploadedToAws)
-          setSendedFiles((prev) =>prev.filter((img) =>img.imageId !== img.imageId))
-
-               setMessages((prev) =>prev.map((msg) => {
-            if(msg?.tempId === tempId){
-              return {
-                ...msg,
-                uploading:false,
-                error:true
-              }
-            }else{
-               return msg
-            }
-          }))
-
-        }else{
-          console.log("image successfully uploaed to s3")
-             ws.send(
-      JSON.stringify({
-        type: "personal-msg",
-        message: signedInUrl?.split("?")[0],
-        receiverId: selectedUser.id,
-        senderId,
-        chatId,
-        isMedia:true
-      })
-    );
-
-          setSendedFiles((prev) =>prev.filter((img) =>img.imageId !== img.imageId))
-                setMessages((prev) =>prev.map((msg) => {
-            if(msg?.tempId === tempId){
-              return {
-                ...msg,
-                uploading:false,
-                error:false
-              }
-            }else{
-               return msg
-            }
-          }))
-        }
-      }
-    })
-
-    }else{
-        const msg = newMessage({senderId, content:input, receiverId:selectedUser.id!,isMedia:false ,tempId:"0",error:false,uploading:false});
-
-    setMessages((prev) => [msg,...prev]);
-
     }
-  
+
+    if (sendedFiles.length > 0) {
+      sendedFiles.forEach(async (img) => {
+        const tempId = uuid();
+        const msg = newMessage({
+          senderId,
+          content: img.url,
+          receiverId: selectedUser.id!,
+          isMedia: true,
+          tempId: tempId,
+          error: false,
+          uploading: true,
+        });
+        setMessages((prev) => [msg, ...prev]);
+        setMediaFile((prev) =>
+          prev.filter((img) => img.imageId !== img.imageId)
+        );
+
+        const res = await axios.post(
+          `${
+            import.meta.env.VITE_BASE_URL_HTTP
+          }/aws/get-presigned-url-s3-media`,
+          {},
+          {
+            withCredentials: true,
+          }
+        );
+        if (res.status === 200) {
+          const signedInUrl = res.data.url;
+          const uploadedToAws = await axios.put(signedInUrl, img.file, {
+            headers: { "Content-Type": img.file.type },
+          });
+          if (uploadedToAws.status !== 200) {
+            console.log("failed to upload iamge", uploadedToAws);
+            setSendedFiles((prev) =>
+              prev.filter((img) => img.imageId !== img.imageId)
+            );
+
+            setMessages((prev) =>
+              prev.map((msg) => {
+                if (msg?.tempId === tempId) {
+                  return {
+                    ...msg,
+                    uploading: false,
+                    error: true,
+                  };
+                } else {
+                  return msg;
+                }
+              })
+            );
+          } else {
+            console.log("image successfully uploaed to s3");
+            ws.send(
+              JSON.stringify({
+                type: "personal-msg",
+                message: signedInUrl?.split("?")[0],
+                receiverId: selectedUser.id,
+                senderId,
+                chatId,
+                isMedia: true,
+              })
+            );
+
+            setSendedFiles((prev) =>
+              prev.filter((img) => img.imageId !== img.imageId)
+            );
+            setMessages((prev) =>
+              prev.map((msg) => {
+                if (msg?.tempId === tempId) {
+                  return {
+                    ...msg,
+                    uploading: false,
+                    error: false,
+                  };
+                } else {
+                  return msg;
+                }
+              })
+            );
+          }
+        }
+      });
+    } else {
+      const msg = newMessage({
+        senderId,
+        content: input,
+        receiverId: selectedUser.id!,
+        isMedia: false,
+        tempId: "0",
+        error: false,
+        uploading: false,
+      });
+
+      setMessages((prev) => [msg, ...prev]);
+    }
+
     setInput("");
   };
   useEffect(() => {
@@ -191,24 +217,26 @@ if(sendedFiles.length <= 0){
 
   useEffect(() => {
     if (!selectedUser) return;
-    // chatWindowRef.current?.scrollIntoView({ behavior: "instant" });
+  
     const getChats = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`, {
-          params: {
-            senderId: senderId,
-            receiverId: selectedUser.id,
-            limit: 20,
-            cursor: undefined,
-          },
-        });
+        const res = await axios.get(
+          `${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`,
+          {
+            params: {
+              senderId: senderId,
+              receiverId: selectedUser.id,
+              limit: 20,
+              cursor: undefined,
+            },
+          }
+        );
         if (res.status === 200) {
-
           setMessages(res.data.messages);
           setCursorId(res.data.cursor);
           setHasMoreMsg(res.data.hasMore);
         }
-      } catch (error) { 
+      } catch (error) {
         console.log(error);
       }
     };
@@ -223,11 +251,22 @@ if(sendedFiles.length <= 0){
       );
     };
 
-    if(messageInputRef.current){
-      messageInputRef.current.focus()
+    if (messageInputRef.current) {
+      messageInputRef.current.focus();
     }
 
-    setInitialLoad(true)
+    if(prevConvertationref.current){
+       ws.send(
+      JSON.stringify({
+        receiverId: prevConvertationref.current,
+        type: "typing-stop",
+        senderId: logedInUser.id,
+      })
+    );
+prevConvertationref.current = ""
+    }
+
+    setInitialLoad(true);
     getChats();
     updateUnreadCount();
     setOpenSearchBar(false);
@@ -242,22 +281,26 @@ if(sendedFiles.length <= 0){
         try {
           const scrollHeightBefore = container.scrollHeight;
           const scrollTopBefore = container.scrollTop;
-          const res = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`, {
-            params: {
-              senderId: senderId,
-              receiverId: selectedUser.id,
-              limit: 20,
-              cursor: JSON.stringify(cursorId),
-            },
-          });
+          const res = await axios.get(
+            `${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`,
+            {
+              params: {
+                senderId: senderId,
+                receiverId: selectedUser.id,
+                limit: 20,
+                cursor: JSON.stringify(cursorId),
+              },
+            }
+          );
           if (res.status === 200) {
-            setMessages(prev => [ ...prev, ...res.data.messages]);
+            setMessages((prev) => [...prev, ...res.data.messages]);
             setCursorId(res.data.cursor);
             setHasMoreMsg(res.data.hasMore);
             requestAnimationFrame(() => {
-              if (messageContainerRef.current){
-              container.scrollTop = container.scrollHeight - scrollHeightBefore + scrollTopBefore;
-              } 
+              if (messageContainerRef.current) {
+                container.scrollTop =
+                  container.scrollHeight - scrollHeightBefore + scrollTopBefore;
+              }
             });
           }
         } catch (error) {
@@ -273,34 +316,52 @@ if(sendedFiles.length <= 0){
     };
   }, [selectedUser, cursorId, hasMoreMsg]);
 
-
-useEffect(() =>{
-  if(!chatWindowRef.current || !initialLoad) return
-  chatWindowRef.current?.scrollIntoView({ behavior: "instant" });
-  setInitialLoad(false)
-},[messages])
+  useEffect(() => {
+    if (!chatWindowRef.current || !initialLoad) return;
+    chatWindowRef.current?.scrollIntoView({ behavior: "instant" });
+    setInitialLoad(false);
+  }, [messages]);
   useEffect(() => {
     if (!ws || !selectedUser) return;
     const getMessage = (m) => {
       const data = JSON.parse(m.data);
       if (data.type === "personal-msg") {
-        console.log("personal mdg",data)
+        console.log("personal mdg", data);
         if (
           (data.receiverId === logedInUser.id &&
             data.senderId === selectedUser.id) ||
           (data.senderId === logedInUser.id &&
             data.receiverId === selectedUser.id)
         ) {
-        const msg = newMessage({senderId:data.senderId, content:data.message, receiverId:data.receiverId,isMedia:data.isMedia ,tempId:"0",error:false,uploading:false});
+          const msg = newMessage({
+            senderId: data.senderId,
+            content: data.message,
+            receiverId: data.receiverId,
+            isMedia: data.isMedia,
+            tempId: "0",
+            error: false,
+            uploading: false,
+          });
 
-          setMessages((prev) => [msg,...prev]);
+          setMessages((prev) => [msg, ...prev]);
         }
       }
     };
     ws.addEventListener("message", getMessage);
 
+    const handleClickOutSideMessageInput =(e) =>{
+      if(messageInputRef.current && !messageInputRef.current.contains(e.target)){
+        typingStop()
+      }
+    }
+
+    window.addEventListener('click',handleClickOutSideMessageInput)
+
+
+    
     return () => {
       ws.removeEventListener("message", getMessage);
+      window.removeEventListener('click',handleClickOutSideMessageInput)
     };
   }, [selectedUser]);
   const formatDate = (newDate: number) => {
@@ -325,7 +386,6 @@ useEffect(() =>{
           chatId: selectedUser.chatId,
         }
       );
-
     };
     updateUnreadCount();
   }, [messages]);
@@ -333,6 +393,7 @@ useEffect(() =>{
   const handleKeyDown = (e: any) => {
     if (e.key === "Enter") {
       sendMessage();
+      typingStop()
     }
   };
   const setRefs = (
@@ -359,20 +420,20 @@ useEffect(() =>{
     }
   };
 
-
   useEffect(() => {
     const container = messageContainerRef.current;
     if (!container) return;
-  
 
-    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 500;
+    const isNearBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight <
+      500;
     if (isNearBottom && messages.length > 0) {
       setTimeout(() => {
         container.scrollTop = container.scrollHeight;
       }, 0);
     }
-  }, [messages]); 
-  
+  }, [messages]);
+
   const [messageIndex, setMessageIndex] = useState<number | null>(null);
   const scrollToFindMessageForward = () => {
     if (findMessagesIds.length === 0) return;
@@ -406,41 +467,76 @@ useEffect(() =>{
     });
   };
 
-const handleFileChange = (e) => {
-  const files = Array.from(e.target.files || []); 
-  const uniqueId = uuid()
-setMediaFile((prev) => [
-  ...prev,
-  ...files.map((file) => ({
-    imageId: uniqueId,
-    url: URL.createObjectURL(file)
-  }))
-]);
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    const uniqueId = uuid();
+    setMediaFile((prev) => [
+      ...prev,
+      ...files.map((file) => ({
+        imageId: uniqueId,
+        url: URL.createObjectURL(file),
+      })),
+    ]);
 
-const mappedFiles = files.map((f) => ({
-  imageId: uniqueId,
-  file: f,  
-  url:URL.createObjectURL(f)
-}));
+    const mappedFiles = files.map((f) => ({
+      imageId: uniqueId,
+      file: f,
+      url: URL.createObjectURL(f),
+    }));
 
-setSendedFiles((prev) => [...prev,...mappedFiles])
+    setSendedFiles((prev) => [...prev, ...mappedFiles]);
+  };
+
+  const removeImage = (image) => {
+    setMediaFile((prev) => prev.filter((img) => img.imageId !== image.imageId));
+
+    setSendedFiles((prev) =>
+      prev.filter((file) => {
+        return file.imageId !== image.imageId;
+      })
+    );
+  };
+
+  const prevConvertationref = useRef("")
 
 
-};
+  const userIsTyping = () => {
+    try {
+      ws.send(
+        JSON.stringify({
+          type: "typing",
+          senderId: logedInUser.id,
+          receiverId: selectedUser.id,
+        })
+      );
+      prevConvertationref.current = selectedUser.id
+    } catch (error) {
+      console.log("error in sending typing state", error);
+    }
+  };
 
-const removeImage =(image) =>{
-  setMediaFile((prev) =>prev.filter((img) => img.imageId !== image.imageId))
 
-  setSendedFiles((prev) =>prev.filter((file) => {
-    return file.imageId !== image.imageId
-  }))
-}
+
+  const typingStop = () => {
+    ws.send(
+      JSON.stringify({
+        receiverId: selectedUser.id,
+        type: "typing-stop",
+        senderId: logedInUser.id,
+      })
+    );
+  };
+
   return (
     <div className="flex  relative    md:h-full   flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl md:p-0  md:rounded-[0] ">
       <div className=" px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
         <div className="flex justify-between items-center gap-3">
           <img
-           src={selectedUser?.profileUrl ? selectedUser.profileUrl : "https://github.com/shadcn.png"}
+            src={
+              selectedUser?.profileUrl
+                ? selectedUser.profileUrl
+                : "https://github.com/shadcn.png"
+            }
             className="h-8 w-8 object-cover rounded-full"
             alt=""
           />
@@ -470,104 +566,106 @@ const removeImage =(image) =>{
         scrollToFindMessageForward={scrollToFindMessageForward}
         scrollToFindMessageBackward={scrollToFindMessageBackward}
       />
- {
-  loadingMoreChat &&  <div className="flex justify-center ">
-  <svg className="loader" viewBox="25 25 50 50">
-  <circle r="20" cy="50" cx="50"></circle>
-</svg>
-  </div>
- }
+      {loadingMoreChat && (
+        <div className="flex justify-center ">
+          <svg className="loader" viewBox="25 25 50 50">
+            <circle r="20" cy="50" cx="50"></circle>
+          </svg>
+        </div>
+      )}
       <div
         ref={messageContainerRef}
         className="flex-1 md:flex-none overflow-y-auto hide-scrollbar md:px-1 md:py-1   mt-2  md:h-[75vh]  "
       >
-        {messages.slice().reverse().map((message, index) => {
-          const isLast = index === messages.length - 1;
-          return (
-            <div 
-              key={message.id}
-              ref={(el) => setRefs(el, message.id!, isLast)}
-              className={`mb-4 flex    gap-2 ${
-                message.senderId === senderId ? "justify-end" : "justify-start"
-              }`}
-            >
-          <div> 
-               {
-              message.isMedia ? <div className="relative   "> <img
-              src={message.content}
-                className={`block  rounded-lg object-cover ${
+        {messages
+          .slice()
+          .reverse()
+          .map((message, index) => {
+            const isLast = index === messages.length - 1;
+            return (
+              <div
+                key={message.id}
+                ref={(el) => setRefs(el, message.id!, isLast)}
+                className={`mb-4 flex    gap-2 ${
                   message.senderId === senderId
-                    ? " h-[200px] w-[200px]"
-                    : " h-[200px] w-[200px]"
-                }
-              `}
-              
-              />
-  {
-    message?.uploading && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-  <div className="w-10 h-10 border-4 border-t-green-600 border-gray-300 rounded-full animate-spin"></div>
-</div>
-
-  }
-              </div>
-              :  <div
-                className={`inline-block p-3 rounded-lg ${
-                  message.senderId === senderId
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 text-gray-800"
-                }
-              `}
+                    ? "justify-end"
+                    : "justify-start"
+                }`}
               >
-                {message.content}
+                <div>
+                  {message.isMedia ? (
+                    <div className="relative   ">
+                      {" "}
+                      <img
+                        src={message.content}
+                        className={`block  rounded-lg object-cover ${
+                          message.senderId === senderId
+                            ? " h-[200px] w-[200px]"
+                            : " h-[200px] w-[200px]"
+                        }
+              `}
+                      />
+                      {message?.uploading && (
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                          <div className="w-10 h-10 border-4 border-t-green-600 border-gray-300 rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div
+                      className={`inline-block p-3 rounded-lg ${
+                        message.senderId === senderId
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-200 text-gray-800"
+                      }
+              `}
+                    >
+                      {message.content}
+                    </div>
+                  )}
+                  <div className="text-xs  text-end text-gray-500 mt-1">
+                    {formatDate(message.createdAt)}
+                  </div>
+                </div>
               </div>
-
-             }
-              <div className="text-xs  text-end text-gray-500 mt-1">
-                {formatDate(message.createdAt)}
-              </div>
-          </div>
-            </div>
-
-            
-          );
-        })}
+            );
+          })}
       </div>
       <div className="mt-4 flex gap-2 justify-center items-center md:p-2 md:mt-2 md:absolute bottom-0  md:w-full sm:gap-1 ">
-        {
-          mediaFile.length <= 0 ? <input
-          value={input}
-          type="text"
-          placeholder="Type a message..."
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="w-full p-3 border sm:p-2  border-gray-300 rounded-lg focus:outline-none text-black focus:border-blue-500"
-          ref={messageInputRef}
-        />
-
- : 
- <div
-          className="w-full  border p-2  gap-4 flex justify-start rounded-lg focus:outline-none bg-white text-black focus:border-blue-500"
- 
- > 
-{
-  mediaFile?.map((img ,index) =>{
-   return   <div className="relative inline-block " key={index}>
-   <img
- src={img.url}
-          className=" h-20 w-20 border object-cover relative  rounded-lg "
-        />
-       <div className="absolute top-1 right-1 cursor-pointer " onClick={() =>removeImage(img)}>
-         <RxCross2 className="text-white"/>
-        </div>
-  </div>
-  })
-}
-</div>
-        }
-        <label htmlFor="file-input">
-          <MdOutlineAttachment
-            className="text-gray-300 rotate-120 hover:text-gray-500 cursor-pointer text-[1.8rem] sm:text-[1.5rem] sm:hover:text-gray-300"
+        {mediaFile.length <= 0 ? (
+          <input
+            value={input}
+            type="text"
+            placeholder="Type a message..."
+            onChange={(e) => {
+              userIsTyping(), setInput(e.target.value);
+            }}
+            onKeyDown={handleKeyDown}
+            className="w-full p-3 border sm:p-2  border-gray-300 rounded-lg focus:outline-none text-black focus:border-blue-500"
+            ref={messageInputRef}
           />
+        ) : (
+          <div className="w-full  border p-2  gap-4 flex justify-start rounded-lg focus:outline-none bg-white text-black focus:border-blue-500">
+            {mediaFile?.map((img, index) => {
+              return (
+                <div className="relative inline-block " key={index}>
+                  <img
+                    src={img.url}
+                    className=" h-20 w-20 border object-cover relative  rounded-lg "
+                  />
+                  <div
+                    className="absolute top-1 right-1 cursor-pointer "
+                    onClick={() => removeImage(img)}
+                  >
+                    <RxCross2 className="text-white" />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <label htmlFor="file-input">
+          <MdOutlineAttachment className="text-gray-300 rotate-120 hover:text-gray-500 cursor-pointer text-[1.8rem] sm:text-[1.5rem] sm:hover:text-gray-300" />
         </label>
         <input
           id="file-input"
@@ -578,10 +676,13 @@ const removeImage =(image) =>{
         />
         <button
           className="ml-2 p-2 bg-blue-500 hover:bg-blue-700 text-white
-        rounded-lg focus:outline-none  focus:bg-blue-700 cursor-pointer text-[1.3rem] sm:text-sm md:bg-gray-500 sm:hover:bg-gray-500"          onClick={sendMessage}
+        rounded-lg focus:outline-none  focus:bg-blue-700 cursor-pointer text-[1.3rem] sm:text-sm md:bg-gray-500 sm:hover:bg-gray-500"
+          onClick={() => {
+            typingStop(), sendMessage();
+          }}
           disabled={!input.length && !mediaFile.length}
         >
-        <BiSolidSend />
+          <BiSolidSend />
         </button>
       </div>
     </div>
