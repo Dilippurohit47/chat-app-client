@@ -66,6 +66,13 @@ const ChatWindow = ({
   const messageInputRef = useRef<HTMLInputElement | null>(null);
   const [mediaFile, setMediaFile] = useState([]);
   const [sendedFiles, setSendedFiles] = useState([]);
+ 
+  interface Msg {
+    selectedUserId:string,
+    input:string,
+  }
+  const incompletInputMsgRef = useRef<Msg[]>([])
+
 
   function newMessage({
     senderId,
@@ -207,6 +214,18 @@ const ChatWindow = ({
       setMessages((prev) => [msg, ...prev]);
     }
 
+      incompletInputMsgRef.current = incompletInputMsgRef.current.map((inc) => {
+        if(inc.selectedUserId === selectedUser.id){
+          return {
+            ...inc,
+            input:""
+          }
+        }else{
+          return inc
+        }
+      })
+
+
     setInput("");
   };
   useEffect(() => {
@@ -217,7 +236,13 @@ const ChatWindow = ({
 
   useEffect(() => {
     if (!selectedUser) return;
-  
+
+      const incompleteInput = incompletInputMsgRef.current.find((inc) => inc.selectedUserId === selectedUser.id)
+    if(incompleteInput){
+      setInput(incompleteInput?.input)
+    }if(!incompleteInput){
+      setInput("")
+    }
     const getChats = async () => {
       try {
         const res = await axios.get(
@@ -356,8 +381,6 @@ prevConvertationref.current = ""
     }
 
     window.addEventListener('click',handleClickOutSideMessageInput)
-
-
     
     return () => {
       ws.removeEventListener("message", getMessage);
@@ -527,6 +550,8 @@ prevConvertationref.current = ""
     );
   };
 
+  console.log("ref",incompletInputMsgRef)
+
   return (
     <div className="flex  relative    md:h-full   flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl md:p-0  md:rounded-[0] ">
       <div className=" px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
@@ -639,6 +664,19 @@ prevConvertationref.current = ""
             placeholder="Type a message..."
             onChange={(e) => {
               userIsTyping(), setInput(e.target.value);
+             const existing = incompletInputMsgRef.current.find(
+  (inc) => inc.selectedUserId === selectedUser.id
+);
+
+if (existing) {
+  existing.input = e.target.value; 
+} else {
+  incompletInputMsgRef.current.push({
+    selectedUserId: selectedUser.id,
+    input: e.target.value
+  });
+}
+
             }}
             onKeyDown={handleKeyDown}
             className="w-full p-3 border sm:p-2  border-gray-300 rounded-lg focus:outline-none text-black focus:border-blue-500"
