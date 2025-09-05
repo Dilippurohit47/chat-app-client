@@ -4,9 +4,18 @@ import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import { onlineUsersType } from "../components/totalUserList";
 
-const WebSocketContext = createContext<WebSocket | null>(null);
 
-export const WebSocketProvider = ({ children }) => {
+export interface WebSocketContextType {
+  ws: React.MutableRefObject<WebSocket | null>;
+  connected: boolean;
+  setConnected: React.Dispatch<React.SetStateAction<boolean>>;
+  connectionBooleanRef: React.MutableRefObject<boolean>;
+  onlineUsers: string[];
+}
+
+const WebSocketContext = createContext<WebSocketContextType | null>(null);
+
+export const WebSocketProvider = ({ children }:{children:React.ReactNode}) => {
   const ws = useRef<WebSocket | null>(null);
   const connectionBooleanRef = useRef<boolean>(false);
   const [onlineUsers, setOnlineUsers] = useState<onlineUsersType[]>([]);
@@ -37,9 +46,11 @@ useEffect(() =>{
  const data = JSON.parse(m.data);
         console.log("online data",data)
         if (data.type === "online-users") {
+          console.log("online ",data)
           const filterData = data?.onlineUsers.filter(
             (c: onlineUsersType) => c.id !== user.id
           );
+          console.log("online",filterData)
           setOnlineUsers(filterData);
         }
         }
@@ -67,6 +78,7 @@ useEffect(() =>{
     };
 
 },[user])
+
   return (
     <WebSocketContext.Provider value={{ws , connected ,setConnected ,connectionBooleanRef ,onlineUsers}}>
       {children}
@@ -74,4 +86,10 @@ useEffect(() =>{
   );
 };
 
-export const useWebSocket = () => useContext(WebSocketContext);
+export const useWebSocket = () => {
+  const context = useContext(WebSocketContext);
+  if (!context) {
+    throw new Error("useWebSocket must be used within a WebSocketProvider");
+  }
+  return context;
+};

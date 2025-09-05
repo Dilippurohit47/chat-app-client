@@ -3,9 +3,9 @@ import { FiTrash, FiX, FiUserX } from "react-icons/fi";
 import { LuMessageSquareOff } from "react-icons/lu";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
-import { useEffect, useRef } from "react";
+import { SetStateAction, useEffect, useRef } from "react";
 
-const ContextMenuDialogBox = ({ open, setOpen,userId ,chatId ,onSelectUser ,deletechat ,setMessages}:{open:null | string , userId:string ,setOpen:()=>void,setMessages:(state:[])=>void,onSelectUser:(state:null)=>void}) => {
+const ContextMenuDialogBox = ({ open, setOpen,userId ,chatId ,onSelectUser ,deletechat ,setMessages}:{open:null | string , userId:string ,setOpen:React.Dispatch<SetStateAction<string | null >>, chatId:string,setMessages:(state:[])=>void,onSelectUser:(state:null)=>void ,deletechat:(state:string) =>void})=> {
   const isOpen = !!open;
 
  const user = useSelector((state:RootState) =>state.user)  
@@ -48,9 +48,9 @@ onSelectUser(null)
 const contextMenuRef = useRef<HTMLDivElement | null >(null)
 
 useEffect(() =>{
-    const handleClickOutside =(e)=>{
+    const handleClickOutside =(e:MouseEvent)=>{
         
-        if(contextMenuRef.current && !contextMenuRef.current.contains(e.target)){
+        if(contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)){
             setOpen(null)
         }
     }
@@ -76,7 +76,7 @@ useEffect(() =>{
           key={index}
           onClick={(e) => { e.preventDefault()
             if (option.onClick) option.onClick();
-            setOpen(); 
+            setOpen(null); 
           }}
           className="flex items-center gap-2 px-4 py-2 text-start text-sm font-[500] hover:bg-gray-100 cursor-pointer transition-colors"
         >

@@ -1,16 +1,19 @@
-import { useEffect, useState } from "react";
+import React, { SetStateAction, useEffect, useState } from "react";
 import { axios } from "../apiClient";;
 import { UserType } from "../slices/userSlice";
-import { onlineUsersType } from "../components/totalUserList";
 import ContextMenuDialogBox from "./contextMenuDialogBox";
+import { MessageType } from "./ChatWindow";
+import { selectedChatType } from "../pages/Homepage";
 
 export interface UserListProps {
-  selectedUser: any;
-  onSelectUser: (state: null) => void;
+  selectedUser: selectedChatType | null;
+  onSelectUser: React.Dispatch<SetStateAction<selectedChatType | null>>;
   connected: boolean;
-  onlineUsers: onlineUsersType[] | undefined;
+  onlineUsers: string[] | undefined;
   ws: WebSocket | null;
   logedInUser: UserType;
+  setChatId:(state:string) =>void
+  setMessages:React.Dispatch<React.SetStateAction<MessageType[]>>
 }
 type ChatUser = {
   chatId: string;
@@ -33,9 +36,9 @@ const UserList = ({
   setChatId,
   setMessages,
 }: UserListProps) => {
-  const [recentChatUsers, setRecentChatUsers] = useState<ChatUser[]>([]);
+  const [recentChatUsers, setRecentChatUsers] = useState<selectedChatType[]>([]);
 
-  const [userIsTyping,setUserIsTyping] = useState([])
+  const [userIsTyping,setUserIsTyping] = useState<string[]>([])
 
 
 
@@ -46,7 +49,6 @@ const UserList = ({
         { params: { userId: logedInUser.id }, withCredentials: true }
       );
       if (res.status === 200) {
-        console.log(res.data.chats)
         setRecentChatUsers(res.data.chats);
       }
     };
@@ -93,7 +95,7 @@ const UserList = ({
   }
   const [openContextMenu, setOpenContextMenu] = useState<null | string >("");
 
-  const handleContextMenu = (e: Event, user: UserListProps) => {
+  const handleContextMenu = (e: React.MouseEvent<HTMLLIElement, MouseEvent> , user: selectedChatType) => {
     e.preventDefault();
     setOpenContextMenu((prev) => (prev === user.id ? "" : user.id));
   
@@ -104,16 +106,7 @@ const UserList = ({
   }
 
 
-  const typingStop = () => {
-      if(!ws) return
-    ws.send(
-      JSON.stringify({
-        receiverId: selectedUser.id,
-        type: "typing-stop",
-        senderId: logedInUser.id,
-      })
-    );
-  };
+
   return (
     <div className="px-3 py-1 w-full md:px-1  ">
       <h2 className="text-[1.2rem]  flex justify-center items-center gap-2 font-semibold mb-2">

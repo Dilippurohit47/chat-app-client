@@ -10,21 +10,55 @@ import {
   TabsList,
   TabsTrigger,
 } from "../components/ui/tabs";
-import TotalUserList, { onlineUsersType } from "../components/totalUserList";
+import TotalUserList from "../components/totalUserList";
 import { useDispatch, useSelector } from "react-redux";
-import { saveUser, UserType, saveAccessToken ,logout } from "../slices/userSlice";
+import { saveUser, saveAccessToken ,logout } from "../slices/userSlice";
 import { RootState } from "../store";
 import GroupList from "../components/GroupList";
+
 import GroupChatWindow from "../components/GroupChatWindow";
-import { useWebSocket } from "../context/webSocket";
+import { useWebSocket, WebSocketContextType } from "../context/webSocket";
+
+type members = {
+  groupId:string,
+  id:string,
+}
+
+export interface SelectedGroupType {
+id:string,
+name:string,
+  groupProfilePicture?:string,
+members:members[]
+lastMessage?:string
+}
+
+export type unreadCountType = {
+  unreadMessages:number,
+userId:string
+}
+export interface selectedChatType {
+  name:string,
+  chatId:string,
+createdAt:Date,
+email:string,
+id:string,
+lastMessage :string,
+lastMessageCreatedAt:string,
+password:string,
+profileUrl:string,
+refreshToken:String,
+tokenExpiresIn:Date | null,
+unreadCount:unreadCountType
+}
+
 
 function Home() {
   const dispatch = useDispatch();
 
-  const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
-  const [selectedGroup, setSelectedGroup] = useState();
+  const [selectedUser, setSelectedUser] = useState<selectedChatType | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState <SelectedGroupType | null>(null);
   const user = useSelector((state: RootState) => state.user);
-  const { ws, connected, setConnected, connectionBooleanRef, onlineUsers } = useWebSocket();
+  const { ws, connected, setConnected, onlineUsers }:WebSocketContextType  = useWebSocket();
   useEffect(() => {
     if (!ws.current) return;
 
@@ -32,8 +66,6 @@ function Home() {
       console.error("WebSocket error:", e);
       setConnected(false);
     };
-    const messageHandler = (m) => {};
-    ws.current.addEventListener("message", messageHandler);
   }, [connected]);
   useEffect(() => {
     const getAccessToken = async () => {
@@ -80,7 +112,7 @@ if(!user.accessToken){
   }, [user.accessToken]);
   const [selectedTab, setSelectedTab] = useState("");
   const [chatId, setChatId] = useState<string | null>("");
-  const [messages, setMessages] = useState<MessageType[] | []>([]);
+  const [messages, setMessages] = useState<MessageType[]>([]);
   const [isMobile, setIsMobile] = useState<boolean>(false);
 
   useEffect(() => {
@@ -100,7 +132,7 @@ if(!user.accessToken){
 
   const lolo = async() =>{
     console.log("object",user)
-      const res = await axios.get(
+       await axios.get(
         `${import.meta.env.VITE_BASE_URL_HTTP}/user/checking`,
 {
   headers:{

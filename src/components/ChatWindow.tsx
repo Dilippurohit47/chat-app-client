@@ -10,36 +10,51 @@ import { RxCross2 } from "react-icons/rx";
 
 import { BiSolidSend } from "react-icons/bi";
 import { useWebSocket } from "../context/webSocket";
+import { selectedChatType } from "../pages/Homepage";
 export type MessageType = {
   id?: string;
   senderId: String;
   receiverId: String;
   content: string;
   createdAt: number;
+  tempId?:string | null,
+  isMedia?:boolean,
+  uploading?:boolean
 };
-type selectedChat = {
-  chatId: string;
-  createdAt: string; // or `Date` if parsed
-  email: string;
-  id: string;
-  lastMessage: string;
-  lastMessageCreatedAt: string; // or `Date` if parsed
-  name: string;
-  password: string;
-  profileUrl: string;
-  unreadMessages: {
-    userId: string;
-    unreadMessages: number;
-  };
-};
+// type selectedChat = {
+//   chatId: string;
+//   createdAt: string; // or `Date` if parsed
+//   email: string;
+//   id: string;
+//   lastMessage: string;
+//   lastMessageCreatedAt: string; // or `Date` if parsed
+//   name: string;
+//   password: string;
+//   profileUrl: string;
+//   unreadMessages: {
+//     userId: string;
+//     unreadMessages: number;
+//   };
+// };
 
 interface ChatWindowProps {
   ws: WebSocket | null;
   senderId: string;
-  selectedUser: selectedChat;
+  selectedUser: selectedChatType;
   setSelectedUser: (state: null) => void;
   logedInUser: UserType;
-  chatId: string;
+  chatId: string | null;
+  messages:MessageType[]
+  setMessages:React.Dispatch<React.SetStateAction<MessageType[]>>
+}
+interface sendedFileType  {
+imageId: string,
+      file: File,
+      url: string
+}
+interface MediaFileType {
+  imageId:string,
+  url:string
 }
 
 const ChatWindow = ({
@@ -54,7 +69,7 @@ const ChatWindow = ({
   const [input, setInput] = useState<string>("");
   const chatWindowRef: React.RefObject<HTMLDivElement | null> = useRef(null);
   const { ws: websocket } = useWebSocket();
-  const ws: WebSocket = websocket.current;
+  const ws: WebSocket | null = websocket.current;
   const [openSearchBar, setOpenSearchBar] = useState<boolean>(false);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [findMessagesIds, setFindMessagesIds] = useState<string[]>([]);
@@ -64,9 +79,10 @@ const ChatWindow = ({
   const [hasMoreMsg, setHasMoreMsg] = useState<boolean>(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const messageInputRef = useRef<HTMLInputElement | null>(null);
-  const [mediaFile, setMediaFile] = useState([]);
-  const [sendedFiles, setSendedFiles] = useState([]);
+  const [mediaFile, setMediaFile] = useState<MediaFileType[] | []>([]);
+  const [sendedFiles, setSendedFiles] = useState<sendedFileType[] | []>([]);
  
+
   interface Msg {
     selectedUserId:string,
     input:string,
@@ -92,7 +108,7 @@ const ChatWindow = ({
     error?: boolean;
   }) {
     return {
-      tempId: tempId || 0,
+      tempId: tempId || "0",
       senderId: senderId,
       content: content,
       receiverId: receiverId,
@@ -120,7 +136,7 @@ const ChatWindow = ({
 
     if (sendedFiles.length > 0) {
       sendedFiles.forEach(async (img) => {
-        const tempId = uuid();
+        const tempId:string = uuid();
         const msg = newMessage({
           senderId,
           content: img.url,
@@ -131,6 +147,7 @@ const ChatWindow = ({
           uploading: true,
         });
         setMessages((prev) => [msg, ...prev]);
+
         setMediaFile((prev) =>
           prev.filter((img) => img.imageId !== img.imageId)
         );
@@ -267,7 +284,7 @@ const ChatWindow = ({
     };
 
     const updateUnreadCount = async () => {
-      const res = await axios.put(
+       await axios.put(
         `${import.meta.env.VITE_BASE_URL_HTTP}/chat/update-unreadmessage-count`,
         {
           userId: logedInUser.id,
@@ -281,6 +298,7 @@ const ChatWindow = ({
     }
 
     if(prevConvertationref.current){
+      if(!ws) return
        ws.send(
       JSON.stringify({
         receiverId: prevConvertationref.current,
@@ -301,6 +319,7 @@ prevConvertationref.current = ""
     if (!messageContainerRef.current) return;
     const handleScroll = async () => {
       const container = messageContainerRef.current;
+      if(!container) return
       if (container.scrollTop === 0 && cursorId && hasMoreMsg) {
         setLoadingMoreChat(true);
         try {
@@ -348,7 +367,7 @@ prevConvertationref.current = ""
   }, [messages]);
   useEffect(() => {
     if (!ws || !selectedUser) return;
-    const getMessage = (m) => {
+    const getMessage = (m:MessageEvent) => {
       const data = JSON.parse(m.data);
       if (data.type === "personal-msg") {
         console.log("personal mdg", data);
@@ -363,7 +382,7 @@ prevConvertationref.current = ""
             content: data.message,
             receiverId: data.receiverId,
             isMedia: data.isMedia,
-            tempId: "0",
+            tempId:" 0",
             error: false,
             uploading: false,
           });
@@ -374,8 +393,8 @@ prevConvertationref.current = ""
     };
     ws.addEventListener("message", getMessage);
 
-    const handleClickOutSideMessageInput =(e) =>{
-      if(messageInputRef.current && !messageInputRef.current.contains(e.target)){
+    const handleClickOutSideMessageInput =(e:MouseEvent) =>{
+      if(messageInputRef.current && !messageInputRef.current.contains(e.target as Node)){
         typingStop()
       }
     }
@@ -390,19 +409,18 @@ prevConvertationref.current = ""
   const formatDate = (newDate: number) => {
     const date = new Date(newDate);
 
-    const options = {
-      hour: "numeric",
-      minute: "numeric",
+    const options: Intl.DateTimeFormatOptions = {
+      hour: "2-digit",
+      minute: "2-digit",
       hour12: true,
     };
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const formattedTime = date.toLocaleTimeString("en-US", options);
 
     return formattedTime;
   };
   useEffect(() => {
     const updateUnreadCount = async () => {
-      const res = await axios.put(
+       await axios.put(
         `${import.meta.env.VITE_BASE_URL_HTTP}/chat/update-unreadmessage-count`,
         {
           userId: logedInUser.id,
@@ -420,7 +438,7 @@ prevConvertationref.current = ""
     }
   };
   const setRefs = (
-    el: HTMLElement | null,
+    el: HTMLDivElement | null,
     messageId: string,
     isLast: boolean
   ) => {
@@ -490,9 +508,10 @@ prevConvertationref.current = ""
     });
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = (e:React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const uniqueId = uuid();
+
     setMediaFile((prev) => [
       ...prev,
       ...files.map((file) => ({
@@ -510,12 +529,12 @@ prevConvertationref.current = ""
     setSendedFiles((prev) => [...prev, ...mappedFiles]);
   };
 
-  const removeImage = (image) => {
-    setMediaFile((prev) => prev.filter((img) => img.imageId !== image.imageId));
+  const removeImage = (imageId:string) => {
+    setMediaFile((prev) => prev.filter((img) => img.imageId !== imageId));
 
     setSendedFiles((prev) =>
       prev.filter((file) => {
-        return file.imageId !== image.imageId;
+        return file.imageId !== imageId;
       })
     );
   };
@@ -524,6 +543,7 @@ prevConvertationref.current = ""
 
 
   const userIsTyping = () => {
+    if(!ws) return
     try {
       ws.send(
         JSON.stringify({
@@ -541,6 +561,7 @@ prevConvertationref.current = ""
 
 
   const typingStop = () => {
+    if(!ws) return
     ws.send(
       JSON.stringify({
         receiverId: selectedUser.id,
@@ -549,9 +570,6 @@ prevConvertationref.current = ""
       })
     );
   };
-
-  console.log("ref",incompletInputMsgRef)
-
   return (
     <div className="flex  relative    md:h-full   flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl md:p-0  md:rounded-[0] ">
       <div className=" px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
@@ -693,7 +711,7 @@ if (existing) {
                   />
                   <div
                     className="absolute top-1 right-1 cursor-pointer "
-                    onClick={() => removeImage(img)}
+                    onClick={() => removeImage(img.imageId)}
                   >
                     <RxCross2 className="text-white" />
                   </div>
@@ -727,3 +745,4 @@ if (existing) {
   );
 };
 export default ChatWindow;
+ 

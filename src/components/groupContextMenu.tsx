@@ -1,13 +1,14 @@
 import { axios } from "../apiClient";;
-import { FiTrash, FiX, FiUserX } from "react-icons/fi";
+import { FiTrash, FiX } from "react-icons/fi";
 import { LuMessageSquareOff } from "react-icons/lu";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { useWebSocket } from "../context/webSocket";
 import { toast } from "react-toastify";
+import { SelectedGroupType } from "../pages/Homepage";
 
-const GroupContextMenuDialogBox = ({ open, setOpen ,groupId ,setSelectedGroup}:{open:null | string , userId:string ,setOpen:()=>void,setMessages:(state:[])=>void,onSelectUser:(state:null)=>void}) => {
+const GroupContextMenuDialogBox = ({ open, setOpen ,groupId ,setSelectedGroup}:{open:null | string  ,setOpen:(state:null)=>void ,groupId:string ,setSelectedGroup:React.Dispatch<React.SetStateAction<SelectedGroupType | null>> }) => {
   const isOpen = !!open;
 
   
@@ -22,6 +23,7 @@ const deleteGroup = async () =>{
     if(res.status === 200){
       toast.success("Group Delete")
       setSelectedGroup(null)
+      if(!ws.current) return
       ws.current.send(
         JSON.stringify({
           type:"send-groups",
@@ -45,9 +47,9 @@ const contextMenuRef = useRef<HTMLDivElement  | null>(null)
  
 
 useEffect(() =>{
-    const handleClickOutside =(e)=>{
+    const handleClickOutside =(e:MouseEvent)=>{
         console.log('cli')
-        if(contextMenuRef.current && !contextMenuRef.current.contains(e.target)){
+        if(contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)){
             setOpen(null)
         }
     }
@@ -70,7 +72,7 @@ useEffect(() =>{
           key={index}
           onClick={(e) => { e.preventDefault()
             if (option.onClick) option.onClick();
-            setOpen(); 
+            setOpen(null); 
           }}
           className="flex items-center gap-2 px-4 py-2 text-start text-sm font-[500] hover:bg-gray-100 cursor-pointer transition-colors"
         >

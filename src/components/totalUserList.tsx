@@ -1,6 +1,7 @@
 import { axios } from "../apiClient";;
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { UserType } from "../slices/userSlice";
+import { selectedChatType } from "../pages/Homepage";
 
 export type onlineUsersType ={
   id: string ;
@@ -12,8 +13,8 @@ export type onlineUsersType ={
 }
 
 interface UserListProps {
-  selectedUser: any; 
-  onSelectUser: (user:UserType) => void; 
+  selectedUser: selectedChatType | null; 
+  onSelectUser: React.Dispatch<React.SetStateAction<selectedChatType | null>>; 
   onlineUsers: onlineUsersType[];
   logedInUser:UserType
 }
@@ -25,7 +26,7 @@ const TotalUserList = ({
   onlineUsers,
   logedInUser,
 }: UserListProps) => {
-  const [totalUsers, setTotalUSers] = useState<UserType[]>([]);
+  const [totalUsers, setTotalUSers] = useState<selectedChatType[]>([]);
   useEffect(() => {
     const getTotalUsers = async () => {
       const res = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/user/all-users`, {
@@ -60,7 +61,6 @@ const TotalUserList = ({
               ) : (
                 <div className="bg-gray-500 rounded-3xl h-2 w-2"></div>
               )}
-              {/* <div className="text-sm text-gray-500">{user?.lastMessage}</div> */}
             </li>
           ))}
       </ul>

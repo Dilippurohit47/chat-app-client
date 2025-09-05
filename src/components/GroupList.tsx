@@ -2,16 +2,22 @@ import { useEffect, useState } from "react";
 import { onlineUsersType } from "./totalUserList";
 import { axios } from "../apiClient";;
 import { useWebSocket } from "../context/webSocket";
-import { ContextMenu } from "@radix-ui/react-context-menu";
 import GroupContextMenuDialogBox from "./groupContextMenu";
+import { UserType } from "../slices/userSlice";
+import { SelectedGroupType } from "../pages/Homepage";
+
 type GroupListType = {
   connected: boolean;
-  logedInUser: onlineUsersType;
+  logedInUser: UserType;
+  selectedGroup:SelectedGroupType | null,
+  setSelectedGroup : React.Dispatch<React.SetStateAction<SelectedGroupType | null>>
 };
+
 const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: GroupListType) => {
-  const [groupList, setGroupList] = useState([]);
+  const [groupList, setGroupList] = useState<SelectedGroupType[] | []>([]);
   const [openContextMenu , setOpenContextMenu] = useState<string | null>(null)
   const {ws } = useWebSocket()
+  console.log("group list ",groupList)
   useEffect(() => {
     if(!ws.current) return
     const fetchGroups = async () => {
@@ -28,7 +34,7 @@ const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: 
 
     fetchGroups();
 
-    const getRefreshedGroups =(e) =>{
+    const getRefreshedGroups =(e:MessageEvent) =>{
     const data = JSON.parse(e.data)
   if(data.type === "get-groups-ws"){
     setGroupList(data.groups)
@@ -37,10 +43,10 @@ const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: 
 
     ws.current.addEventListener("message",getRefreshedGroups)
     return () =>{ 
+      if(!ws.current) return
       ws.current.removeEventListener("message",getRefreshedGroups)
     }
   },[]);
-    console.log(openContextMenu)
 
   return (
     <div className="px-3 py-1  overflow-y-auto">
@@ -60,7 +66,7 @@ const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: 
                 
                 <li
                 onContextMenu={(e) =>{ e.preventDefault() ;  setOpenContextMenu(group.id)}}
-                  key={group.chatId}
+                  key={group.id}
                   className={`p-3 cursor-pointer rounded-lg  z-0  flex  
                       ${
                     selectedGroup?.id === group.id
@@ -73,8 +79,8 @@ const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: 
                   <div className="flex   w-[3rem]  justify-start items-center gap-3 ">
                     <img
                       src={
-                        group.profileUrl
-                          ? group.profileUrl
+                        group.groupProfilePicture
+                          ? group.groupProfilePicture
                           : "https://github.com/shadcn.png"
                       }
                       className="rounded-full h-9 w-9 object-cover"
