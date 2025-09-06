@@ -12,7 +12,7 @@ import {
 } from "../components/ui/tabs";
 import TotalUserList from "../components/totalUserList";
 import { useDispatch, useSelector } from "react-redux";
-import { saveUser, saveAccessToken ,logout } from "../slices/userSlice";
+import { saveUser, saveAccessToken ,logout, UserType } from "../slices/userSlice";
 import { RootState } from "../store";
 import GroupList from "../components/GroupList";
 
@@ -22,6 +22,8 @@ import { useWebSocket, WebSocketContextType } from "../context/webSocket";
 type members = {
   groupId:string,
   id:string,
+  user:UserType,
+  userId:string,
 }
 
 export interface SelectedGroupType {
@@ -30,6 +32,7 @@ name:string,
   groupProfilePicture?:string,
 members:members[]
 lastMessage?:string
+description?:string
 }
 
 export type unreadCountType = {
@@ -130,20 +133,7 @@ if(!user.accessToken){
   }, []);
 
 
-  const lolo = async() =>{
-    console.log("object",user)
-       await axios.get(
-        `${import.meta.env.VITE_BASE_URL_HTTP}/user/checking`,
-{
-  headers:{
-    Authorization:`Bearer ${user.accessToken}`
-  },
-          withCredentials: true,
-          
-        }
-      );
-
-  }
+ 
 
   return (
     <div className="flex h-[84.5vh] md:h-[calc(100vh-3rem)]  justify-center mx-auto my-auto sm:mx-0 hide-scrollbar ">
@@ -246,7 +236,6 @@ if(!user.accessToken){
             setSelectedGroup={setSelectedGroup}
           />
         )}
-        <button onClick={lolo}>lol</button>
       </div>
     </div>
   );

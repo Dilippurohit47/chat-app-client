@@ -9,17 +9,18 @@ import { RxCross2 } from "react-icons/rx";
 import { toast } from "react-toastify";
 import { LuEyeClosed } from "react-icons/lu";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
+import { AxiosError } from "axios";
 const SignUp = () => {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [error, setError] = useState("");
+  const [name, setName] = useState<string>("");
+  const [error, setError] = useState<string>("");
   const [image, setImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<string | null>(null);
-  const [selectedFile, setSelctedFile] = useState();
+  const [selectedFile, setSelctedFile] = useState<File | null>(null);
   const [imageUploading, setImageUploading] = useState<boolean>(false);
   const [isImageUploaded, setIsImageUploaded] = useState(false);
-    const [showPassword,setShowPassword] = useState(false)
+    const [showPassword,setShowPassword] = useState<boolean>(false)
   
   const dispatch = useDispatch();     
   const navigate = useNavigate();
@@ -39,7 +40,7 @@ const SignUp = () => {
     getUser();
   }, []);
   
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       const res = await axios.post(
@@ -61,15 +62,15 @@ const SignUp = () => {
       }else{
         console.log(res.data.errors[0])
       }
-    } catch (err) {
-        setError(err.response.data?.message)
-      console.log("Login error:", err.response);
+    } catch (error) {
+      const err = error as AxiosError<{message:string}>
+        setError(err.response?.data?.message || "Something went wrong")
     }
   };
   
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[0] || null;
     setSelctedFile(file);
     if (file) {
       const imageUrl = URL.createObjectURL(file);
@@ -95,6 +96,7 @@ const SignUp = () => {
       if (res.status === 200) {
         const uploadUrl = res.data.url;
         if (!uploadUrl) return console.log("upload url is absent");
+        if(!selectedFile) return
         const uploadRes = await axios.put(uploadUrl, selectedFile, {
           headers: { "Content-Type": selectedFile.type },
         });

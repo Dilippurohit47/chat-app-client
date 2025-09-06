@@ -3,14 +3,7 @@ import React, { useEffect, useState } from "react";
 import { UserType } from "../slices/userSlice";
 import { selectedChatType } from "../pages/Homepage";
 
-export type onlineUsersType ={
-  id: string ;
-  name: string ;
-  email: string ;
-  isLogin: boolean;
-  profileUrl: string | null;
-  userId:string
-}
+export type onlineUsersType = string
 
 interface UserListProps {
   selectedUser: selectedChatType | null; 
@@ -56,7 +49,7 @@ const TotalUserList = ({
             >
                  <img src={user.profileUrl ? user.profileUrl : "https://github.com/shadcn.png" } className="rounded-full object-cover h-9 w-9" alt="" />
               <div className="font-medium  max-w-[10rem]  overflow-hidden truncate">{user?.name}</div>
-              { onlineUsers && onlineUsers.map((u:onlineUsersType) => u.userId).includes(user.id!) ? (
+              { onlineUsers && onlineUsers.map((u:string) => u).includes(user.id!) ? (
                 <div className="bg-green-500 rounded-3xl h-2 w-2"></div>
               ) : (
                 <div className="bg-gray-500 rounded-3xl h-2 w-2"></div>

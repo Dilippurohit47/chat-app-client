@@ -1,15 +1,17 @@
 import { axios } from "../apiClient";;
-import { useEffect, useRef } from "react";
+import React, { SetStateAction, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import { useWebSocket } from "../context/webSocket";
+import { SelectedGroupType } from "../pages/Homepage";
 
 
 type groupInfoProps = {
-group:object[],
+group:SelectedGroupType,
 showGroupInfo:boolean,
 setShowGroupInfo:(State:boolean)=>void;
-groupInfoButtonRef:React.RefObject<HTMLDivElement>;
-userId:string
+groupInfoButtonRef:React.RefObject<HTMLDivElement | null> 
+userId:string | null
+setSelectedGroup:React.Dispatch<SetStateAction<SelectedGroupType | null >>
 }
 
 const GroupInfoDialog = ({  setSelectedGroup ,userId, group, showGroupInfo ,setShowGroupInfo ,groupInfoButtonRef }:groupInfoProps) => {
@@ -19,8 +21,8 @@ const GroupInfoDialog = ({  setSelectedGroup ,userId, group, showGroupInfo ,setS
 
   useEffect(() =>{
 
-    const  handleClickOutside  =(e) =>{
-if( groupInfoButtonRef && groupInfoButtonRef.current && !groupInfoButtonRef.current.contains(e.target)   && infoRef.current && !infoRef.current.contains(e.target)){
+    const  handleClickOutside  =(e:MouseEvent) =>{
+if( groupInfoButtonRef && groupInfoButtonRef.current && !groupInfoButtonRef.current.contains(e.target as Node)   && infoRef.current && !infoRef.current.contains(e.target as Node)){
 setShowGroupInfo(false)
 }
     }
@@ -42,6 +44,7 @@ const deleteGroup = async () =>{
       toast.success("Group Deleted")
       setSelectedGroup(null)
       setShowGroupInfo(false)
+      if(!ws.current) return
       ws.current.send(
         JSON.stringify({
           type:"send-groups",
@@ -89,12 +92,12 @@ const deleteGroup = async () =>{
                   {user.profileUrl ? (
                     <img
                       src={user.profileUrl}
-                      alt={user.name}
+                      alt={user.name!}
                       className="w-full h-full object-cover"
                     />
                   ) : (
                     <span className="text-xs text-white">
-                      {user.name.charAt(0)}
+                      {user.name!.charAt(0)}
                     </span>
                   )}
                 </div>

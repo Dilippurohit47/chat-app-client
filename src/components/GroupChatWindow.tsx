@@ -1,5 +1,5 @@
 import { axios } from "../apiClient";;
-import { useEffect, useRef, useState } from "react";
+import React, { KeyboardEventHandler, useEffect, useRef, useState } from "react";
 import { MdOutlineAttachment } from "react-icons/md";
 import { IoMdSearch } from "react-icons/io";
 import SearchBarForChat from "../components/SearchBarForChat";
@@ -9,6 +9,8 @@ import { FaArrowLeftLong } from "react-icons/fa6";
 import { FiUserPlus } from "react-icons/fi";  
 import { HiMiniUserGroup } from "react-icons/hi2";
 import AddMoreMembersInGroupDialogBox from "./AddMoreMembersInGroupDialogBox";
+import { SelectedGroupType } from "../pages/Homepage";
+
 import GroupInfoDialog from "./GroupInfoDialog";
 export type MessageType = {
   id?: string;
@@ -17,23 +19,24 @@ export type MessageType = {
   content: string;
   createdAt: number;
 };
-type selectedChat = {
-  chatId: string;
-  createdAt: string; // or `Date` if parsed
-  email: string;
-  id: string;
-  lastMessage: string;
-  lastMessageCreatedAt: string; // or `Date` if parsed
-  name: string;
-  password: string;
-  profileUrl: string;
-  unreadMessages: {
-    userId: string;
-    unreadMessages: number;
-  };
-};
 
 
+interface GroupMessageType {
+  id?:string
+  content:string,
+  senderId:string,
+  groupId:string,
+  isMedia?:boolean,
+}
+
+
+interface GroupChatWindowPropsType {
+  ws:WebSocket | null,
+  senderId:string,
+  selectedGroup:SelectedGroupType,
+  setSelectedGroup:React.Dispatch<React.SetStateAction<SelectedGroupType | null >>
+  logedInUser:UserType
+}
 
 const GroupChatWindow = ({
   ws,
@@ -41,11 +44,11 @@ const GroupChatWindow = ({
   selectedGroup,
   setSelectedGroup,
   logedInUser,
-}) => {
+}:GroupChatWindowPropsType) => {
   const [input, setInput] = useState<string>("");
   const chatWindowRef: React.RefObject<HTMLDivElement | null> = useRef(null);
 
-  const [messages, setMessages] = useState<MessageType[] | []>([]);
+  const [messages, setMessages] = useState<GroupMessageType[] | []>([]);
   const [openSearchBar, setOpenSearchBar] = useState<boolean>(false);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const [findMessagesIds, setFindMessagesIds] = useState<string[]>([]);
@@ -56,36 +59,47 @@ const GroupChatWindow = ({
   const [initialLoad ,setInitialLoad] = useState(true)
   const messageInputRef = useRef<HTMLInputElement | null>(null)
 const [showGroupInfo,setShowGroupInfo] = useState<boolean>(false)
-const newMessage =(senderId,input) =>{
+interface MessageParams {
+  senderId:string,
+  input:string,
+  groupId:string,
+  messageId?:string,
+}
+const newMessage =({senderId,input,groupId,messageId}:MessageParams) =>{
   return {
+    MessageId:messageId,
     senderId:senderId,
-    content:input
+    content:input,
+    groupId:groupId 
   }
 }
+console.log("selected group ",selectedGroup)
 
   const sendMessage =() =>{
-    const msg = newMessage(senderId,input)
+    if(!ws) return
+    const msg = newMessage({senderId:senderId,input:input,groupId:selectedGroup.id})
 ws.send(JSON.stringify({
   type:"group-message",
   groupId:selectedGroup.id,
-  message:msg
+  message:msg,
 }))
 setMessages(prev =>[...prev,msg])
 setInput("")
   }
 
-const handleKeyDown = (e) =>{
+const handleKeyDown = (e:React.KeyboardEvent<HTMLInputElement>) =>{
 if(e.key === "Enter"){
   sendMessage()
 }
 }
 
 useEffect(() =>{
-  const handleMessage =(e) =>{
+  if(!ws) return 
+  const handleMessage =(e:MessageEvent) =>{
     const data = JSON.parse(e.data)
     console.log(data)
     if(data.type === "group-message"){
-        const msg = newMessage(data.senderId,data.content)
+        const msg = newMessage({messageId:data.MessageId,senderId:data.senderId,input:data.content,groupId:data.groupId})
         setMessages((prev) =>[msg,...prev])
     }
   }
@@ -94,14 +108,14 @@ useEffect(() =>{
     ws.removeEventListener("message",handleMessage)
   }
 },[])
-const [addMoreMembersDialog,setAddMoreMembersDialog] = useState(false)
+console.log(messages)
 const groupInfonButtonRef = useRef<HTMLDivElement | null>(null)
   return (
     <div className="flex relative  flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl  overflow-hidden ">
       <div className=" px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
         <div className="flex justify-between items-center gap-3">
           <img
-           src={selectedGroup?.profileUrl ? selectedGroup.profileUrl : "https://github.com/shadcn.png"}
+           src={selectedGroup?.groupProfilePicture ? selectedGroup.groupProfilePicture : "https://github.com/shadcn.png"}
             className="h-8 w-8 object-cover rounded-full"
             alt=""
           />
@@ -119,7 +133,7 @@ const groupInfonButtonRef = useRef<HTMLDivElement | null>(null)
 <div onClick={()=>setShowGroupInfo(prev =>!prev)} className="cursor-pointer" ref={groupInfonButtonRef}>
 <HiMiniUserGroup size={20} />
 </div>
-      <AddMoreMembersInGroupDialogBox userId={logedInUser.id} selectedGroup={selectedGroup} />
+      <AddMoreMembersInGroupDialogBox userId={logedInUser.id!} selectedGroup={selectedGroup} />
 
      <div
           className="cursor-pointer"
@@ -133,15 +147,15 @@ const groupInfonButtonRef = useRef<HTMLDivElement | null>(null)
    
       </div>
       <GroupInfoDialog  setSelectedGroup={setSelectedGroup} group={selectedGroup} userId={logedInUser.id} showGroupInfo={showGroupInfo}  setShowGroupInfo={setShowGroupInfo} groupInfoButtonRef={groupInfonButtonRef}/>
-      <SearchBarForChat
-        // messageIndex={messageIndex}
+      {/* <SearchBarForChat
+        messageIndex={messageIndex}
         totalFindmessages={findMessagesIds.length}
         isOpen={openSearchBar}
         messages={messages}
-        // findMessages={findMessages}
-        // scrollToFindMessageForward={scrollToFindMessageForward}
-        // scrollToFindMessageBackward={scrollToFindMessageBackward}
-      />
+        findMessages={findMessages}
+        scrollToFindMessageForward={scrollToFindMessageForward}
+        scrollToFindMessageBackward={scrollToFindMessageBackward}
+      /> */}
  {
   loadingMoreChat &&  <div className="flex justify-center">
   <svg className="loader" viewBox="25 25 50 50">
@@ -153,8 +167,8 @@ const groupInfonButtonRef = useRef<HTMLDivElement | null>(null)
         // ref={messageContainerRef}
         className="flex-1 overflow-y-auto hide-scrollbar  mt-2 "
       >
-        {messages.slice().reverse().map((message, index) => {
-          const isLast = index === messages.length - 1;
+        {messages.slice().reverse().map((message) => {
+          // const isLast = index === messages.length - 1;
           return (
             <div
               key={message.id}

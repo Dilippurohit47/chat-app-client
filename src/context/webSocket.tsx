@@ -48,7 +48,7 @@ useEffect(() =>{
         if (data.type === "online-users") {
           console.log("online ",data)
           const filterData = data?.onlineUsers.filter(
-            (c: onlineUsersType) => c.id !== user.id
+            (c: onlineUsersType) => c !== user.id
           );
           console.log("online",filterData)
           setOnlineUsers(filterData);

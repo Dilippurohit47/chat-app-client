@@ -1,8 +1,8 @@
-import { axios } from "../apiClient";;
-import  { useEffect, useState } from "react";
+import { axios } from "./apiClient";;
+import  React, { useEffect, useState } from "react";
 import Login from "./pages/LoginPage";
 
-const Layout = ({ children }) => {
+const Layout = ({ children }:{children:React.ReactNode}) => {
   const [user, setUser] = useState();
   useEffect(() => {
     const getUser = async () => {

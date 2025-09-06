@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { IoIosArrowDown } from "react-icons/io";
-import { MessageType } from "../ChatWindow";
+import { MessageType } from "../components/ChatWindow";
 
 interface SearchBarProps {
   isOpen: boolean;

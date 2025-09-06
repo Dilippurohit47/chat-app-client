@@ -17,10 +17,8 @@ import { FiPlus } from "react-icons/fi";
 import { FiMinus } from "react-icons/fi";
 import { axios } from "../apiClient";;
 import { toast } from "react-toastify";
-import { UserListProps } from "./UserList";
-import { RootState } from "../store";
-import { useSelector } from "react-redux";
 import { useWebSocket } from "../context/webSocket";
+import { AxiosError } from "axios";
 
 export interface UserTypes {
   id: string;
@@ -30,12 +28,12 @@ export interface UserTypes {
   profileUrl: string | undefined;
 }
 
-const CreateGroupDialogBox = ({userId}:string) => {
+const CreateGroupDialogBox = ({userId}:{userId:string | null}) => {
   const [totalUsers, setTotalUsers] = useState<UserTypes[]>([]);
   const [addedMembers, setAddedMembers] = useState<string[]>([]);
-  const [groupName, setGroupName] = useState<String | null>(null);
+  const [groupName, setGroupName] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
-    const {ws ,connected} = useWebSocket()
+    const {ws } = useWebSocket()
 
 
   useEffect(() => {
@@ -89,8 +87,10 @@ const [error,setError] = useState<string>("")
       if (res.status === 200) {
         setDialogOpen(false)
         toast.success(res.data.message);
-        setGroupName(null)
+        setGroupName("")
         setAddedMembers([])
+        if(!ws.current) return
+
         ws.current.send(
           JSON.stringify({
             type:"send-groups",
@@ -99,8 +99,8 @@ const [error,setError] = useState<string>("")
         )
       }
     } catch (error) {
-        toast.error(error.response.data.message)
-      console.log(error.response.data);
+       const err = error as AxiosError<{ message: string }>;
+        toast.error(err.response?.data.message || "something went wrong")
     }
   };
   return (

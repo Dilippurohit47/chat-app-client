@@ -7,6 +7,7 @@ import { saveUser } from "../slices/userSlice";
 import { toast } from "react-toastify";
 import { LuEyeClosed } from "react-icons/lu";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
+import { AxiosError } from "axios";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,7 +16,7 @@ const Login = () => {
   const [showPassword,setShowPassword] = useState(false)
 
 const dispatch = useDispatch()
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       const res = await axios.post(
@@ -33,9 +34,10 @@ const dispatch = useDispatch()
         toast.success("Login successfull")
         navigate("/");
       }
-    } catch (err) {
+    } catch (error) {
+      const err = error as AxiosError<{message:string}>
       console.log(err.response?.data?.message)
-      setError(err.response?.data?.message);
+      setError(err.response?.data?.message || "Something went wrong");
       console.log("Login error:", err);
     }
   };

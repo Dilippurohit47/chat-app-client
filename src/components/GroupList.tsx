@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { onlineUsersType } from "./totalUserList";
 import { axios } from "../apiClient";;
 import { useWebSocket } from "../context/webSocket";
 import GroupContextMenuDialogBox from "./groupContextMenu";
@@ -41,6 +40,7 @@ const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: 
   }
     }
 
+
     ws.current.addEventListener("message",getRefreshedGroups)
     return () =>{ 
       if(!ws.current) return
@@ -48,6 +48,7 @@ const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: 
     }
   },[]);
 
+  console.log("group",selectedGroup)
   return (
     <div className="px-3 py-1  overflow-y-auto">
       <h2 className="text-[1.2rem]  flex justify-center items-center gap-2 font-semibold mb-2">

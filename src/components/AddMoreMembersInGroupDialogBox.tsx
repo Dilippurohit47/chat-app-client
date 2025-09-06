@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { XIcon } from "lucide-react";
 
 import {
   Dialog,
@@ -20,6 +18,9 @@ import { FiPlus } from "react-icons/fi";
 import { FiMinus } from "react-icons/fi";
 import { axios } from "../apiClient";;
 import { toast } from "react-toastify";
+import { SelectedGroupType } from "../pages/Homepage";
+import { UserType } from "../slices/userSlice";
+import { AxiosError } from "axios";
 
 export interface UserTypes {
   id: string;
@@ -29,7 +30,11 @@ export interface UserTypes {
   profileUrl: string | undefined;
 }
 
-const AddMoreMembersInGroupDialogBox = ({ userId, selectedGroup }: string) => {
+interface AddMoreMembersPropsType {
+  userId:string,
+  selectedGroup:SelectedGroupType
+}
+const AddMoreMembersInGroupDialogBox = ({ userId, selectedGroup }:AddMoreMembersPropsType) => {
   const [totalUsers, setTotalUsers] = useState<UserTypes[]>([]);
   const [filterUsers,setFilterUsers] = useState<UserTypes[]>([])
   const [addedMembers, setAddedMembers] = useState<string[]>([]);
@@ -42,12 +47,10 @@ const AddMoreMembersInGroupDialogBox = ({ userId, selectedGroup }: string) => {
           { withCredentials: true }
         );
         if (res.status === 200) {
-         const memberIds = new Set(selectedGroup.members?.map(m => m.userId));
-         console.log('membere ids',memberIds)
-        const filterData = res.data?.filter(user => {
-          console.log(user.id , memberIds.has(user.id))
-          return !memberIds.has(user.id)
-        });
+         const memberIds = new Set(selectedGroup.members?.map(user => user.userId));
+  const filterData = res.data?.filter((user: UserType) => {
+  return user.id !== null && !memberIds.has(user.id);
+});
           setTotalUsers(filterData);
           setFilterUsers(filterData);
         }
@@ -88,8 +91,9 @@ const addMembers = (id: string) => {
         setAddedMembers([])
       }
     } catch (error) {
-      toast.error(error?.data?.message);
-    }
+  const err = error as AxiosError<{ message: string }>;
+  toast.error(err.response?.data?.message || "Something went wrong");
+}
   };
 
   const filterUsersForSearch =(name:string) =>{
@@ -98,7 +102,7 @@ const addMembers = (id: string) => {
         return user
       }
     }).filter((i)=> i)
-setFilterUsers(newArray)
+setFilterUsers(newArray.filter((u) =>u !== undefined))
   }
 
   const handleDialogClose = () =>{
