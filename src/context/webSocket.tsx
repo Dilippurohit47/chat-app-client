@@ -28,7 +28,7 @@ useEffect(() =>{
   if (!user.isLogin) return;
 //  const serverPort = new URLSearchParams(window.location.search).get("port") || 8000;
     const connect = async () => {
-      ws.current = new WebSocket(`ws://localhost:${8000}`);
+      ws.current = new WebSocket(`${import.meta.env.VITE_BASE_URL_WS}`);
      ws.current.onopen = () => {
          if (ws.current?.readyState === WebSocket.OPEN) {
            ws.current.send(
