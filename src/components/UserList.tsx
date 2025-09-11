@@ -4,7 +4,7 @@ import { UserType } from "../slices/userSlice";
 import ContextMenuDialogBox from "./contextMenuDialogBox";
 import { MessageType } from "./ChatWindow";
 import { selectedChatType } from "../pages/Homepage";
-
+import AiChatBot from "./aiChatBot";
 export interface UserListProps {
   selectedUser: selectedChatType | null;
   onSelectUser: React.Dispatch<SetStateAction<selectedChatType | null>>;
@@ -15,17 +15,17 @@ export interface UserListProps {
   setChatId:(state:string) =>void
   setMessages:React.Dispatch<React.SetStateAction<MessageType[]>>
 }
-type ChatUser = {
-  chatId: string;
-  createdAt: string; // If using Date objects, change to `Date`
-  email: string;
-  id: string;
-  lastMessage: string;
-  lastMessageCreatedAt: string; // Change to `Date` if needed
-  name: string;
-  password: string; // Consider removing this for security
-  profileUrl: string;
-};
+// type ChatUser = {
+//   chatId: string;
+//   createdAt: string; // If using Date objects, change to `Date`
+//   email: string;
+//   id: string;
+//   lastMessage: string;
+//   lastMessageCreatedAt: string; // Change to `Date` if needed
+//   name: string;
+//   password: string; // Consider removing this for security
+//   profileUrl: string;
+// };
 const UserList = ({
   logedInUser,
   selectedUser,
@@ -118,6 +118,7 @@ const UserList = ({
           : "Login first "}{" "}
       </h2>
       <ul className="flex flex-col gap-2 transition-all  ">
+        <AiChatBot   selectedUser={selectedUser} onSelectUser={onSelectUser} setOpenContextMenu={setOpenContextMenu} setChatId={setChatId}/>
         {recentChatUsers?.length > 0
           ? recentChatUsers.map((user) => {
               return (

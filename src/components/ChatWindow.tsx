@@ -122,6 +122,13 @@ const ChatWindow = ({
   const sendMessage = async () => {
     if (!logedInUser.isLogin) return toast.error("Login first ");
     if (!ws) return toast.error("server error!");
+    if(selectedUser.id === "chat-bot"){
+      ws.send(JSON.stringify({
+        type:"get-chatbot-response",
+        query:input,
+        receiverId:logedInUser.id
+      }))
+    }
     if (sendedFiles.length <= 0) {
       ws.send(
         JSON.stringify({
@@ -382,6 +389,27 @@ prevConvertationref.current = ""
             content: data.message,
             receiverId: data.receiverId,
             isMedia: data.isMedia,
+            tempId:" 0",
+            error: false,
+            uploading: false,
+          });
+
+          setMessages((prev) => [msg, ...prev]);
+        }
+      }
+      if (data.type === "chatbot-reply") {
+        console.log("personal mdg", data);
+        if (true
+          // (data.receiverId === logedInUser.id &&
+          //   data.senderId === selectedUser.id) ||
+          // (data.senderId === logedInUser.id &&
+          //   data.receiverId === selectedUser.id)
+        ) {
+          const msg = newMessage({
+            senderId: data.senderId,
+            content: data.answer,
+            receiverId: data.receiverId,
+            isMedia: data.isMedia || false,
             tempId:" 0",
             error: false,
             uploading: false,
@@ -720,9 +748,11 @@ if (existing) {
             })}
           </div>
         )}
-        <label htmlFor="file-input">
+  {
+    selectedUser.id !== "chat-bot" &&       <label htmlFor="file-input">
           <MdOutlineAttachment className="text-gray-300 rotate-120 hover:text-gray-500 cursor-pointer text-[1.8rem] sm:text-[1.5rem] sm:hover:text-gray-300" />
         </label>
+  }
         <input
           id="file-input"
           type="file"
