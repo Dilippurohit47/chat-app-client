@@ -81,7 +81,8 @@ const ChatWindow = ({
   const messageInputRef = useRef<HTMLInputElement | null>(null);
   const [mediaFile, setMediaFile] = useState<MediaFileType[] | []>([]);
   const [sendedFiles, setSendedFiles] = useState<sendedFileType[] | []>([]);
- 
+ const [inputPlaceHolder,SetInputPlaceHolder] = useState<string>("Type a message")
+const placeHolderSetterInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
   interface Msg {
     selectedUserId:string,
@@ -262,6 +263,38 @@ const ChatWindow = ({
     if (!selectedUser) return;
 
       const incompleteInput = incompletInputMsgRef.current.find((inc) => inc.selectedUserId === selectedUser.id)
+        if(selectedUser.id === "chat-bot"){
+              const placeHolders= ["Tell me about your projects" ,"What is your experience","what is your qualifications"]
+              let usedPlaceholder = 0
+              if(placeHolderSetterInterval.current === null){
+                 placeHolderSetterInterval.current = setInterval(() =>{
+              console.log("place holder",usedPlaceholder)
+                SetInputPlaceHolder(placeHolders[usedPlaceholder])
+                if(usedPlaceholder >= 2){
+                  usedPlaceholder = 0
+                }else{
+                  usedPlaceholder = usedPlaceholder+1
+                }
+            },2000)
+              }
+           
+
+          if(!ws) return
+      ws.send(JSON.stringify({
+        type:"get-chatbot-response",
+        query:"Hello",
+        receiverId:logedInUser.id
+      }))
+    }else{
+      console.log("else blovk")
+      if(placeHolderSetterInterval.current !== null){
+        console.log("removing")
+        clearInterval(placeHolderSetterInterval.current)
+        placeHolderSetterInterval.current = null
+        console.log("removed",placeHolderSetterInterval)
+      }
+      SetInputPlaceHolder("Type a message")
+    }
     if(incompleteInput){
       setInput(incompleteInput?.input)
     }if(!incompleteInput){
@@ -285,7 +318,8 @@ const ChatWindow = ({
           setCursorId(res.data.cursor);
           setHasMoreMsg(res.data.hasMore);
         }
-      } catch (error) {
+      } catch (error) { 
+          setMessages([]);
         console.log(error);
       }
     };
@@ -707,7 +741,7 @@ prevConvertationref.current = ""
           <input
             value={input}
             type="text"
-            placeholder="Type a message..."
+            placeholder={inputPlaceHolder}
             onChange={(e) => {
               userIsTyping(), setInput(e.target.value);
              const existing = incompletInputMsgRef.current.find(
