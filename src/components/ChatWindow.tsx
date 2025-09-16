@@ -11,6 +11,9 @@ import { RxCross2 } from "react-icons/rx";
 import { BiSolidSend } from "react-icons/bi";
 import { useWebSocket } from "../context/webSocket";
 import { selectedChatType } from "../pages/Homepage";
+import { LuPhoneCall } from "react-icons/lu";
+import VideoCallDialog from "./VideoCallDialog";
+
 export type MessageType = {
   id?: string;
   senderId: String;
@@ -82,7 +85,11 @@ const ChatWindow = ({
   const [mediaFile, setMediaFile] = useState<MediaFileType[] | []>([]);
   const [sendedFiles, setSendedFiles] = useState<sendedFileType[] | []>([]);
  const [inputPlaceHolder,SetInputPlaceHolder] = useState<string>("Type a message")
-const placeHolderSetterInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+ const placeHolderSetterInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+const [callUserId, setCallUserId] = useState<string | null>(null);
+const [isCallOpen, setIsCallOpen] = useState(false);
+
+
 
   interface Msg {
     selectedUserId:string,
@@ -277,14 +284,7 @@ const placeHolderSetterInterval = useRef<ReturnType<typeof setInterval> | null>(
                 }
             },2000)
               }
-           
 
-          if(!ws) return
-      ws.send(JSON.stringify({
-        type:"get-chatbot-response",
-        query:"Hello",
-        receiverId:logedInUser.id
-      }))
     }else{
       console.log("else blovk")
       if(placeHolderSetterInterval.current !== null){
@@ -632,8 +632,11 @@ prevConvertationref.current = ""
       })
     );
   };
+
+
+
   return (
-    <div className="flex  relative    md:h-full   flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl md:p-0  md:rounded-[0] ">
+    <div className="flex  relative overflow-hidden    md:h-full   flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl md:p-0  md:rounded-[0] ">
       <div className=" px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
         <div className="flex justify-between items-center gap-3">
           <img
@@ -653,6 +656,11 @@ prevConvertationref.current = ""
             {selectedUser?.name}
           </h1>
         </div>
+<div className="flex justify-center pr-4 items-center gap-4">
+
+      <div className="cursor-pointer" onClick={() =>{setIsCallOpen(true) ; setCallUserId(selectedUser.id)}}>
+          <LuPhoneCall size={20} />
+        </div>
         <div
           className="cursor-pointer"
           onClick={() => {
@@ -661,7 +669,14 @@ prevConvertationref.current = ""
         >
           <IoMdSearch size={24} />
         </div>
+  
+
+
+</div>
       </div>
+      
+      { isCallOpen && callUserId === selectedUser.id && <VideoCallDialog setCall={setCallUserId}  setIsCallOpen={setIsCallOpen} call={callUserId} selectedUserId={selectedUser.id}/>
+      }
       <SearchBarForChat
         messageIndex={messageIndex}
         totalFindmessages={findMessagesIds.length}
@@ -691,10 +706,10 @@ prevConvertationref.current = ""
               <div
                 key={message.id}
                 ref={(el) => setRefs(el, message.id!, isLast)}
-                className={`mb-4 flex    gap-2 ${
+                className={`mb-4 flex     gap-2 ${
                   message.senderId === senderId
-                    ? "justify-end"
-                    : "justify-start"
+                    ? "justify-end "
+                    : "justify-start  max-w-[70%]"
                 }`}
               >
                 <div>
@@ -703,7 +718,7 @@ prevConvertationref.current = ""
                       {" "}
                       <img
                         src={message.content}
-                        className={`block  rounded-lg object-cover ${
+                        className={`block  rounded-lg object-cover  ${
                           message.senderId === senderId
                             ? " h-[200px] w-[200px]"
                             : " h-[200px] w-[200px]"
@@ -718,9 +733,9 @@ prevConvertationref.current = ""
                     </div>
                   ) : (
                     <div
-                      className={`inline-block p-3 rounded-lg ${
+                      className={`inline-block p-3 rounded-lg   ${
                         message.senderId === senderId
-                          ? "bg-blue-500 text-white"
+                          ? "bg-blue-500 text-white "
                           : "bg-gray-200 text-gray-800"
                       }
               `}
