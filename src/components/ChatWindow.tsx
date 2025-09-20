@@ -13,6 +13,7 @@ import { useWebSocket } from "../context/webSocket";
 import { selectedChatType } from "../pages/Homepage";
 import { LuPhoneCall } from "react-icons/lu";
 import VideoCallDialog from "./VideoCallDialog";
+import AnswerVideoCall from "./AnswerVideoCall";
 
 export type MessageType = {
   id?: string;
@@ -88,6 +89,7 @@ const ChatWindow = ({
  const placeHolderSetterInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 const [callUserId, setCallUserId] = useState<string | null>(null);
 const [isCallOpen, setIsCallOpen] = useState(false);
+const [answerCall, setAnswerCall] = useState(false);
 
 
 
@@ -661,6 +663,9 @@ prevConvertationref.current = ""
       <div className="cursor-pointer" onClick={() =>{setIsCallOpen(true) ; setCallUserId(selectedUser.id)}}>
           <LuPhoneCall size={20} />
         </div>
+      <div className="cursor-pointer" onClick={() =>{setAnswerCall(true) ; setCallUserId(selectedUser.id)}}>
+          answer
+        </div>
         <div
           className="cursor-pointer"
           onClick={() => {
@@ -676,6 +681,8 @@ prevConvertationref.current = ""
       </div>
       
       { isCallOpen && callUserId === selectedUser.id && <VideoCallDialog setCall={setCallUserId}  setIsCallOpen={setIsCallOpen} call={callUserId} selectedUserId={selectedUser.id}/>
+      }
+      {answerCall  && callUserId === selectedUser.id && <AnswerVideoCall setCall={setCallUserId}  setIsCallOpen={setAnswerCall} call={callUserId} selectedUserId={selectedUser.id}/>
       }
       <SearchBarForChat
         messageIndex={messageIndex}

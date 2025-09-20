@@ -3,6 +3,7 @@ import { useWebSocket } from "../context/webSocket";
 import { FaVideoSlash } from "react-icons/fa";
 import { FaVideo } from "react-icons/fa";
 import { Loader, LoaderCircle } from "lucide-react";
+import { IoMdResize } from "react-icons/io";
 import { FaMicrophone } from "react-icons/fa";
 import { FaMicrophoneSlash } from "react-icons/fa";
 interface VideoCallDialogProps {
@@ -12,7 +13,7 @@ interface VideoCallDialogProps {
   selectedUserId: string;
 }
 
-const VideoCallDialog = ({
+const AnswerVideoCall = ({
   setCall,
   call,
   setIsCallOpen,
@@ -20,16 +21,17 @@ const VideoCallDialog = ({
 }: VideoCallDialogProps) => {
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
-  const pcRef = useRef<RTCPeerConnection | null>(null);
-  const { ws } = useWebSocket();
+  const [remoteStream, setRemoteStream] = useState(false);
 const [camera,setCamera] = useState(true)
 const [mic,setMic]  =useState(true)
+  const pcRef = useRef<RTCPeerConnection | null>(null);
+  const { ws } = useWebSocket();
+const [stream ,setStream] = useState<MediaStream | null>(null)
+
 const [remoteUserCamera,setRemoteUserCamera] = useState(true)
 const [remoteUserAudio,setRemoteUserAudio] = useState(true)
-  const [stream,setStream] = useState<MediaStream |null>(null)
-  useEffect(() => {
- 
-    let messageHandler: ((m: MessageEvent) => void) | null = null;
+  useEffect(() => { 
+    // let stream: MediaStream;
 
     const startVideo = async () => {
       if (!call) return;
@@ -39,98 +41,96 @@ const [remoteUserAudio,setRemoteUserAudio] = useState(true)
           video: true,
           audio: true,
         });
-setStream(localStream)
-        // Create PeerConnection
+
+        setStream(localStream)
+
+  
+        // init peer connection
         const pc = new RTCPeerConnection({
           iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
         });
         pcRef.current = pc;
 
-        // Add local tracks
-        localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
+        // add tracks
+        localStream?.getTracks().forEach((track) => pc.addTrack(track, localStream));
 
-        // Listen for remote stream
+        // remote track
         pc.ontrack = (event) => {
-          const [remoteStream] = event.streams;
-          
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = remoteStream;
+          const [remoteStream] = event.streams ;
+          if (
+            remoteVideoRef.current &&
+            remoteVideoRef.current.srcObject !== remoteStream
+          ) {
+            try {
+     
+              remoteVideoRef.current.srcObject = remoteStream;
+            } catch (err) {
+              console.log("error in putting", err);
+            }
           }
         };
 
-   // Handle ICE candidates
+        // send ICE
         pc.onicecandidate = (event) => {
           if (event.candidate) {
-            console.log("Sending ICE candidate from sender");
-            ws.current?.send(JSON.stringify({
-      type: "ice-candidate",
-      candidate: {
-        candidate: event.candidate.candidate,
-        sdpMid: event.candidate.sdpMid,
-        sdpMLineIndex: event.candidate.sdpMLineIndex,
-      },
-      receiverId: selectedUserId,
-    }));
-  }
-};
+            ws.current?.send(
+              JSON.stringify({
+                type: "ice-candidate",
+                candidate: event.candidate,
+                receiverId: selectedUserId,
+              })
+            );
+          }
+        };
 
-        // Handle connection state changes
-   
-
-        // Handle incoming messages
-        messageHandler = async (m: MessageEvent) => {
+ 
+        // handle incoming signaling
+        const handleMessage = async (m: MessageEvent) => {
           const data = JSON.parse(m.data);
 
-          if (data.type === "answer") {
-            if (pc.signalingState === "have-local-offer") {
-              await pc.setRemoteDescription(data.answer);
-            } else {
-              console.warn("Ignoring answer, wrong state:", pc.signalingState);
-            }
-          } else if (data.type === "ice-candidate") {
+          if (data.type === "offer") {
+    
+           await pc.setRemoteDescription(data.offer);
 
+            const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+
+            ws.current?.send(
+              JSON.stringify({
+                type: "answer",
+                answer,
+                receiverId: selectedUserId,
+              })
+            );
+          } else if (data.type === "ice-candidate") {
             try {
-             await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-            } catch (error) {
-              console.error("Error adding ICE candidate:", error);
+              await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+            } catch (err) {
+              console.warn("Failed to add ICE candidate:", err);
             }
           }
-          if(data.type === 'audio-video-toggle'){
+
+             if(data.type === 'audio-video-toggle'){
             setRemoteUserCamera((prev) =>prev === data.video ? prev : data.video)
             setRemoteUserAudio((prev) =>prev === data.audio ? prev : data.audio)
           }
+
         };
 
-        ws.current?.addEventListener("message", messageHandler);
+        ws.current?.addEventListener("message", handleMessage);
 
-        // Create and send offer
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-
-        ws.current?.send(
-          JSON.stringify({
-            type: "offer",
-            receiverId: selectedUserId,
-            offer,
-          })
-        );
-        console.log("Offer sent");
-
+        return () => {
+          ws.current?.removeEventListener("message", handleMessage);
+          //   pc.close();
+        };
       } catch (error) {
-        console.error("Error starting call:", error);
+        console.log("Error in getUserMedia", error);
       }
     };
 
     startVideo();
 
     return () => {
-      if (messageHandler) {
-        ws.current?.removeEventListener("message", messageHandler);
-      }
-      if (pcRef.current) {
-        pcRef.current.close();
-        pcRef.current = null;
-      }
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
       }
@@ -138,20 +138,9 @@ setStream(localStream)
         localVideoRef.current.srcObject = null;
       }
     };
-  }, [call, selectedUserId, ws]);
-
-  useEffect(() =>{
-if(localVideoRef.current && stream){
-  localVideoRef.current.srcObject = stream
-}
-  },[stream])
-
+  }, [call]);
 
   const hangUp = () => {
-    if (pcRef.current) {
-      pcRef.current.close();
-      pcRef.current = null;
-    }
     if (localVideoRef.current) {
       const stream = localVideoRef.current.srcObject as MediaStream | null;
       if (stream) {
@@ -159,9 +148,29 @@ if(localVideoRef.current && stream){
       }
       localVideoRef.current.srcObject = null;
     }
+    // pcRef.current?.close();
     setCall(null);
     setIsCallOpen(false);
   };
+
+
+  useEffect(() =>{
+          if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+        }
+
+  },[stream])
+
+  const toggleVideo  =() =>{
+stream?.getVideoTracks().forEach((track) =>track.enabled = !track.enabled)
+setCamera((prev) =>!prev)
+
+  }
+  const toggleAudio = () =>{
+stream?.getAudioTracks().forEach((track) =>track.enabled = !track.enabled)
+setMic((prev) =>!prev)
+
+  }
 
 useEffect(() =>{
   if(!ws.current) return
@@ -171,48 +180,44 @@ ws.current?.send(JSON.stringify({
   audio:mic,
   type:'audio-vedio-toggle'
 }))
-},[camera,mic]) 
+},[camera,mic])
+console.log("remote access" ,remoteUserAudio ,remoteUserCamera)
   if (!call) return null;
-  const toggleVideo  =() =>{
-stream?.getVideoTracks().forEach((track) =>track.enabled = !track.enabled)
-setCamera((prev) =>!prev)
-  }
-  const toggleAudio = () =>{
-stream?.getAudioTracks().forEach((track) =>track.enabled = !track.enabled)
-setMic((prev) =>!prev)
-  }
-  console.log("remote user trakcs",remoteUserAudio ,remoteUserCamera)
   return (
-       <div className="absolute overflow-hidden bg-black top-16 h-[80%] w-[97%]">
-      <div className="flex flex-col justify-between items-center">
-
-        <video
+    <div className="absolute overflow-hidden bg-black top-16 h-[80%] w-[97%]">
+      <div className="flex flex-col   justify-between items-center">
+       
+       <div className="absolute overflow-hidden    rounded-md  bg-red-600 h-[45%] w-[40%] right-0 bottom-2 ">
+   <video
           ref={localVideoRef}
           autoPlay
           playsInline
           muted
-       className={`w-[40%] rounded-md absolute  right-0 bottom-2 ${camera ? "block" : "hidden"}`}
+          className={`w-[90%] object-cover  ${camera ? "block" : "hidden"}`}
         /> 
-        {!camera && (
+        <div className="w-24 absolute top-0 left-0 text-white">
+          <IoMdResize />
+        </div>
+       </div>
+
+{!camera && (
   <div className="w-[40%] rounded-md absolute right-0 bottom-2 bg-purple-500 h-[50%]" />
 )}
 
-
 {!remoteUserCamera 
-&& <div className=" w-[80%] bg-pink-600 rounded-md h-[80vh]">
-
+&& <div className=" w-[80%] bg-pink-500 h-[80vh]">
   </div>
 }
 <video 
           ref={remoteVideoRef}
           autoPlay
           playsInline
-          className={`w-[80%]  rounded-md ${remoteUserCamera ? "block" :"hidden"}`}
+          className={`w-[80%] ${remoteUserCamera ? "block" :"hidden"}`}
           muted
         />    
-
       </div>
-<div className="absolute  gap-3 flex justify-center items-center z-50 top-[90%] left-[40%] ">
+
+<div className={`absolute  gap-3 flex justify-center items-center z-50 top-[90%] left-[40%]  `}>
  
     <div className="text-white cursor-pointer"  onClick={toggleAudio}>
         {
@@ -236,4 +241,4 @@ setMic((prev) =>!prev)
   );
 };
 
-export default VideoCallDialog;
+export default AnswerVideoCall;
