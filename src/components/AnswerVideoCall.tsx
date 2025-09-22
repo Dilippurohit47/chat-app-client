@@ -13,6 +13,10 @@ interface VideoCallDialogProps {
   selectedUserId: string;
 }
 
+type LocalVideoSizeTypes = {
+  width:number,
+  height:number,
+}
 const AnswerVideoCall = ({
   setCall,
   call,
@@ -30,9 +34,11 @@ const [stream ,setStream] = useState<MediaStream | null>(null)
 
 const [remoteUserCamera,setRemoteUserCamera] = useState(true)
 const [remoteUserAudio,setRemoteUserAudio] = useState(true)
+const  [localVideoSize,setLocalVideoSize] = useState<LocalVideoSizeTypes>({ height:200,  width:240})
+
+
   useEffect(() => { 
     // let stream: MediaStream;
-
     const startVideo = async () => {
       if (!call) return;
 
@@ -181,27 +187,61 @@ ws.current?.send(JSON.stringify({
   type:'audio-vedio-toggle'
 }))
 },[camera,mic])
-console.log("remote access" ,remoteUserAudio ,remoteUserCamera)
   if (!call) return null;
+
+
+  const localVideoResize = (e) =>{
+
+    const startX = e.clientX
+    const startY = e.clientY
+    const startHeight = localVideoSize.height
+    const startWidth = localVideoSize.width
+
+    
+
+    const mouseMove =(mouseEvent)=>{
+      const newWidth = startWidth + (startX - mouseEvent.clientX)
+      const newHeight = startHeight + (startY - mouseEvent.clientY)
+      setLocalVideoSize({height:newHeight,width:newWidth})
+
+    }
+const mouseUp =() =>{
+  window.removeEventListener("mousemove",mouseMove)
+  window.removeEventListener("mouseup",mouseUp)
+}
+    window.addEventListener("mousemove",mouseMove)
+    window.addEventListener("mouseup",mouseUp)
+  }
+
+  console.log("new ts h w ",localVideoSize)
   return (
     <div className="absolute overflow-hidden bg-black top-16 h-[80%] w-[97%]">
       <div className="flex flex-col   justify-between items-center">
        
-       <div className="absolute overflow-hidden    rounded-md  bg-red-600 h-[45%] w-[40%] right-0 bottom-2 ">
+       <div className={`absolute overflow-hidden    rounded-md  right-0 bottom-2 `}
+       style={{
+        height:`${localVideoSize.height}px`,
+        width:`${localVideoSize.width}px`
+       }}>
    <video
           ref={localVideoRef}
           autoPlay
           playsInline
           muted
-          className={`w-[90%] object-cover  ${camera ? "block" : "hidden"}`}
+          className={`w-[100%] h-[100%] object-cover  ${camera ? "block" : "hidden"}`}
         /> 
-        <div className="w-24 absolute top-0 left-0 text-white">
-          <IoMdResize />
+        <div className="rounded-full z-50 px-2 py-2 absolute top-2 left-2 bg-black text-white  cursor-pointer " onMouseDown={localVideoResize}>
+          <IoMdResize  size={16} />
         </div>
        </div>
 
 {!camera && (
-  <div className="w-[40%] rounded-md absolute right-0 bottom-2 bg-purple-500 h-[50%]" />
+  <div className=" rounded-md absolute right-0 bottom-2 bg-purple-500 h-[50%]" style={{
+    height:`${localVideoSize.height}px`,
+    width:`${localVideoSize.width}px`
+  }}
+   />
+  
 )}
 
 {!remoteUserCamera 

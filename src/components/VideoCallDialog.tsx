@@ -5,6 +5,8 @@ import { FaVideo } from "react-icons/fa";
 import { Loader, LoaderCircle } from "lucide-react";
 import { FaMicrophone } from "react-icons/fa";
 import { FaMicrophoneSlash } from "react-icons/fa";
+import { IoMdResize } from "react-icons/io";
+
 interface VideoCallDialogProps {
   setCall: React.Dispatch<React.SetStateAction<string | null>>;
   setIsCallOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -12,6 +14,10 @@ interface VideoCallDialogProps {
   selectedUserId: string;
 }
 
+type LocalVideoSizeTypes = {
+  width:number,
+  height:number,
+}
 const VideoCallDialog = ({
   setCall,
   call,
@@ -27,6 +33,8 @@ const [mic,setMic]  =useState(true)
 const [remoteUserCamera,setRemoteUserCamera] = useState(true)
 const [remoteUserAudio,setRemoteUserAudio] = useState(true)
   const [stream,setStream] = useState<MediaStream |null>(null)
+  const  [localVideoSize,setLocalVideoSize] = useState<LocalVideoSizeTypes>({ height:200,  width:240})
+  
   useEffect(() => {
  
     let messageHandler: ((m: MessageEvent) => void) | null = null;
@@ -182,36 +190,70 @@ stream?.getAudioTracks().forEach((track) =>track.enabled = !track.enabled)
 setMic((prev) =>!prev)
   }
   console.log("remote user trakcs",remoteUserAudio ,remoteUserCamera)
+   const localVideoResize = (e) =>{
+    const startX = e.clientX
+    const startY = e.clientY
+    const startHeight = localVideoSize.height
+    const startWidth = localVideoSize.width
+
+    
+
+    const mouseMove =(mouseEvent)=>{
+      const newWidth = startWidth + (startX - mouseEvent.clientX)
+      const newHeight = startHeight + (startY - mouseEvent.clientY)
+      setLocalVideoSize({height:newHeight,width:newWidth})
+
+    }
+const mouseUp =() =>{
+  window.removeEventListener("mousemove",mouseMove)
+  window.removeEventListener("mouseup",mouseUp)
+}
+    window.addEventListener("mousemove",mouseMove)
+    window.addEventListener("mouseup",mouseUp)
+  }
   return (
        <div className="absolute overflow-hidden bg-black top-16 h-[80%] w-[97%]">
-      <div className="flex flex-col justify-between items-center">
-
+         <div className="flex flex-col   justify-between items-center">
+            
+            <div className={`absolute overflow-hidden    rounded-md  right-0 bottom-2 `}
+            style={{
+             height:`${localVideoSize.height}px`,
+             width:`${localVideoSize.width}px`
+            }}>
         <video
-          ref={localVideoRef}
-          autoPlay
-          playsInline
-          muted
-       className={`w-[40%] rounded-md absolute  right-0 bottom-2 ${camera ? "block" : "hidden"}`}
-        /> 
-        {!camera && (
-  <div className="w-[40%] rounded-md absolute right-0 bottom-2 bg-purple-500 h-[50%]" />
-)}
-
-
-{!remoteUserCamera 
-&& <div className=" w-[80%] bg-pink-600 rounded-md h-[80vh]">
-
-  </div>
-}
-<video 
-          ref={remoteVideoRef}
-          autoPlay
-          playsInline
-          className={`w-[80%]  rounded-md ${remoteUserCamera ? "block" :"hidden"}`}
-          muted
-        />    
-
-      </div>
+               ref={localVideoRef}
+               autoPlay
+               playsInline
+               muted
+               className={`w-[100%] h-[100%] object-cover  ${camera ? "block" : "hidden"}`}
+             /> 
+             <div className="rounded-full z-50 px-2 py-2 absolute top-2 left-2 bg-black text-white  cursor-pointer " onMouseDown={localVideoResize}>
+               <IoMdResize  size={16} />
+             </div>
+            </div>
+     
+     {!camera && (
+       <div className=" rounded-md absolute right-0 bottom-2 bg-purple-500 h-[50%]" style={{
+         height:`${localVideoSize.height}px`,
+         width:`${localVideoSize.width}px`
+       }}
+        />
+       
+     )}
+     
+     {!remoteUserCamera 
+     && <div className=" w-[80%] bg-pink-500 h-[80vh]">
+       </div>
+     }
+     <video 
+               ref={remoteVideoRef}
+               autoPlay
+               playsInline
+               className={`w-[80%] ${remoteUserCamera ? "block" :"hidden"}`}
+               muted
+             />    
+           </div>
+     
 <div className="absolute  gap-3 flex justify-center items-center z-50 top-[90%] left-[40%] ">
  
     <div className="text-white cursor-pointer"  onClick={toggleAudio}>
