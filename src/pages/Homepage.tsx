@@ -3,7 +3,6 @@ import "../App.css";
 import UserList from "../components/UserList";
 import ChatWindow, { MessageType } from "../components/ChatWindow";
 import { axios } from "../apiClient";
-
 import {
   Tabs,
   TabsContent,
@@ -12,62 +11,111 @@ import {
 } from "../components/ui/tabs";
 import TotalUserList from "../components/totalUserList";
 import { useDispatch, useSelector } from "react-redux";
-import { saveUser, saveAccessToken ,logout, UserType } from "../slices/userSlice";
+import {
+  saveUser,
+  saveAccessToken,
+  logout,
+  UserType,
+} from "../slices/userSlice";
 import { RootState } from "../store";
 import GroupList from "../components/GroupList";
 
 import GroupChatWindow from "../components/GroupChatWindow";
 import { useWebSocket, WebSocketContextType } from "../context/webSocket";
+// import AnswerVideoCall from "../components/AnswerVideoCall";
+import CallNotificationDialog from "../components/CallNotificationDialog";
+import AnswerVideoCall from "../components/AnswerVideoCall";
 
 type members = {
-  groupId:string,
-  id:string,
-  user:UserType,
-  userId:string,
-}
+  groupId: string;
+  id: string;
+  user: UserType;
+  userId: string;
+};
 
 export interface SelectedGroupType {
-id:string,
-name:string,
-  groupProfilePicture?:string,
-members:members[]
-lastMessage?:string
-description?:string
+  id: string;
+  name: string;
+  groupProfilePicture?: string;
+  members: members[];
+  lastMessage?: string;
+  description?: string;
 }
 
 export type unreadCountType = {
-  unreadMessages:number,
-userId:string
-}
+  unreadMessages: number;
+  userId: string;
+};
 export interface selectedChatType {
-  name:string,
-  chatId:string,
-createdAt:Date,
-email:string,
-id:string,
-lastMessage :string,
-lastMessageCreatedAt:string,
-// password:string,
-profileUrl:string,
-refreshToken:String,
-tokenExpiresIn:Date | null,
-unreadCount:unreadCountType
+  name: string;
+  chatId: string;
+  createdAt: Date;
+  email: string;
+  id: string;
+  lastMessage: string;
+  lastMessageCreatedAt: string;
+  // password:string,
+  profileUrl: string;
+  refreshToken: String;
+  tokenExpiresIn: Date | null;
+  unreadCount: unreadCountType;
 }
 
+type incomingCallType = {
+  callerId: string;
+  callStatus: string;
+  callerName: string;
+  callerProfileUrl: string;
+};
 
 function Home() {
   const dispatch = useDispatch();
 
-  const [selectedUser, setSelectedUser] = useState<selectedChatType | null>(null);
-  const [selectedGroup, setSelectedGroup] = useState <SelectedGroupType | null>(null);
+  const [selectedUser, setSelectedUser] = useState<selectedChatType | null>(
+    null
+  );
+  const [selectedGroup, setSelectedGroup] = useState<SelectedGroupType | null>(
+    null
+  );
+  const [callAccepted, setCallAccepted] = useState<boolean>(false);
+  const [showCallNotification, setShowCallNotification] =
+    useState<boolean>(false);
   const user = useSelector((state: RootState) => state.user);
-  const { ws, connected, setConnected, onlineUsers }:WebSocketContextType  = useWebSocket();
+  const [incomingCall, setIncomingCall] = useState<incomingCallType | null>(
+    null
+  );
+  const { ws, connected, setConnected, onlineUsers }: WebSocketContextType =
+    useWebSocket();
   useEffect(() => {
     if (!ws.current) return;
 
     ws.current.onerror = (e) => {
       console.error("WebSocket error:", e);
       setConnected(false);
+    };
+
+    const handleMessage = (m: MessageEvent) => {
+      const data = JSON.parse(m.data);
+      if (data.type === "someone-is-calling") {
+        const callerData = data.callerData;
+
+        setIncomingCall({
+          callerId: callerData.callerId,
+          callerName: callerData.callerName,
+          callerProfileUrl: callerData.callerProfileUrl,
+          callStatus: "incoming",
+        });
+        setShowCallNotification(true);
+      }
+      if (data.type === "client-call-status") {
+        setIncomingCall(null);
+      }
+    };
+    ws.current.addEventListener("message", handleMessage);
+
+    return () => {
+      if (!ws.current) return;
+      ws.current.removeEventListener("message", handleMessage);
     };
   }, [connected]);
   useEffect(() => {
@@ -80,34 +128,33 @@ function Home() {
       );
 
       if (res.status === 200) {
-        console.log("get access token",res.data)
-        dispatch(saveAccessToken({accessToken:res.data.accessToken}));
+        console.log("get access token", res.data);
+        dispatch(saveAccessToken({ accessToken: res.data.accessToken }));
       }
-      if(res.status == 403){
-        getAccessToken()
+      if (res.status == 403) {
+        getAccessToken();
       }
-      if(res.status !== 403 && res.status !== 200){
-        dispatch(logout())
+      if (res.status !== 403 && res.status !== 200) {
+        dispatch(logout());
       }
     };
-if(!user.accessToken){
-    getAccessToken();
-}
+    if (!user.accessToken) {
+      getAccessToken();
+    }
   }, []);
   useEffect(() => {
     const getUser = async () => {
       const res = await axios.get(
         `${import.meta.env.VITE_BASE_URL_HTTP}/user/get-user`,
-{
-  headers:{
-    Authorization:`Bearer ${user.accessToken}`
-  },
+        {
+          headers: {
+            Authorization: `Bearer ${user.accessToken}`,
+          },
           withCredentials: true,
-          
         }
       );
       if (res.status === 200) {
-        console.log("user data",res)
+        console.log("user data", res);
         dispatch(saveUser(res.data.user));
       }
     };
@@ -127,16 +174,14 @@ if(!user.accessToken){
     handleScreenSize();
 
     window.addEventListener("resize", handleScreenSize);
+
     return () => {
       window.removeEventListener("resize", handleScreenSize);
     };
   }, []);
 
-
- 
-
   return (
-    <div className="flex h-[84.5vh] md:h-[calc(100vh-3rem)]  justify-center mx-auto my-auto sm:mx-0 hide-scrollbar ">
+    <div className="flex h-[84.5vh] md:h-[calc(100vh-3rem)]  relative justify-center mx-auto my-auto sm:mx-0 hide-scrollbar ">
       <div
         className={` shadow-2xl rounded-md border-r border-gray-300 border-2  sm:mr-0  ${
           isMobile && !(selectedUser === null)
@@ -204,7 +249,7 @@ if(!user.accessToken){
         </Tabs>
       </div>
       {/* Chat Window Section */}
-      <div className="w-3/4 md:w-[100vw] ">
+      <div className="w-3/4 md:w-[100vw] relative ">
         {selectedUser && (
           <ChatWindow
             logedInUser={user}
@@ -236,7 +281,25 @@ if(!user.accessToken){
             setSelectedGroup={setSelectedGroup}
           />
         )}
+        {callAccepted && (
+          <AnswerVideoCall
+            setCallAccepted={setCallAccepted}
+            isCallAccepted={callAccepted}
+            callerId={incomingCall?.callerId}
+          />
+        )}
       </div>
+      {incomingCall && showCallNotification && (
+        <CallNotificationDialog
+          callerData={incomingCall}
+          onAccept={() => {
+            setCallAccepted(true);
+            setShowCallNotification(false);
+          }}
+          onReject={() => console.log("Call rejected")}
+          onIgnore={() => setShowCallNotification(false)}
+        />
+      )}
     </div>
   );
 }

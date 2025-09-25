@@ -6,6 +6,7 @@ import { RootState } from "../store";
 import { SetStateAction, useEffect, useRef } from "react";
 
 const ContextMenuDialogBox = ({ open, setOpen,userId ,chatId ,onSelectUser ,deletechat ,setMessages}:{open:null | string , userId:string ,setOpen:React.Dispatch<SetStateAction<string | null >>, chatId:string,setMessages:(state:[])=>void,onSelectUser:(state:null)=>void ,deletechat:(state:string) =>void})=> {
+  console.log("chat id",chatId)
   const isOpen = !!open;
 
  const user = useSelector((state:RootState) =>state.user)  
@@ -13,7 +14,8 @@ const ContextMenuDialogBox = ({ open, setOpen,userId ,chatId ,onSelectUser ,dele
     const res = await axios.delete(`${import.meta.env.VITE_BASE_URL_HTTP}/chat-setting/clear-chat`,{
         withCredentials:true,
         data:{
- userId:userId
+ userId:userId,
+ chatId:chatId
         }
     })
 if(res.status === 200){
@@ -28,7 +30,6 @@ const deleteChat =  async() =>{
     data:{
         userId:user.id,
         chatId:chatId
-
     }
   })
 if(res.status === 200){

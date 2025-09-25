@@ -679,11 +679,9 @@ prevConvertationref.current = ""
 
 </div>
       </div>
-      
-      { isCallOpen && callUserId === selectedUser.id && <VideoCallDialog setCall={setCallUserId}  setIsCallOpen={setIsCallOpen} call={callUserId} selectedUserId={selectedUser.id}/>
+      { isCallOpen && callUserId === selectedUser.id && <VideoCallDialog logedInUser={logedInUser} setCall={setCallUserId}  setIsCallOpen={setIsCallOpen} call={callUserId} selectedUserId={selectedUser.id}/>
       }
-      {answerCall  && callUserId === selectedUser.id && <AnswerVideoCall setCall={setCallUserId}  setIsCallOpen={setAnswerCall} call={callUserId} selectedUserId={selectedUser.id}/>
-      }
+     
       <SearchBarForChat
         messageIndex={messageIndex}
         totalFindmessages={findMessagesIds.length}

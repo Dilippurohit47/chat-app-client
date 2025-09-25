@@ -13,6 +13,7 @@ export interface WebSocketContextType {
   onlineUsers: string[];
 }
 
+
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
 
 export const WebSocketProvider = ({ children }:{children:React.ReactNode}) => {
@@ -44,7 +45,6 @@ useEffect(() =>{
 
          ws.current.onmessage=(m) =>{
  const data = JSON.parse(m.data);
-        console.log("online data",data)
         if (data.type === "online-users") {
           console.log("online ",data)
           const filterData = data?.onlineUsers.filter(
@@ -53,6 +53,8 @@ useEffect(() =>{
           console.log("online",filterData)
           setOnlineUsers(filterData);
         }
+
+      
         }
       ws.current.onclose = () => {
         console.log("WebSocket connection closed");
