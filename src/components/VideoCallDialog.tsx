@@ -106,7 +106,7 @@ const VideoCallDialog = ({
     ws.current?.send(
       JSON.stringify({
         type: "call-status",
-        callStatus: "cancel",
+        callStatus: "hang-up",
         callReceiverId: selectedUserId,
       })
     );
@@ -216,6 +216,9 @@ const VideoCallDialog = ({
           console.log("call accepted through ws");
           setIsCallAccepted(true);
         }
+        if(data.callStatus === "hang-up"){
+          hangUp()
+        }
       }
     };
     ws.current?.addEventListener("message", handleMessage);
@@ -275,7 +278,7 @@ const VideoCallDialog = ({
             }`}
           />
           <div
-            className="rounded-full z-50 px-2 py-2 absolute top-2 left-2 bg-black text-white  cursor-pointer "
+            className="rounded-full z-50 px-2 py-2 absolute top-2 left-2 bg-black text-white  cursor-move "
             onMouseDown={localVideoResize}
           >
             <IoMdResize size={16} />
@@ -295,13 +298,16 @@ const VideoCallDialog = ({
         {!remoteUserCamera && (
           <div className=" w-[80%] bg-pink-500 h-[80vh]"></div>
         )}
-        <video
+{
+  isCallAccepted ?         <video
           ref={remoteVideoRef}
           autoPlay
           playsInline
           className={`w-[80%] ${remoteUserCamera ? "block" : "hidden"}`}
-          muted
-        />
+        /> : <div className={`w-[80%] text-2xl font-semibold h-[70vh] flex justify-center items-center text-white text-center ${remoteUserCamera ? "block" : "hidden"}`}> 
+        Calling...
+        </div>
+}
       </div>
 
       <div className="absolute  gap-3 flex justify-center items-center z-50 top-[90%] left-[40%] ">

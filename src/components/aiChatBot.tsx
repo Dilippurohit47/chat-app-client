@@ -31,9 +31,7 @@ const AiChatBot = ({
     }
   };
 
-  const handleContextMenu = (
-    e: React.MouseEvent<HTMLLIElement, MouseEvent>
-  ) => {};
+
   return (
     <div>
       <div className="relative w-full">
@@ -43,7 +41,6 @@ const AiChatBot = ({
               ? "bg-[#008080d6] text-white"
               : "bg-gray-200"
           }`}
-          onContextMenu={(e) => handleContextMenu(e)}
           onClick={() => {
             onSelectUser(user);
             setOpenContextMenu(null);
@@ -64,17 +61,7 @@ const AiChatBot = ({
               </div>
               <div className="bg-green-500 rounded-3xl h-2 w-2"></div>
             </div>
-            <div className={`text-sm flex justify-between w-full overflow-hidden truncate ${selectedUser?.chatId  === "ai-chat-bot" ? "text-gray-200" :"text-gray-500"} `}>
-              <span className="max-w-[8rem] overflow-hidden truncate">
-                Typing...
-              </span>
-              <div className="flex gap-1 justify-center items-center">
-                <div className="text-white bg-blue-400 rounded-full h-4 w-4 flex items-center justify-center text-[0.6rem] p-2 text-center">
-                  3
-                </div>
-                <span>12:30 PM</span>
-              </div>
-            </div>
+   
           </div>
         </li>
 

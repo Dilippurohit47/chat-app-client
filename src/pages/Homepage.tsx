@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "../App.css";
 import UserList from "../components/UserList";
 import ChatWindow, { MessageType } from "../components/ChatWindow";
@@ -84,6 +84,12 @@ function Home() {
   const [incomingCall, setIncomingCall] = useState<incomingCallType | null>(
     null
   );
+  const answerVideoCallRef  = useRef<any>(null)
+   const [selectedTab, setSelectedTab] = useState("");
+  const [chatId, setChatId] = useState<string | null>("");
+  const [messages, setMessages] = useState<MessageType[]>([]);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+
   const { ws, connected, setConnected, onlineUsers }: WebSocketContextType =
     useWebSocket();
   useEffect(() => {
@@ -108,7 +114,14 @@ function Home() {
         setShowCallNotification(true);
       }
       if (data.type === "client-call-status") {
+        if(data.callStatus === "hang-up"){
+          if(answerVideoCallRef.current){
+            answerVideoCallRef.current.hangUp()
+            answerVideoCallRef.current = null
+          }
         setIncomingCall(null);
+
+        } 
       }
     };
     ws.current.addEventListener("message", handleMessage);
@@ -118,6 +131,7 @@ function Home() {
       ws.current.removeEventListener("message", handleMessage);
     };
   }, [connected]);
+
   useEffect(() => {
     const getAccessToken = async () => {
       const res = await axios.get(
@@ -160,10 +174,7 @@ function Home() {
     };
     getUser();
   }, [user.accessToken]);
-  const [selectedTab, setSelectedTab] = useState("");
-  const [chatId, setChatId] = useState<string | null>("");
-  const [messages, setMessages] = useState<MessageType[]>([]);
-  const [isMobile, setIsMobile] = useState<boolean>(false);
+ 
 
   useEffect(() => {
     const handleScreenSize = () => {
@@ -180,6 +191,14 @@ function Home() {
     };
   }, []);
 
+  const callRejected =() =>{
+    if(!incomingCall?.callerId) return
+    ws.current?.send(JSON.stringify({
+      type:"call-status",
+      callStatus:"hang-up",
+      callReceiverId:incomingCall?.callerId
+    }))
+  }
   return (
     <div className="flex h-[84.5vh] md:h-[calc(100vh-3rem)]  relative justify-center mx-auto my-auto sm:mx-0 hide-scrollbar ">
       <div
@@ -286,6 +305,7 @@ function Home() {
             setCallAccepted={setCallAccepted}
             isCallAccepted={callAccepted}
             callerId={incomingCall?.callerId}
+            ref={answerVideoCallRef}
           />
         )}
       </div>
@@ -296,7 +316,7 @@ function Home() {
             setCallAccepted(true);
             setShowCallNotification(false);
           }}
-          onReject={() => console.log("Call rejected")}
+          onReject={() => callRejected()}
           onIgnore={() => setShowCallNotification(false)}
         />
       )}

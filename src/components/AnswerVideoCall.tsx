@@ -5,11 +5,8 @@ import { FaVideo } from "react-icons/fa";
 import { IoMdResize } from "react-icons/io";
 import { FaMicrophone } from "react-icons/fa";
 import { FaMicrophoneSlash } from "react-icons/fa";
+import { forwardRef ,useImperativeHandle } from "react";
 interface VideoCallDialogProps {
-  // setCall: React.Dispatch<React.SetStateAction<string | null>>;
-  // setIsCallOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  // call: string | null;c
-  // selectedUserId: string;
   callerId: string | undefined;
   setCallAccepted: React.Dispatch<React.SetStateAction<boolean>>;
   isCallAccepted: boolean;
@@ -19,11 +16,12 @@ type LocalVideoSizeTypes = {
   width: number;
   height: number;
 };
-const AnswerVideoCall = ({
-  callerId,
-  setCallAccepted,
-  isCallAccepted,
-}: VideoCallDialogProps) => {
+const AnswerVideoCall = forwardRef((props: VideoCallDialogProps, ref)=> {
+
+  
+
+    const { callerId, setCallAccepted, isCallAccepted } = props;
+
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const [remoteStream, setRemoteStream] = useState(false);
@@ -44,7 +42,6 @@ const AnswerVideoCall = ({
 
   useEffect(() => {
     const startVideo = async () => {
-      // let pc:RTCPeerConnection | null = pcRef.current
       if (!callerId) return;
       try {
         let localStream = await navigator.mediaDevices.getUserMedia({
@@ -163,10 +160,21 @@ const AnswerVideoCall = ({
       }
       localVideoRef.current.srcObject = null;
     }
-    // pcRef.current?.close();
+    pcRef.current?.close();
     setCallAccepted(false);
-  };
 
+        ws.current?.send(
+      JSON.stringify({
+        type: "call-status",
+        callStatus: "hang-up",
+        callReceiverId: callerId,
+      })
+    );
+    
+  };
+useImperativeHandle(ref, () => ({
+  hangUp, 
+}));
   useEffect(() => {
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = stream;
@@ -289,6 +297,6 @@ const AnswerVideoCall = ({
       </div>
     </div>
   );
-};
+});
 
 export default AnswerVideoCall;

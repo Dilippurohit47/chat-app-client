@@ -660,14 +660,12 @@ prevConvertationref.current = ""
         </div>
 <div className="flex justify-center pr-4 items-center gap-4">
 
-      <div className="cursor-pointer" onClick={() =>{setIsCallOpen(true) ; setCallUserId(selectedUser.id)}}>
+      <div className="cursor-pointer " onClick={() =>{setIsCallOpen(true) ; setCallUserId(selectedUser.id)}}>
           <LuPhoneCall size={20} />
         </div>
-      <div className="cursor-pointer" onClick={() =>{setAnswerCall(true) ; setCallUserId(selectedUser.id)}}>
-          answer
-        </div>
+   
         <div
-          className="cursor-pointer"
+          className="cursor-pointer "
           onClick={() => {
             setOpenSearchBar(!openSearchBar), setFindMessagesIds([]);
           }}
