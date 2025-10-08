@@ -200,15 +200,15 @@ function Home() {
     }))
   }
   return (
-    <div className="flex h-[84.5vh] md:h-[calc(100vh-3rem)]  relative justify-center mx-auto my-auto sm:mx-0 hide-scrollbar ">
+    <div className="flex  h-[84.5vh] sm:h-[calc(100vh-3rem)] md:h-[calc(100vh-3rem)]  relative justify-center mx-auto my-auto sm:mx-0 hide-scrollbar ">
       <div
-        className={` shadow-2xl rounded-md border-r border-gray-300 border-2  sm:mr-0  ${
-          isMobile && !(selectedUser === null)
-            ? " hidden -translate-x-[100%] w-0"
-            : "w-1/4  sm:w-full"
-        } `}
+        className={` shadow-2xl sm:w-[100%] rounded-md border-r  border-gray-300 border-2  sm:mr-0  ${
+          isMobile && !((selectedUser || selectedGroup ) === null)
+            ? " hidden -translate-x-[100%]   "
+            : "w-1/4  md:w-[35%]"
+        } `}  
       >
-        <Tabs defaultValue="online-users" className={`w-[300px] sm:w-full`}>
+        <Tabs defaultValue="online-users" className={` md:max-w-[400px] md:mx-auto md:my-0 sm:w-full`}>
           <TabsList className="w-full border-2 ">
             <TabsTrigger
               value="online-users"
@@ -268,7 +268,11 @@ function Home() {
         </Tabs>
       </div>
       {/* Chat Window Section */}
-      <div className="w-3/4 md:w-[100vw] relative ">
+     <div
+  className={` relative w-3/4 ${
+    selectedUser || selectedGroup ? "md:w-full sm:w-[100%] sm:h-[100%]" : "sm:w-0"
+  }`}
+>
         {selectedUser && (
           <ChatWindow
             logedInUser={user}
@@ -282,7 +286,7 @@ function Home() {
           />
         )}
         {!selectedUser && !selectedGroup && (
-          <div className="flex bg-[#1e1e2e] sm:hidden  items-center justify-center h-full text-gray-200 rounded-md text-[1.1rem] md:rounded-none  ">
+          <div className="flex bg-[#1e1e2e] sm:hidden   items-center justify-center h-full text-gray-200 rounded-md text-[1.1rem] md:rounded-none  ">
             {user.isLogin
               ? selectedTab !== "group-list"
                 ? "select a user and start chating"

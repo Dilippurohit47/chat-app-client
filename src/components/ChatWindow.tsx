@@ -11,9 +11,10 @@ import { RxCross2 } from "react-icons/rx";
 import { BiSolidSend } from "react-icons/bi";
 import { useWebSocket } from "../context/webSocket";
 import { selectedChatType } from "../pages/Homepage";
+import { MdArrowBackIosNew } from "react-icons/md";
+
 import { LuPhoneCall } from "react-icons/lu";
 import VideoCallDialog from "./VideoCallDialog";
-import AnswerVideoCall from "./AnswerVideoCall";
 
 export type MessageType = {
   id?: string;
@@ -638,9 +639,14 @@ prevConvertationref.current = ""
 
 
   return (
-    <div className="flex  relative overflow-hidden    md:h-full   flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl md:p-0  md:rounded-[0] ">
-      <div className=" px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
-        <div className="flex justify-between items-center gap-3">
+    <div className="flex  relative overflow-hidden    md:h-full   flex-col h-[100%] max-md:p-4 p-2 bg-[#1e1e2e] max-md:rounded-2xl md:p-0  md:rounded-[0] ">
+      <div className=" pr-2 pl-2 max-md:px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
+        <div className="flex justify-between items-center gap-2">
+
+        <div onClick={()=>setSelectedUser(null)}>
+        <MdArrowBackIosNew size={24}/>
+      </div>
+
           <img
             src={
               selectedUser?.profileUrl
@@ -709,10 +715,10 @@ prevConvertationref.current = ""
               <div
                 key={message.id}
                 ref={(el) => setRefs(el, message.id!, isLast)}
-                className={`mb-4 flex     gap-2 ${
+                className={`mb-4 flex    md:text-start gap-2 ${
                   message.senderId === senderId
                     ? "justify-end "
-                    : "justify-start  max-w-[70%]"
+                    : "justify-start  max-md:max-w-[70%] "
                 }`}
               >
                 <div>

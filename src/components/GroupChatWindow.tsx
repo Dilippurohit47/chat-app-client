@@ -108,10 +108,9 @@ useEffect(() =>{
     ws.removeEventListener("message",handleMessage)
   }
 },[])
-console.log(messages)
 const groupInfonButtonRef = useRef<HTMLDivElement | null>(null)
   return (
-    <div className="flex relative  flex-col h-[100%] p-4 bg-[#1e1e2e] rounded-2xl  overflow-hidden ">
+    <div className="flex relative  flex-col h-[100%]  max-md:p-4 p-2 bg-[#1e1e2e] max-md:rounded-2xl  overflow-hidden ">
       <div className=" px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
         <div className="flex justify-between items-center gap-3">
           <img
