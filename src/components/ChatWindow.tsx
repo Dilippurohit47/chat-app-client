@@ -643,7 +643,7 @@ prevConvertationref.current = ""
       <div className=" pr-2 pl-2 max-md:px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
         <div className="flex justify-between items-center gap-2">
 
-        <div onClick={()=>setSelectedUser(null)}>
+        <div onClick={()=>setSelectedUser(null)} className="cursor-pointer">
         <MdArrowBackIosNew size={24}/>
       </div>
 
