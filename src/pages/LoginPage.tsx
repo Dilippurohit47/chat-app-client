@@ -8,6 +8,9 @@ import { toast } from "react-toastify";
 import { LuEyeClosed } from "react-icons/lu";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { AxiosError } from "axios";
+import { FcGoogle } from "react-icons/fc";
+
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -115,6 +118,11 @@ const dispatch = useDispatch()
             Login
           </button>
         </form>
+
+
+            <div className="my-2  font-medium ">or</div>
+<div className=" flex justify-center items-center gap-2 py-2 border-2 rounded-md  hover:bg-gray-200 cursor-pointer ">Continue with Google <FcGoogle size={21} /> </div>
+
         <p className="mt-4 text-center text-gray-600">
           Don't have an account?{" "}
           <a href="/sign-up" className="text-blue-600 hover:underline">

@@ -202,7 +202,7 @@ function Home() {
   return (
     <div className="flex  h-[84.5vh] sm:h-[calc(100vh-3rem)] md:h-[calc(100vh-3rem)]  relative justify-center mx-auto my-auto sm:mx-0 hide-scrollbar ">
       <div
-        className={` shadow-2xl sm:w-[100%] rounded-md border-r  border-gray-300 border-2  sm:mr-0  ${
+        className={` shadow-2xl sm:w-[100%] rounded-md border-r  border-gray-300 border-2  sm:mr-0   ${
           isMobile && !((selectedUser || selectedGroup ) === null)
             ? " hidden -translate-x-[100%]   "
             : "w-1/4  md:w-[35%]"
@@ -269,7 +269,7 @@ function Home() {
       </div>
       {/* Chat Window Section */}
      <div
-  className={` relative w-3/4 ${
+  className={` relative w-3/4  ${
     selectedUser || selectedGroup ? "md:w-full sm:w-[100%] sm:h-[100%]" : "sm:w-0"
   }`}
 >
