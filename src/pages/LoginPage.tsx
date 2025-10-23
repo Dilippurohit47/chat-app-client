@@ -9,8 +9,14 @@ import { LuEyeClosed } from "react-icons/lu";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { AxiosError } from "axios";
 import { FcGoogle } from "react-icons/fc";
+import { useGoogleLogin } from "@react-oauth/google";
+
+interface CredentialResType {
+  [Key: string]: string;
+}
 
 
+ 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -60,6 +66,37 @@ const dispatch = useDispatch()
     };
     getUser();
   }, []);
+
+ const handleLoginSuccess = async (credentialResponse:CredentialResType) => {
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_BASE_URL_HTTP}/user/google/callback`,
+        {
+          credentialResponse,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      if (res && res.status === 200) {
+        toast.success(res.data.message);
+        dispatch(saveUser(res.data.user))
+        navigate("/");
+      }
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data.message || "Internal server error");
+      } else {
+        toast.error("An error occurred try again later");
+      }
+    }
+  };
+
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: (codeResponse) => handleLoginSuccess(codeResponse),
+    flow: "auth-code",
+  });
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600">
@@ -121,8 +158,8 @@ const dispatch = useDispatch()
 
 
             <div className="my-2  font-medium ">or</div>
-<div className=" flex justify-center items-center gap-2 py-2 border-2 rounded-md  hover:bg-gray-200 cursor-pointer ">Continue with Google <FcGoogle size={21} /> </div>
-
+            
+<div className=" flex justify-center items-center gap-2 py-2 border-2 rounded-md  hover:bg-gray-200 cursor-pointer " onClick={()=>loginWithGoogle()}>Continue with Google <FcGoogle size={21} /> </div>
         <p className="mt-4 text-center text-gray-600">
           Don't have an account?{" "}
           <a href="/sign-up" className="text-blue-600 hover:underline">
@@ -133,5 +170,6 @@ const dispatch = useDispatch()
     </div>
   );
 };
+
 
 export default Login;

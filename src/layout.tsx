@@ -6,7 +6,7 @@ const Layout = ({ children }:{children:React.ReactNode}) => {
   const [user, setUser] = useState();
   useEffect(() => {
     const getUser = async () => {
-      const res = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/user/get-user`, {
+      const res = await axios.get(`${import.meta.env.e}/user/get-user`, {
         withCredentials: true,
       });
       if (res.status === 200) {
