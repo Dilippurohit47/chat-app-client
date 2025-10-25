@@ -199,6 +199,7 @@ function Home() {
       callReceiverId:incomingCall?.callerId
     }))
   }
+  console.log("from homepage",selectedUser)
   return (
     <div className="flex  h-[84.5vh] sm:h-[calc(100vh-3rem)] md:h-[calc(100vh-3rem)]  relative justify-center mx-auto my-auto sm:mx-0 hide-scrollbar ">
       <div
@@ -231,7 +232,7 @@ function Home() {
             <TabsTrigger
               value="total-users"
               className="cursor-pointer data-[state=active]:bg-blue-500 data-[state=active]:text-white"
-              onClick={() => setSelectedTab("all-users")}
+              onClick={() => {setSelectedTab("all-users") ,setSelectedUser(null)}}
             >
               Total
             </TabsTrigger>
@@ -283,6 +284,7 @@ function Home() {
             chatId={chatId}
             messages={messages}
             setMessages={setMessages}
+            selectedTab={selectedTab}
           />
         )}
         {!selectedUser && !selectedGroup && (

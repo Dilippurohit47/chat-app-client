@@ -51,6 +51,7 @@ interface ChatWindowProps {
   chatId: string | null;
   messages:MessageType[]
   setMessages:React.Dispatch<React.SetStateAction<MessageType[]>>
+  selectedTab:string
 }
 interface sendedFileType  {
 imageId: string,
@@ -70,6 +71,7 @@ const ChatWindow = ({
   chatId,
   messages,
   setMessages,
+  selectedTab
 }: ChatWindowProps) => {
   const [input, setInput] = useState<string>("");
   const chatWindowRef: React.RefObject<HTMLDivElement | null> = useRef(null);
@@ -270,10 +272,20 @@ const [answerCall, setAnswerCall] = useState(false);
   }, [logedInUser]);
 
   useEffect(() => {
-    if (!selectedUser) return;
+    console.log("run again after making user null")
 
-      const incompleteInput = incompletInputMsgRef.current.find((inc) => inc.selectedUserId === selectedUser.id)
-        if(selectedUser.id === "chat-bot"){
+
+      if (placeHolderSetterInterval.current) {
+    clearInterval(placeHolderSetterInterval.current);
+    placeHolderSetterInterval.current = null;
+  }
+
+      if (!selectedUser) {
+    SetInputPlaceHolder("Greet your friend...");
+    setInput("");
+    return; 
+  }
+       if(selectedUser.id === "chat-bot"){
               const placeHolders= ["Tell me about your projects" ,"What is your experience","what is your qualifications"]
               let usedPlaceholder = 0
               if(placeHolderSetterInterval.current === null){
@@ -287,17 +299,22 @@ const [answerCall, setAnswerCall] = useState(false);
                 }
             },2000)
               }
-
-    }else{
-      console.log("else blovk")
+    }
+    
+    
+    else{
+      console.log("in else block")
       if(placeHolderSetterInterval.current !== null){
-        console.log("removing")
+        console.log("removing placeholder")
         clearInterval(placeHolderSetterInterval.current)
         placeHolderSetterInterval.current = null
-        console.log("removed",placeHolderSetterInterval)
       }
       SetInputPlaceHolder("Type a message")
     }
+
+if(!selectedUser) return
+      const incompleteInput = incompletInputMsgRef.current.find((inc) => inc.selectedUserId === selectedUser.id)
+      
     if(incompleteInput){
       setInput(incompleteInput?.input)
     }if(!incompleteInput){
@@ -357,7 +374,14 @@ prevConvertationref.current = ""
     getChats();
     updateUnreadCount();
     setOpenSearchBar(false);
-  }, [selectedUser]);
+
+    return () =>{
+      if(placeHolderSetterInterval.current){
+      clearInterval(placeHolderSetterInterval.current)
+      placeHolderSetterInterval.current = null
+      }
+    }
+  }, [selectedUser ,selectedTab]);
 
   useEffect(() => {
     if (!messageContainerRef.current) return;

@@ -9,7 +9,7 @@ import { WebSocketProvider } from "./context/webSocket.tsx";
 createRoot(document.getElementById("root")!).render(
     <Provider store={store}>
       <WebSocketProvider>
-        <GoogleOAuthProvider clientId="860063088948-9dalgkd113he6c4dhjkfd8qo11vankv6.apps.googleusercontent.com">
+        <GoogleOAuthProvider clientId={`${import.meta.env.VITE_GOOGLE_CLIENT_ID}`}>
       <App />
       </GoogleOAuthProvider>
       </WebSocketProvider>
