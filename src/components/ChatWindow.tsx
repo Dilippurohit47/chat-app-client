@@ -15,6 +15,7 @@ import { MdArrowBackIosNew } from "react-icons/md";
 
 import { LuPhoneCall } from "react-icons/lu";
 import VideoCallDialog from "./VideoCallDialog";
+import { useNetworkStatus } from "../lib/helper";
 
 export type MessageType = {
   id?: string;
@@ -24,7 +25,8 @@ export type MessageType = {
   createdAt: number;
   tempId?:string | null,
   isMedia?:boolean,
-  uploading?:boolean
+  uploading?:boolean,
+  chatId:string
 };
 // type selectedChat = {
 //   chatId: string;
@@ -132,7 +134,33 @@ const [answerCall, setAnswerCall] = useState(false);
       error: error,
     };
   }
+
+  
+
+  const saveOfflineMessage = (msg:MessageType) =>{
+    const existing = JSON.parse(localStorage.getItem("pendingMessages")) || [];
+    existing.push(msg)
+    localStorage.setItem("pendingMessages",JSON.stringify(existing))
+  }
+
   const sendMessage = async () => {
+    if(!navigator.onLine){
+      toast.error("no internet connection")
+          const msg = newMessage({
+        senderId,
+        content: input,
+        receiverId: selectedUser.id!,
+        isMedia: false,
+        tempId: "0",
+        error: false,
+        uploading: false,
+      });
+
+    saveOfflineMessage(msg)
+      setMessages((prev) => [msg, ...prev]);
+      setInput("")
+      return
+    }
     if (!logedInUser.isLogin) return toast.error("Login first ");
     if (!ws) return toast.error("server error!");
     if(selectedUser.id === "chat-bot"){
@@ -262,9 +290,10 @@ const [answerCall, setAnswerCall] = useState(false);
         }
       })
 
-
     setInput("");
   };
+
+
   useEffect(() => {
     if (!logedInUser.isLogin) {
       setMessages([]);
@@ -272,9 +301,6 @@ const [answerCall, setAnswerCall] = useState(false);
   }, [logedInUser]);
 
   useEffect(() => {
-    console.log("run again after making user null")
-
-
       if (placeHolderSetterInterval.current) {
     clearInterval(placeHolderSetterInterval.current);
     placeHolderSetterInterval.current = null;
@@ -369,7 +395,6 @@ if(!selectedUser) return
     );
 prevConvertationref.current = ""
     }
-
     setInitialLoad(true);
     getChats();
     updateUnreadCount();
@@ -460,12 +485,7 @@ prevConvertationref.current = ""
       }
       if (data.type === "chatbot-reply") {
         console.log("personal mdg", data);
-        if (true
-          // (data.receiverId === logedInUser.id &&
-          //   data.senderId === selectedUser.id) ||
-          // (data.senderId === logedInUser.id &&
-          //   data.receiverId === selectedUser.id)
-        ) {
+        if (true) {
           const msg = newMessage({
             senderId: data.senderId,
             content: data.answer,

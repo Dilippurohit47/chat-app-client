@@ -25,6 +25,7 @@ import { useWebSocket, WebSocketContextType } from "../context/webSocket";
 // import AnswerVideoCall from "../components/AnswerVideoCall";
 import CallNotificationDialog from "../components/CallNotificationDialog";
 import AnswerVideoCall from "../components/AnswerVideoCall";
+import { useNetworkStatus } from "../lib/helper";
 
 type members = {
   groupId: string;
@@ -92,6 +93,36 @@ function Home() {
 
   const { ws, connected, setConnected, onlineUsers }: WebSocketContextType =
     useWebSocket();
+
+
+    const isOnline = useNetworkStatus()
+
+
+useEffect(() =>{
+  if(!isOnline) return
+    const offlineMessages = JSON.parse(localStorage.getItem("pendingMessages") || "[]")
+    console.log("offline messages",offlineMessages)
+    if(offlineMessages  && offlineMessages.length > 0){
+      offlineMessages.forEach((msg:MessageType) =>{
+        console.log("messages send")
+  if(!ws.current) return
+               ws.current.send(
+        JSON.stringify({
+          type: "personal-msg",
+          message: msg.content,
+          receiverId: msg.receiverId,
+          senderId:msg.senderId,
+          chatId:msg.chatId,
+        })
+      );
+
+      })
+
+    }
+        localStorage.removeItem("pendingMessages");
+},[isOnline])
+
+
   useEffect(() => {
     if (!ws.current) return;
 
