@@ -7,6 +7,7 @@ export interface UserType {
   isLogin: boolean;
   profileUrl: string | null;
   accessToken:string | null;
+  publickey:string | null ;
 }
 
 const initialState: UserType = {
@@ -16,6 +17,7 @@ const initialState: UserType = {
   isLogin: false,
   profileUrl: null,
   accessToken:null,
+  publickey:null,
 };
 
 const userReducer = createSlice({
@@ -27,12 +29,16 @@ const userReducer = createSlice({
         (state.id = null),
         (state.name = null),
         (state.email = null);
+        (state.publickey = null);
     },
     saveUser: (state, action: PayloadAction<UserType>) => {
-      (state.id = action.payload.id),
-        (state.name = action.payload.name),
-        (state.email = action.payload.email || null),
-        (state.profileUrl = action.payload.profileUrl),
+      // console.log("name",action.payload.name)
+      // console.log("key ",action.payload.publickey?.length)
+      (state.id = action.payload.id);
+        (state.name = action.payload.name);
+        (state.email = action.payload.email || null);
+        (state.profileUrl = action.payload.profileUrl);
+        (state.publickey = action.payload.publickey);
       state.isLogin = true;
     },
     saveAccessToken:(state,action) =>{

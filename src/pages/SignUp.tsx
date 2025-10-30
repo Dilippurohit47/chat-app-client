@@ -10,6 +10,11 @@ import { toast } from "react-toastify";
 import { LuEyeClosed } from "react-icons/lu";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { AxiosError } from "axios";
+import { savePrivateKeyToIndexedDB } from "../lib/helper";
+type keyPair ={
+  publicKey:string,
+  privateKey:string,
+} 
 const SignUp = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState("");
@@ -40,16 +45,50 @@ const SignUp = () => {
     getUser();
   }, []);
   
-  const handleSubmit = async (e:React.FormEvent<HTMLFormElement>) => {
+  const generateKeys =  async():Promise<keyPair> =>{
+    try {
+
+      const keyPair = await window.crypto.subtle.generateKey(
+  {
+    name: "RSA-OAEP",
+    modulusLength: 4096,
+    publicExponent: new Uint8Array([1, 0, 1]), 
+    hash: "SHA-256", 
+  },
+  true, 
+  ["encrypt", "decrypt"]
+);
+
+const publicKeyExported = await crypto.subtle.exportKey("spki", keyPair.publicKey);
+const privateKeyExported = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
+
+const publicKeyString = btoa(String.fromCharCode(...new Uint8Array(publicKeyExported)));
+const privateKeyString = btoa(String.fromCharCode(...new Uint8Array(privateKeyExported)));
+
+return {publicKey:publicKeyString  , privateKey : privateKeyString}
+
+    } catch (error) {
+      console.log("error in generating private public keys ",error)
+      throw error
+    }
+  }
+
+
+
+  const handleSubmit = async (e:React.FormEvent<HTMLFormElement>) =>
+     {
     e.preventDefault();
     try {
+        const {publicKey , privateKey } = await generateKeys()
+  await  savePrivateKeyToIndexedDB(privateKey)
       const res = await axios.post(
        `${import.meta.env.VITE_BASE_URL_HTTP}/user/sign-up`,
         {
           name,
           email,
-          password,
-          profileUrl:image
+          password, 
+          profileUrl:image,
+          publicKey:publicKey
         },
         {
           withCredentials: true,
@@ -63,6 +102,7 @@ const SignUp = () => {
         console.log(res.data.errors[0])
       }
     } catch (error) {
+      console.log(error)
       const err = error as AxiosError<{message:string}>
         setError(err.response?.data?.message || "Something went wrong")
     }
@@ -128,7 +168,7 @@ uploadImageToS3()
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
+        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800 cursor-pointer">
           Welcome
         </h2>
 

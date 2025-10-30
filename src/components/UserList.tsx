@@ -5,6 +5,7 @@ import ContextMenuDialogBox from "./contextMenuDialogBox";
 import { MessageType } from "./ChatWindow";
 import { selectedChatType } from "../pages/Homepage";
 import AiChatBot from "./aiChatBot";
+import { decryptMessage, getkeyFromIndexedDb, importPrivateKey } from "../lib/helper";
 export interface UserListProps {
   selectedUser: selectedChatType | null;
   onSelectUser: React.Dispatch<SetStateAction<selectedChatType | null>>;
@@ -49,7 +50,33 @@ const UserList = ({
         { params: { userId: logedInUser.id }, withCredentials: true }
       );
       if (res.status === 200) {
-        setRecentChatUsers(res.data.chats);
+        const chats = res.data.chats  as selectedChatType[]
+if(chats.length > 0){
+
+
+                        const privateKeyString  =  await getkeyFromIndexedDb() 
+                         const privateKeyCrypto = await importPrivateKey(privateKeyString!)
+
+
+        const decryptedChats = await Promise.all(chats.map(async(user) =>{
+          if(user.senderId === logedInUser.id){
+            const decryptedMessage = await decryptMessage(user.lastMessageForSender , privateKeyCrypto)
+                      user.lastMessage = decryptedMessage
+                      return user
+
+          }else{
+// if(privateKeyString && privateKeyCrypto){ 
+                      const decryptedMessage = await decryptMessage(user.lastMessageForReceiver , privateKeyCrypto)
+                      user.lastMessage = decryptedMessage
+                      return user
+                      //  }
+          }
+                       
+                     
+        }))
+        setRecentChatUsers(decryptedChats);
+
+}
       }
     };
     getTotalUsers();
@@ -59,12 +86,38 @@ const UserList = ({
     }
   }, [logedInUser]);
 
+
+
   useEffect(() => {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
-    const messageHandler = (m: any) => {
+    const messageHandler = async(m: any) => {
       const data = JSON.parse(m.data);
       if (data.type === "recent-chats") {
-        setRecentChatUsers(data.chats);
+        console.log("chats",data.chats)
+const chats = data.chats as selectedChatType[]
+          const privateKeyString  =  await getkeyFromIndexedDb() 
+                         const privateKeyCrypto = await importPrivateKey(privateKeyString!)
+
+        const decryptedChats = await Promise.all(chats.map(async(user) =>{
+          if(user.senderId === logedInUser.id){
+     if(privateKeyString && privateKeyCrypto){
+                      const decryptedMessage = await decryptMessage(user.lastMessageForSender , privateKeyCrypto)
+                      user.lastMessage = decryptedMessage
+                      return user
+                       }
+          }
+                  else{
+
+                      if(privateKeyString && privateKeyCrypto){
+                      const decryptedMessage = await decryptMessage(user.lastMessageForReceiver , privateKeyCrypto)
+                      user.lastMessage = decryptedMessage
+                      return user
+                       }
+                      }   
+        }))
+        setRecentChatUsers(decryptedChats);
+
+        // setRecentChatUsers(data.chats);
       }
          if(data.type === "user-is-typing"){
         setUserIsTyping((prev) =>[...prev , data.senderId])
@@ -106,7 +159,6 @@ const UserList = ({
   }
 
 
-
   return (
     <div className="px-3 py-1 w-full md:px-1  ">
       <h2 className="text-[1.2rem]  flex justify-center items-center gap-2 font-semibold mb-2">
@@ -120,7 +172,9 @@ const UserList = ({
       <ul className="flex flex-col gap-2 transition-all  ">
         <AiChatBot   selectedUser={selectedUser} onSelectUser={onSelectUser} setOpenContextMenu={setOpenContextMenu} setChatId={setChatId}/>
         {recentChatUsers?.length > 0
-          ? recentChatUsers.map((user) => {
+          ? recentChatUsers.map((user)=> {
+
+
               return (
                <div className="relative w-full  ">
                   <li

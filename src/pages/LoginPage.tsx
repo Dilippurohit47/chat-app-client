@@ -39,7 +39,18 @@ const dispatch = useDispatch()
         }
       );
       if (res.status === 200) {
-        dispatch(saveUser(res.data.user))
+        console.log('res data user' ,res.data.user)
+      const user = res.data.user;
+dispatch(saveUser({
+  id: user.id,
+  name: user.name,
+  email: user.email || null,
+  profileUrl: user.profileUrl,
+  publickey: user.publickey,
+    accessToken: res.data.accessToken,
+  isLogin: true,
+}));
+
         toast.success("Login successfull")
         navigate("/");
       }

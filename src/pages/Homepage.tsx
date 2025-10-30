@@ -47,6 +47,7 @@ export type unreadCountType = {
   unreadMessages: number;
   userId: string;
 };
+
 export interface selectedChatType {
   name: string;
   chatId: string;
@@ -55,11 +56,15 @@ export interface selectedChatType {
   id: string;
   lastMessage: string;
   lastMessageCreatedAt: string;
-  // password:string,
+  lastMessageForReceiver:string,
+  lastMessageForSender:string,
+  senderId:string,
+  receiverId:string,
   profileUrl: string;
   refreshToken: String;
   tokenExpiresIn: Date | null;
   unreadCount: unreadCountType;
+  publickey:string
 }
 
 type incomingCallType = {
@@ -90,22 +95,17 @@ function Home() {
   const [chatId, setChatId] = useState<string | null>("");
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+const [publicKey ,setPublicKey] = useState<string>("")
 
   const { ws, connected, setConnected, onlineUsers }: WebSocketContextType =
     useWebSocket();
-
-
-    const isOnline = useNetworkStatus()
-
-
-useEffect(() =>{
+    const isOnline = useNetworkStatus() 
+useEffect(() =>{ 
   if(!isOnline) return
     const offlineMessages = JSON.parse(localStorage.getItem("pendingMessages") || "[]")
-    console.log("offline messages",offlineMessages)
     if(offlineMessages  && offlineMessages.length > 0){
       offlineMessages.forEach((msg:MessageType) =>{
-        console.log("messages send")
-  if(!ws.current) return
+  if(!ws.current) return    
                ws.current.send(
         JSON.stringify({
           type: "personal-msg",
@@ -115,9 +115,7 @@ useEffect(() =>{
           chatId:msg.chatId,
         })
       );
-
       })
-
     }
         localStorage.removeItem("pendingMessages");
 },[isOnline])
@@ -173,7 +171,6 @@ useEffect(() =>{
       );
 
       if (res.status === 200) {
-        console.log("get access token", res.data);
         dispatch(saveAccessToken({ accessToken: res.data.accessToken }));
       }
       if (res.status == 403) {
@@ -199,7 +196,7 @@ useEffect(() =>{
         }
       );
       if (res.status === 200) {
-        console.log("user data", res);
+        console.log("usr from get user",res.data.user)
         dispatch(saveUser(res.data.user));
       }
     };
@@ -230,7 +227,6 @@ useEffect(() =>{
       callReceiverId:incomingCall?.callerId
     }))
   }
-  console.log("from homepage",selectedUser)
   return (
     <div className="flex  h-[84.5vh] sm:h-[calc(100vh-3rem)] md:h-[calc(100vh-3rem)]  relative justify-center mx-auto my-auto sm:mx-0 hide-scrollbar ">
       <div

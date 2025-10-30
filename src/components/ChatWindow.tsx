@@ -15,18 +15,20 @@ import { MdArrowBackIosNew } from "react-icons/md";
 
 import { LuPhoneCall } from "react-icons/lu";
 import VideoCallDialog from "./VideoCallDialog";
-import { useNetworkStatus } from "../lib/helper";
+import { decryptMessage, getkeyFromIndexedDb, importPrivateKey, importPublicKey } from "../lib/helper";
 
 export type MessageType = {
   id?: string;
   senderId: String;
   receiverId: String;
   content: string;
+  senderContent?:string,
+  receiverContent?:string,
   createdAt: number;
-  tempId?:string | null,
-  isMedia?:boolean,
-  uploading?:boolean,
-  chatId:string
+  tempId?: string | null;
+  isMedia?: boolean;
+  uploading?: boolean;
+  chatId: string | null;
 };
 // type selectedChat = {
 //   chatId: string;
@@ -51,18 +53,18 @@ interface ChatWindowProps {
   setSelectedUser: (state: null) => void;
   logedInUser: UserType;
   chatId: string | null;
-  messages:MessageType[]
-  setMessages:React.Dispatch<React.SetStateAction<MessageType[]>>
-  selectedTab:string
+  messages: MessageType[];
+  setMessages: React.Dispatch<React.SetStateAction<MessageType[]>>;
+  selectedTab: string;
 }
-interface sendedFileType  {
-imageId: string,
-      file: File,
-      url: string
+interface sendedFileType {
+  imageId: string;
+  file: File;
+  url: string;
 }
 interface MediaFileType {
-  imageId:string,
-  url:string
+  imageId: string;
+  url: string;
 }
 
 const ChatWindow = ({
@@ -73,7 +75,6 @@ const ChatWindow = ({
   chatId,
   messages,
   setMessages,
-  selectedTab
 }: ChatWindowProps) => {
   const [input, setInput] = useState<string>("");
   const chatWindowRef: React.RefObject<HTMLDivElement | null> = useRef(null);
@@ -90,24 +91,25 @@ const ChatWindow = ({
   const messageInputRef = useRef<HTMLInputElement | null>(null);
   const [mediaFile, setMediaFile] = useState<MediaFileType[] | []>([]);
   const [sendedFiles, setSendedFiles] = useState<sendedFileType[] | []>([]);
- const [inputPlaceHolder,SetInputPlaceHolder] = useState<string>("Type a message")
- const placeHolderSetterInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-const [callUserId, setCallUserId] = useState<string | null>(null);
-const [isCallOpen, setIsCallOpen] = useState(false);
-const [answerCall, setAnswerCall] = useState(false);
-
-
+  const [inputPlaceHolder, SetInputPlaceHolder] =
+    useState<string>("Type a message");
+  const placeHolderSetterInterval = useRef<ReturnType<
+    typeof setInterval
+  > | null>(null);
+  const [callUserId, setCallUserId] = useState<string | null>(null);
+  const [isCallOpen, setIsCallOpen] = useState(false);
+  const [answerCall, setAnswerCall] = useState(false);
 
   interface Msg {
-    selectedUserId:string,
-    input:string,
+    selectedUserId: string;
+    input: string;
   }
-  const incompletInputMsgRef = useRef<Msg[]>([])
-
+  const incompletInputMsgRef = useRef<Msg[]>([]);
 
   function newMessage({
     senderId,
-    content,
+    receiverContent,
+    senderContent,
     receiverId,
     tempId,
     isMedia = false,
@@ -115,6 +117,8 @@ const [answerCall, setAnswerCall] = useState(false);
     error = false,
   }: {
     senderId: string;
+    senderContent:string,
+    receiverContent:string,
     content: string;
     receiverId: string;
     tempId?: string;
@@ -125,7 +129,8 @@ const [answerCall, setAnswerCall] = useState(false);
     return {
       tempId: tempId || "0",
       senderId: senderId,
-      content: content,
+      receiverContent: receiverContent,
+      senderContent: senderContent,
       receiverId: receiverId,
       chatId: chatId,
       createdAt: Date.now(),
@@ -135,46 +140,105 @@ const [answerCall, setAnswerCall] = useState(false);
     };
   }
 
-  
+  const saveOfflineMessage = (msg: MessageType) => {
+    const existing = JSON.parse(
+      localStorage.getItem("pendingMessages") || "[]"
+    );
+    existing.push(msg);
+    localStorage.setItem("pendingMessages", JSON.stringify(existing));
+  };
 
-  const saveOfflineMessage = (msg:MessageType) =>{
-    const existing = JSON.parse(localStorage.getItem("pendingMessages")) || [];
-    existing.push(msg)
-    localStorage.setItem("pendingMessages",JSON.stringify(existing))
+
+
+const getReceiverMessage = async() =>{
+  try {
+       const encoder = new TextEncoder();
+const data = encoder.encode(input);
+const receiverCryptoKey = await importPublicKey(selectedUser.publickey);
+const encrypted = await window.crypto.subtle.encrypt(
+  {
+    name: "RSA-OAEP",
+  },
+  receiverCryptoKey, 
+  data
+);
+
+const  receiverContent = btoa(
+  String.fromCharCode(...new Uint8Array(encrypted))
+
+);
+return receiverContent
+  } catch (error) {
+    
   }
+}
+
+const getSenderMessage = async() =>{
+  try {
+       const encoder = new TextEncoder();
+const data = encoder.encode(input);
+const receiverCryptoKey = await importPublicKey(logedInUser.publickey!);
+const encrypted = await window.crypto.subtle.encrypt(
+  {
+    name: "RSA-OAEP",
+  },
+  receiverCryptoKey, 
+  data
+);
+
+const  senderContent = btoa(
+  String.fromCharCode(...new Uint8Array(encrypted))
+
+);
+return senderContent
+  } catch (error) {
+    
+  }
+}
+
+
 
   const sendMessage = async () => {
-    if(!navigator.onLine){
-      toast.error("no internet connection")
-          const msg = newMessage({
+
+    const receiverContent = await getReceiverMessage()
+    const senderContent = await getSenderMessage()
+
+    if (!navigator.onLine) {
+      toast.error("no internet connection");
+      const msg = newMessage({
         senderId,
-        content: input,
+        receiverContent: input,
+        senderContent: input,
         receiverId: selectedUser.id!,
+        content:input,
         isMedia: false,
         tempId: "0",
         error: false,
         uploading: false,
       });
 
-    saveOfflineMessage(msg)
+      saveOfflineMessage(msg);
       setMessages((prev) => [msg, ...prev]);
-      setInput("")
-      return
+      setInput("");
+      return;
     }
     if (!logedInUser.isLogin) return toast.error("Login first ");
     if (!ws) return toast.error("server error!");
-    if(selectedUser.id === "chat-bot"){
-      ws.send(JSON.stringify({
-        type:"get-chatbot-response",
-        query:input,
-        receiverId:logedInUser.id
-      }))
+    if (selectedUser.id === "chat-bot") {
+      ws.send(
+        JSON.stringify({
+          type: "get-chatbot-response",
+          query: input,
+          receiverId: logedInUser.id,
+        })
+      );
     }
     if (sendedFiles.length <= 0) {
       ws.send(
         JSON.stringify({
           type: "personal-msg",
-          message: input,
+          receiverContent: receiverContent,
+          senderContent:senderContent,
           receiverId: selectedUser.id,
           senderId,
           chatId,
@@ -184,7 +248,7 @@ const [answerCall, setAnswerCall] = useState(false);
 
     if (sendedFiles.length > 0) {
       sendedFiles.forEach(async (img) => {
-        const tempId:string = uuid();
+        const tempId: string = uuid();
         const msg = newMessage({
           senderId,
           content: img.url,
@@ -268,7 +332,8 @@ const [answerCall, setAnswerCall] = useState(false);
     } else {
       const msg = newMessage({
         senderId,
-        content: input,
+        receiverContent: input,
+        senderContent:input,
         receiverId: selectedUser.id!,
         isMedia: false,
         tempId: "0",
@@ -279,20 +344,19 @@ const [answerCall, setAnswerCall] = useState(false);
       setMessages((prev) => [msg, ...prev]);
     }
 
-      incompletInputMsgRef.current = incompletInputMsgRef.current.map((inc) => {
-        if(inc.selectedUserId === selectedUser.id){
-          return {
-            ...inc,
-            input:""
-          }
-        }else{
-          return inc
-        }
-      })
+    incompletInputMsgRef.current = incompletInputMsgRef.current.map((inc) => {
+      if (inc.selectedUserId === selectedUser.id) {
+        return {
+          ...inc,
+          input: "",
+        };
+      } else {
+        return inc;
+      }
+    });
 
     setInput("");
   };
-
 
   useEffect(() => {
     if (!logedInUser.isLogin) {
@@ -301,50 +365,51 @@ const [answerCall, setAnswerCall] = useState(false);
   }, [logedInUser]);
 
   useEffect(() => {
-      if (placeHolderSetterInterval.current) {
-    clearInterval(placeHolderSetterInterval.current);
-    placeHolderSetterInterval.current = null;
-  }
-
-      if (!selectedUser) {
-    SetInputPlaceHolder("Greet your friend...");
-    setInput("");
-    return; 
-  }
-       if(selectedUser.id === "chat-bot"){
-              const placeHolders= ["Tell me about your projects" ,"What is your experience","what is your qualifications"]
-              let usedPlaceholder = 0
-              if(placeHolderSetterInterval.current === null){
-                 placeHolderSetterInterval.current = setInterval(() =>{
-              console.log("place holder",usedPlaceholder)
-                SetInputPlaceHolder(placeHolders[usedPlaceholder])
-                if(usedPlaceholder >= 2){
-                  usedPlaceholder = 0
-                }else{
-                  usedPlaceholder = usedPlaceholder+1
-                }
-            },2000)
-              }
+    if (placeHolderSetterInterval.current) {
+      clearInterval(placeHolderSetterInterval.current);
+      placeHolderSetterInterval.current = null;
     }
-    
-    
-    else{
-      console.log("in else block")
-      if(placeHolderSetterInterval.current !== null){
-        console.log("removing placeholder")
-        clearInterval(placeHolderSetterInterval.current)
-        placeHolderSetterInterval.current = null
+
+    if (!selectedUser) {
+      SetInputPlaceHolder("Greet your friend...");
+      setInput("");
+      return;
+    }
+    if (selectedUser.id === "chat-bot") {
+      const placeHolders = [
+        "Tell me about your projects",
+        "What is your experience",
+        "what is your qualifications",
+      ];
+      let usedPlaceholder = 0;
+      if (placeHolderSetterInterval.current === null) {
+        placeHolderSetterInterval.current = setInterval(() => {
+          SetInputPlaceHolder(placeHolders[usedPlaceholder]);
+          if (usedPlaceholder >= 2) {
+            usedPlaceholder = 0;
+          } else {
+            usedPlaceholder = usedPlaceholder + 1;
+          }
+        }, 2000);
       }
-      SetInputPlaceHolder("Type a message")
+    } else {
+      if (placeHolderSetterInterval.current !== null) {
+        clearInterval(placeHolderSetterInterval.current);
+        placeHolderSetterInterval.current = null;
+      }
+      SetInputPlaceHolder("Type a message");
     }
 
-if(!selectedUser) return
-      const incompleteInput = incompletInputMsgRef.current.find((inc) => inc.selectedUserId === selectedUser.id)
-      
-    if(incompleteInput){
-      setInput(incompleteInput?.input)
-    }if(!incompleteInput){
-      setInput("")
+    if (!selectedUser) return;
+    const incompleteInput = incompletInputMsgRef.current.find(
+      (inc) => inc.selectedUserId === selectedUser.id
+    );
+
+    if (incompleteInput) {
+      setInput(incompleteInput?.input);
+    }
+    if (!incompleteInput) {
+      setInput("");
     }
     const getChats = async () => {
       try {
@@ -360,18 +425,36 @@ if(!selectedUser) return
           }
         );
         if (res.status === 200) {
-          setMessages(res.data.messages);
-          setCursorId(res.data.cursor);
-          setHasMoreMsg(res.data.hasMore);
+         const privateKeyString = await getkeyFromIndexedDb();
+  const privateKeyCrypto = await importPrivateKey(privateKeyString!);
+
+  const decryptedMessages = await Promise.all(
+    res.data.messages.map(async (msg: any) => {
+      if(msg.senderId === logedInUser.id){
+         const decryptedText = await decryptMessage(msg.senderContent, privateKeyCrypto);
+      return { ...msg,senderContent:decryptedText};
+      }
+      if(msg.senderId === selectedUser.id){
+         const decryptedText = await decryptMessage(msg.receiverContent, privateKeyCrypto);
+      return { ...msg,receiverContent:decryptedText };
+      }else{
+      return msg
+      }
+    })
+  );
+
+  setMessages(decryptedMessages);
+  setCursorId(res.data.cursor);
+  setHasMoreMsg(res.data.hasMore);
         }
-      } catch (error) { 
-          setMessages([]);
+      } catch (error) {
+        // setMessages([]);
         console.log(error);
       }
     };
 
     const updateUnreadCount = async () => {
-       await axios.put(
+      await axios.put(
         `${import.meta.env.VITE_BASE_URL_HTTP}/chat/update-unreadmessage-count`,
         {
           userId: logedInUser.id,
@@ -380,39 +463,53 @@ if(!selectedUser) return
       );
     };
 
+    const getUserKeys = async() =>{
+
+      const response = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/user`,{
+        params:{
+          id:selectedUser.id
+        }
+      })
+
+      if(response.status === 200){
+
+      }
+    }
     if (messageInputRef.current) {
       messageInputRef.current.focus();
     }
 
-    if(prevConvertationref.current){
-      if(!ws) return
-       ws.send(
-      JSON.stringify({
-        receiverId: prevConvertationref.current,
-        type: "typing-stop",
-        senderId: logedInUser.id,
-      })
-    );
-prevConvertationref.current = ""
+    if (prevConvertationref.current) {
+      if (!ws) return;
+      ws.send(
+        JSON.stringify({
+          receiverId: prevConvertationref.current,
+          type: "typing-stop",
+          senderId: logedInUser.id,
+        })
+      );
+      prevConvertationref.current = "";
     }
+
     setInitialLoad(true);
+    getUserKeys()
     getChats();
     updateUnreadCount();
     setOpenSearchBar(false);
 
-    return () =>{
-      if(placeHolderSetterInterval.current){
-      clearInterval(placeHolderSetterInterval.current)
-      placeHolderSetterInterval.current = null
+    return () => {
+      if (placeHolderSetterInterval.current) {
+        clearInterval(placeHolderSetterInterval.current);
+        placeHolderSetterInterval.current = null;
       }
-    }
-  }, [selectedUser ,selectedTab]);
+    };
+  }, [selectedUser]);
 
   useEffect(() => {
     if (!messageContainerRef.current) return;
     const handleScroll = async () => {
       const container = messageContainerRef.current;
-      if(!container) return
+      if (!container) return;
       if (container.scrollTop === 0 && cursorId && hasMoreMsg) {
         setLoadingMoreChat(true);
         try {
@@ -460,38 +557,43 @@ prevConvertationref.current = ""
   }, [messages]);
   useEffect(() => {
     if (!ws || !selectedUser) return;
-    const getMessage = (m:MessageEvent) => {
+    const getMessage =  async(m: MessageEvent) => {
       const data = JSON.parse(m.data);
       if (data.type === "personal-msg") {
-        console.log("personal mdg", data);
         if (
           (data.receiverId === logedInUser.id &&
             data.senderId === selectedUser.id) ||
           (data.senderId === logedInUser.id &&
-            data.receiverId === selectedUser.id)
+            data.receiverId === selectedUser.id) 
         ) {
+
+
+          console.log("Data from ws",data) 
+          const privateKeyString  =  await getkeyFromIndexedDb()
+          const privateKeyCrypto = await importPrivateKey(privateKeyString!)
+          const decryptedMessage = await decryptMessage(data.receiverContent , privateKeyCrypto)
           const msg = newMessage({
             senderId: data.senderId,
-            content: data.message,
+            receiverContent: decryptedMessage,
+            senderContent: "ee",
             receiverId: data.receiverId,
             isMedia: data.isMedia,
-            tempId:" 0",
+            tempId: " 0",
             error: false,
             uploading: false,
           });
 
-          setMessages((prev) => [msg, ...prev]);
+          setMessages((prev) => [msg, ...prev]);  
         }
       }
       if (data.type === "chatbot-reply") {
-        console.log("personal mdg", data);
         if (true) {
           const msg = newMessage({
             senderId: data.senderId,
             content: data.answer,
             receiverId: data.receiverId,
             isMedia: data.isMedia || false,
-            tempId:" 0",
+            tempId: " 0",
             error: false,
             uploading: false,
           });
@@ -502,17 +604,20 @@ prevConvertationref.current = ""
     };
     ws.addEventListener("message", getMessage);
 
-    const handleClickOutSideMessageInput =(e:MouseEvent) =>{
-      if(messageInputRef.current && !messageInputRef.current.contains(e.target as Node)){
-        typingStop()
+    const handleClickOutSideMessageInput = (e: MouseEvent) => {
+      if (
+        messageInputRef.current &&
+        !messageInputRef.current.contains(e.target as Node)
+      ) {
+        typingStop();
       }
-    }
+    };
 
-    window.addEventListener('click',handleClickOutSideMessageInput)
-    
+    window.addEventListener("click", handleClickOutSideMessageInput);
+
     return () => {
       ws.removeEventListener("message", getMessage);
-      window.removeEventListener('click',handleClickOutSideMessageInput)
+      window.removeEventListener("click", handleClickOutSideMessageInput);
     };
   }, [selectedUser]);
   const formatDate = (newDate: number) => {
@@ -529,7 +634,7 @@ prevConvertationref.current = ""
   };
   useEffect(() => {
     const updateUnreadCount = async () => {
-       await axios.put(
+      await axios.put(
         `${import.meta.env.VITE_BASE_URL_HTTP}/chat/update-unreadmessage-count`,
         {
           userId: logedInUser.id,
@@ -543,7 +648,7 @@ prevConvertationref.current = ""
   const handleKeyDown = (e: any) => {
     if (e.key === "Enter") {
       sendMessage();
-      typingStop()
+      typingStop();
     }
   };
   const setRefs = (
@@ -617,7 +722,7 @@ prevConvertationref.current = ""
     });
   };
 
-  const handleFileChange = (e:React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const uniqueId = uuid();
 
@@ -638,7 +743,7 @@ prevConvertationref.current = ""
     setSendedFiles((prev) => [...prev, ...mappedFiles]);
   };
 
-  const removeImage = (imageId:string) => {
+  const removeImage = (imageId: string) => {
     setMediaFile((prev) => prev.filter((img) => img.imageId !== imageId));
 
     setSendedFiles((prev) =>
@@ -648,11 +753,10 @@ prevConvertationref.current = ""
     );
   };
 
-  const prevConvertationref = useRef("")
-
+  const prevConvertationref = useRef("");
 
   const userIsTyping = () => {
-    if(!ws) return
+    if (!ws) return;
     try {
       ws.send(
         JSON.stringify({
@@ -661,16 +765,14 @@ prevConvertationref.current = ""
           receiverId: selectedUser.id,
         })
       );
-      prevConvertationref.current = selectedUser.id
+      prevConvertationref.current = selectedUser.id;
     } catch (error) {
       console.log("error in sending typing state", error);
     }
   };
 
-
-
   const typingStop = () => {
-    if(!ws) return
+    if (!ws) return;
     ws.send(
       JSON.stringify({
         receiverId: selectedUser.id,
@@ -686,11 +788,9 @@ prevConvertationref.current = ""
     <div className="flex  relative overflow-hidden    md:h-full   flex-col h-[100%] max-md:p-4 p-2 bg-[#1e1e2e] max-md:rounded-2xl md:p-0  md:rounded-[0] ">
       <div className=" pr-2 pl-2 max-md:px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
         <div className="flex justify-between items-center gap-2">
-
-        <div onClick={()=>setSelectedUser(null)} className="cursor-pointer">
-        <MdArrowBackIosNew size={24}/>
-      </div>
-
+          <div onClick={() => setSelectedUser(null)} className="cursor-pointer">
+            <MdArrowBackIosNew size={24} />
+          </div>
           <img
             src={
               selectedUser?.profileUrl
@@ -708,28 +808,37 @@ prevConvertationref.current = ""
             {selectedUser?.name}
           </h1>
         </div>
-<div className="flex justify-center pr-4 items-center gap-4">
+        <div className="flex justify-center pr-4 items-center gap-4">
+          <div
+            className="cursor-pointer "
+            onClick={() => {
+              setIsCallOpen(true);
+              setCallUserId(selectedUser.id);
+            }}
+          >
+            <LuPhoneCall size={20} />
+          </div>
 
-      <div className="cursor-pointer " onClick={() =>{setIsCallOpen(true) ; setCallUserId(selectedUser.id)}}>
-          <LuPhoneCall size={20} />
+          <div
+            className="cursor-pointer "
+            onClick={() => {
+              setOpenSearchBar(!openSearchBar), setFindMessagesIds([]);
+            }}
+          >
+            <IoMdSearch size={24} />
+          </div>
         </div>
-   
-        <div
-          className="cursor-pointer "
-          onClick={() => {
-            setOpenSearchBar(!openSearchBar), setFindMessagesIds([]);
-          }}
-        >
-          <IoMdSearch size={24} />
-        </div>
-  
-
-
-</div>
       </div>
-      { isCallOpen && callUserId === selectedUser.id && <VideoCallDialog logedInUser={logedInUser} setCall={setCallUserId}  setIsCallOpen={setIsCallOpen} call={callUserId} selectedUserId={selectedUser.id}/>
-      }
-     
+      {isCallOpen && callUserId === selectedUser.id && (
+        <VideoCallDialog
+          logedInUser={logedInUser}
+          setCall={setCallUserId}
+          setIsCallOpen={setIsCallOpen}
+          call={callUserId}
+          selectedUserId={selectedUser.id}
+        />
+      )}
+
       <SearchBarForChat
         messageIndex={messageIndex}
         totalFindmessages={findMessagesIds.length}
@@ -785,16 +894,17 @@ prevConvertationref.current = ""
                       )}
                     </div>
                   ) : (
-                    <div
-                      className={`inline-block p-3 rounded-lg   ${
-                        message.senderId === senderId
-                          ? "bg-blue-500 text-white "
-                          : "bg-gray-200 text-gray-800"
-                      }
-              `}
-                    >
-                      {message.content}
-                    </div>
+                 <div
+  className={`inline-block p-3 rounded-lg ${
+    message.senderId === senderId
+      ? "bg-blue-500 text-white" // sender
+      : "bg-gray-200 text-gray-800" // receiver
+  }`}
+>
+  {message.senderId === senderId
+    ? message.senderContent
+    : message.receiverContent}
+</div>
                   )}
                   <div className="text-xs  text-end text-gray-500 mt-1">
                     {formatDate(message.createdAt)}
@@ -812,19 +922,18 @@ prevConvertationref.current = ""
             placeholder={inputPlaceHolder}
             onChange={(e) => {
               userIsTyping(), setInput(e.target.value);
-             const existing = incompletInputMsgRef.current.find(
-  (inc) => inc.selectedUserId === selectedUser.id
-);
+              const existing = incompletInputMsgRef.current.find(
+                (inc) => inc.selectedUserId === selectedUser.id
+              );
 
-if (existing) {
-  existing.input = e.target.value; 
-} else {
-  incompletInputMsgRef.current.push({
-    selectedUserId: selectedUser.id,
-    input: e.target.value
-  });
-}
-
+              if (existing) {
+                existing.input = e.target.value;
+              } else {
+                incompletInputMsgRef.current.push({
+                  selectedUserId: selectedUser.id,
+                  input: e.target.value,
+                });
+              }
             }}
             onKeyDown={handleKeyDown}
             className="w-full p-3 border sm:p-2  border-gray-300 rounded-lg focus:outline-none text-black focus:border-blue-500"
@@ -850,11 +959,11 @@ if (existing) {
             })}
           </div>
         )}
-  {
-    selectedUser.id !== "chat-bot" &&       <label htmlFor="file-input">
-          <MdOutlineAttachment className="text-gray-300 rotate-120 hover:text-gray-500 cursor-pointer text-[1.8rem] sm:text-[1.5rem] sm:hover:text-gray-300" />
-        </label>
-  }
+        {selectedUser.id !== "chat-bot" && (
+          <label htmlFor="file-input">
+            <MdOutlineAttachment className="text-gray-300 rotate-120 hover:text-gray-500 cursor-pointer text-[1.8rem] sm:text-[1.5rem] sm:hover:text-gray-300" />
+          </label>
+        )}
         <input
           id="file-input"
           type="file"
@@ -877,4 +986,3 @@ if (existing) {
   );
 };
 export default ChatWindow;
- 
