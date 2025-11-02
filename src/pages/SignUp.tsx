@@ -11,10 +11,16 @@ import { LuEyeClosed } from "react-icons/lu";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { AxiosError } from "axios";
 import { savePrivateKeyToIndexedDB } from "../lib/helper";
+import { Loader } from "lucide-react";
+import { useGoogleLogin } from "@react-oauth/google";
+import { FcGoogle } from "react-icons/fc";
 type keyPair ={
   publicKey:string,
   privateKey:string,
 } 
+interface CredentialResType {
+  [Key: string]: string;
+}
 const SignUp = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState("");
@@ -26,6 +32,7 @@ const SignUp = () => {
   const [imageUploading, setImageUploading] = useState<boolean>(false);
   const [isImageUploaded, setIsImageUploaded] = useState(false);
     const [showPassword,setShowPassword] = useState<boolean>(false)
+    const [signupLoaing , setsignUploading] = useState<boolean>(false)
   
   const dispatch = useDispatch();     
   const navigate = useNavigate();
@@ -47,7 +54,6 @@ const SignUp = () => {
   
   const generateKeys =  async():Promise<keyPair> =>{
     try {
-
       const keyPair = await window.crypto.subtle.generateKey(
   {
     name: "RSA-OAEP",
@@ -78,6 +84,7 @@ return {publicKey:publicKeyString  , privateKey : privateKeyString}
   const handleSubmit = async (e:React.FormEvent<HTMLFormElement>) =>
      {
     e.preventDefault();
+    setsignUploading(true)
     try {
         const {publicKey , privateKey } = await generateKeys()
   await  savePrivateKeyToIndexedDB(privateKey)
@@ -95,7 +102,16 @@ return {publicKey:publicKeyString  , privateKey : privateKeyString}
         }
       );
       if (res.status === 200) {
-        dispatch(saveUser(res.data.user));
+          const user = res.data.user;
+    dispatch(saveUser({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      profileUrl: user.profileUrl,
+      publickey: user.publickey,
+        accessToken: res.data.accessToken,
+      isLogin: true,
+    }));
         toast.success("Signup Successfully")
         navigate("/")
       }else{
@@ -105,6 +121,8 @@ return {publicKey:publicKeyString  , privateKey : privateKeyString}
       console.log(error)
       const err = error as AxiosError<{message:string}>
         setError(err.response?.data?.message || "Something went wrong")
+    }finally{
+      setsignUploading(false)
     }
   };
   
@@ -164,6 +182,38 @@ if(imageFile){
 uploadImageToS3()
 }
 },[imageFile])
+
+ const handleLoginSuccess = async (credentialResponse:CredentialResType) => {
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_BASE_URL_HTTP}/user/google/callback`,
+        {
+          credentialResponse,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      if (res && res.status === 200) {
+        toast.success(res.data.message);
+        dispatch(saveUser(res.data.user))
+        navigate("/");
+      }
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data.message || "Internal server error");
+      } else {
+        toast.error("An error occurred try again later");
+      }
+    }
+  };
+
+
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: (codeResponse) => handleLoginSuccess(codeResponse),
+    flow: "auth-code",
+  });
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600">
@@ -284,7 +334,7 @@ uploadImageToS3()
               required
             />
 
-
+ 
             {
               !showPassword ? <div className="cursor-pointer absolute right-4 top-9" onClick={()=>setShowPassword(true)}>  <LuEyeClosed /></div> : <div className="cursor-pointer absolute right-4 top-9"  onClick={()=>setShowPassword(false)}>  <MdOutlineRemoveRedEye /></div>
             }
@@ -292,12 +342,19 @@ uploadImageToS3()
           </div>
           <button
             type="submit"
-            className="w-full cursor-pointer bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="w-full cursor-pointer flex justify-center items-center bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             disabled={imageUploading}
           >
-            Sign Up
+          {
+            signupLoaing ? <Loader className="animate-spin text-center" /> :   "Sign Up"
+          }
           </button>
         </form>
+
+            <div className="my-2  font-medium ">or</div>
+            
+<div className="  hidden flex justify-center  items-center gap-2 py-2 border-2 rounded-md  hover:bg-gray-200 cursor-pointer " onClick={()=>loginWithGoogle()}>Continue with Google <FcGoogle size={21} /> </div>
+
 
         <p className="mt-4 text-center text-gray-600">
           Already have an account?{" "}

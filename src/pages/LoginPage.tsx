@@ -10,6 +10,7 @@ import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { AxiosError } from "axios";
 import { FcGoogle } from "react-icons/fc";
 import { useGoogleLogin } from "@react-oauth/google";
+import { Loader } from "lucide-react";
 
 interface CredentialResType {
   [Key: string]: string;
@@ -22,11 +23,12 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const [showPassword,setShowPassword] = useState(false)
-
+  const [showPassword,setShowPassword] = useState<boolean>(false)
+  const [signInLoading,setSignInLoading]= useState<boolean>(false)
 const dispatch = useDispatch()
   const handleSubmit = async (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setSignInLoading(true)
     try {
       const res = await axios.post(
         `${import.meta.env.VITE_BASE_URL_HTTP}/user/sign-in`,
@@ -39,8 +41,8 @@ const dispatch = useDispatch()
         }
       );
       if (res.status === 200) {
-        console.log('res data user' ,res.data.user)
       const user = res.data.user;
+      console.log(res.data)
 dispatch(saveUser({
   id: user.id,
   name: user.name,
@@ -59,6 +61,8 @@ dispatch(saveUser({
       console.log(err.response?.data?.message)
       setError(err.response?.data?.message || "Something went wrong");
       console.log("Login error:", err);
+    }finally{
+      setSignInLoading(false)
     }
   };
 
@@ -161,16 +165,18 @@ dispatch(saveUser({
           </div>
           <button
             type="submit"
-            className="w-full cursor-pointer bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="w-full flex justify-center items-center  cursor-pointer bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
-            Login
+          {
+            signInLoading ? <Loader  className="animate-spin" /> :"Login"
+          }
           </button>
         </form>
 
 
             <div className="my-2  font-medium ">or</div>
             
-<div className=" flex justify-center items-center gap-2 py-2 border-2 rounded-md  hover:bg-gray-200 cursor-pointer " onClick={()=>loginWithGoogle()}>Continue with Google <FcGoogle size={21} /> </div>
+<div className=" flex justify-center  hidden items-center gap-2 py-2 border-2 rounded-md  hover:bg-gray-200 cursor-pointer " onClick={()=>loginWithGoogle()}>Continue with Google <FcGoogle size={21} /> </div>
         <p className="mt-4 text-center text-gray-600">
           Don't have an account?{" "}
           <a href="/sign-up" className="text-blue-600 hover:underline">

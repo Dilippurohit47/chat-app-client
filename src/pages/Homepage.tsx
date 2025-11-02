@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import "../App.css";
 import UserList from "../components/UserList";
 import ChatWindow, { MessageType } from "../components/ChatWindow";
@@ -162,6 +162,7 @@ useEffect(() =>{
   }, [connected]);
 
   useEffect(() => {
+    console.log('getting access token ' ,user.accessToken ,user)
     const getAccessToken = async () => {
       const res = await axios.get(
         `${import.meta.env.VITE_BASE_URL_HTTP}/user/refresh`,
@@ -171,12 +172,15 @@ useEffect(() =>{
       );
 
       if (res.status === 200) {
+        console.log("succes full get ")
         dispatch(saveAccessToken({ accessToken: res.data.accessToken }));
       }
       if (res.status == 403) {
+        console.log("trying again to get access token ")
         getAccessToken();
       }
       if (res.status !== 403 && res.status !== 200) {
+        console.log("log out ")
         dispatch(logout());
       }
     };

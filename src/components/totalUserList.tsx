@@ -2,7 +2,7 @@ import { axios } from "../apiClient";;
 import React, { useEffect, useState } from "react";
 import { UserType } from "../slices/userSlice";
 import { selectedChatType } from "../pages/Homepage";
-
+import { IoSearch } from "react-icons/io5";
 export type onlineUsersType = string
 
 interface UserListProps {
@@ -20,25 +20,36 @@ const TotalUserList = ({
   logedInUser,
 }: UserListProps) => {
   const [totalUsers, setTotalUSers] = useState<selectedChatType[]>([]);
+  const [filterUsers,setFilterusers] = useState<selectedChatType[]>(totalUsers)
   useEffect(() => {
     const getTotalUsers = async () => {
       const res = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/user/all-users`, {
         withCredentials: true,
       });
       if (res.status === 200) {
-        console.log("user", logedInUser);
-        console.log(res.data);
         const filterData = res?.data.filter((c:any) => c.id !== logedInUser.id);
         setTotalUSers(filterData);
+        setFilterusers(filterData)
       }
     };
     getTotalUsers();
   }, []);
+
+
+  const searchUsers = (query:string) =>{
+setFilterusers(totalUsers.filter((user) => user.name.includes(query)))
+  }
+
   return (
-    <div className="px-3 py-1">
-      <ul className="flex flex-col gap-2">
-        {totalUsers &&
-          totalUsers?.map((user) => (
+    <div className="px-3 py-1  overflow-hidden">
+      <div className="relative ">
+      <input placeholder="search" className="border rounded-lg px-3 py-2 w-full mb-2 outline-none" onChange={(e) =>searchUsers(e.target.value)} />
+      <div  className="absolute  top-2 right-2"><IoSearch className="text-gray-600" size={22} /></div>
+      </div>
+      
+      <ul className="flex flex-col gap-2   hide-scrollbar overflow-y-auto max-h-[70vh]">
+        {filterUsers &&
+          filterUsers?.map((user) => (
             <li
               key={user.id}
               className={`p-3    cursor-pointer rounded-lg   flex  justify-evenly items-center gap-3 ${

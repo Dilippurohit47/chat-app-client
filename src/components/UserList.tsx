@@ -1,11 +1,16 @@
 import React, { SetStateAction, useEffect, useState } from "react";
-import { axios } from "../apiClient";;
+import { axios } from "../apiClient";
 import { UserType } from "../slices/userSlice";
 import ContextMenuDialogBox from "./contextMenuDialogBox";
 import { MessageType } from "./ChatWindow";
 import { selectedChatType } from "../pages/Homepage";
 import AiChatBot from "./aiChatBot";
-import { decryptMessage, getkeyFromIndexedDb, importPrivateKey } from "../lib/helper";
+import {
+  decryptMessage,
+  getkeyFromIndexedDb,
+  importPrivateKey,
+} from "../lib/helper";
+import { IoSearch } from "react-icons/io5";
 export interface UserListProps {
   selectedUser: selectedChatType | null;
   onSelectUser: React.Dispatch<SetStateAction<selectedChatType | null>>;
@@ -13,8 +18,8 @@ export interface UserListProps {
   onlineUsers: string[] | undefined;
   ws: WebSocket | null;
   logedInUser: UserType;
-  setChatId:(state:string) =>void
-  setMessages:React.Dispatch<React.SetStateAction<MessageType[]>>
+  setChatId: (state: string) => void;
+  setMessages: React.Dispatch<React.SetStateAction<MessageType[]>>;
 }
 // type ChatUser = {
 //   chatId: string;
@@ -37,11 +42,12 @@ const UserList = ({
   setChatId,
   setMessages,
 }: UserListProps) => {
-  const [recentChatUsers, setRecentChatUsers] = useState<selectedChatType[]>([]);
+  const [recentChatUsers, setRecentChatUsers] = useState<selectedChatType[]>(
+    []
+  );
 
-  const [userIsTyping,setUserIsTyping] = useState<string[]>([])
-
-
+  const [userIsTyping, setUserIsTyping] = useState<string[]>([]);
+  const [filterChats,setSetFilterChats] =useState<selectedChatType[]>([])
 
   useEffect(() => {
     const getTotalUsers = async () => {
@@ -50,82 +56,95 @@ const UserList = ({
         { params: { userId: logedInUser.id }, withCredentials: true }
       );
       if (res.status === 200) {
-        const chats = res.data.chats  as selectedChatType[]
-if(chats.length > 0){
+        const chats = res.data.chats as selectedChatType[];
+        if (chats.length > 0) {
+          const privateKeyString = await getkeyFromIndexedDb();
+          const privateKeyCrypto = await importPrivateKey(privateKeyString!);
 
+          const decryptedChats = (
+            await Promise.all(
+              chats.map(async (user) => {
+                console.log(user.senderId, user.receiverId, logedInUser.id);
+                if (user.senderId === logedInUser.id) {
+                  const decryptedMessage = await decryptMessage(
+                    user.lastMessageForSender,
+                    privateKeyCrypto
+                  );
+                  user.lastMessage = decryptedMessage;
+                  return user;
+                } else {
+                  if (privateKeyCrypto) {
+                    const decryptedMessage = await decryptMessage(
+                      user.lastMessageForReceiver,
+                      privateKeyCrypto
+                    );
+                    user.lastMessage = decryptedMessage;
+                    return user;
+                  }
+                }
 
-                        const privateKeyString  =  await getkeyFromIndexedDb() 
-                         const privateKeyCrypto = await importPrivateKey(privateKeyString!)
-
-
-        const decryptedChats = await Promise.all(chats.map(async(user) =>{
-          if(user.senderId === logedInUser.id){
-            const decryptedMessage = await decryptMessage(user.lastMessageForSender , privateKeyCrypto)
-                      user.lastMessage = decryptedMessage
-                      return user
-
-          }else{
-// if(privateKeyString && privateKeyCrypto){ 
-                      const decryptedMessage = await decryptMessage(user.lastMessageForReceiver , privateKeyCrypto)
-                      user.lastMessage = decryptedMessage
-                      return user
-                      //  }
-          }
-                       
-                     
-        }))
-        setRecentChatUsers(decryptedChats);
-
-}
+                //  return user
+              })
+            )
+          ).filter((chat) => chat !== undefined);
+          setRecentChatUsers(decryptedChats);
+          setSetFilterChats(decryptedChats)
+        }
       }
     };
     getTotalUsers();
     if (!logedInUser.isLogin) {
       setRecentChatUsers([]);
+          setSetFilterChats([])
       onSelectUser(null);
     }
   }, [logedInUser]);
 
-
-
   useEffect(() => {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
-    const messageHandler = async(m: any) => {
+    const messageHandler = async (m: any) => {
       const data = JSON.parse(m.data);
       if (data.type === "recent-chats") {
-        console.log("chats",data.chats)
-const chats = data.chats as selectedChatType[]
-          const privateKeyString  =  await getkeyFromIndexedDb() 
-                         const privateKeyCrypto = await importPrivateKey(privateKeyString!)
+        console.log("chats", data.chats);
+        const chats = data.chats as selectedChatType[];
+        const privateKeyString = await getkeyFromIndexedDb();
+        const privateKeyCrypto = await importPrivateKey(privateKeyString!);
 
-        const decryptedChats = await Promise.all(chats.map(async(user) =>{
-          if(user.senderId === logedInUser.id){
-     if(privateKeyString && privateKeyCrypto){
-                      const decryptedMessage = await decryptMessage(user.lastMessageForSender , privateKeyCrypto)
-                      user.lastMessage = decryptedMessage
-                      return user
-                       }
-          }
-                  else{
-
-                      if(privateKeyString && privateKeyCrypto){
-                      const decryptedMessage = await decryptMessage(user.lastMessageForReceiver , privateKeyCrypto)
-                      user.lastMessage = decryptedMessage
-                      return user
-                       }
-                      }   
-        }))
+        const decryptedChats = (
+          await Promise.all(
+            chats.map(async (user) => {
+              if (user.senderId === logedInUser.id) {
+                if (privateKeyCrypto) {
+                  const decryptedMessage = await decryptMessage(
+                    user.lastMessageForSender,
+                    privateKeyCrypto
+                  );
+                  user.lastMessage = decryptedMessage;
+                  return user;
+                }
+              } else {
+                if (privateKeyCrypto) {
+                  const decryptedMessage = await decryptMessage(
+                    user.lastMessageForReceiver,
+                    privateKeyCrypto
+                  );
+                  user.lastMessage = decryptedMessage;
+                  return user;
+                }
+              }
+            })
+          )
+        ).filter((u) => u !== undefined);
         setRecentChatUsers(decryptedChats);
+          setSetFilterChats(decryptedChats)
 
-        // setRecentChatUsers(data.chats);
       }
-         if(data.type === "user-is-typing"){
-        setUserIsTyping((prev) =>[...prev , data.senderId])
+      if (data.type === "user-is-typing") {
+        setUserIsTyping((prev) => [...prev, data.senderId]);
       }
-         if(data.type === "user-stopped-typing"){
-        setUserIsTyping((prev) =>prev.filter((id) => id !== data.senderId))
+      if (data.type === "user-stopped-typing") {
+        setUserIsTyping((prev) => prev.filter((id) => id !== data.senderId));
       }
-
     };
     ws.send(
       JSON.stringify({
@@ -146,21 +165,31 @@ const chats = data.chats as selectedChatType[]
 
     return `${hours}:${minutes}`;
   }
-  const [openContextMenu, setOpenContextMenu] = useState<null | string >("");
+  const [openContextMenu, setOpenContextMenu] = useState<null | string>("");
 
-  const handleContextMenu = (e: React.MouseEvent<HTMLLIElement, MouseEvent> , user: selectedChatType) => {
+  const handleContextMenu = (
+    e: React.MouseEvent<HTMLLIElement, MouseEvent>,
+    user: selectedChatType
+  ) => {
     e.preventDefault();
     setOpenContextMenu((prev) => (prev === user.id ? "" : user.id));
-  
   };
 
-  const deletechat = (deletedChatId:string) =>{
-    setRecentChatUsers((prev) =>prev.filter(({chatId}) => chatId !== deletedChatId ))
+  const deletechat = (deletedChatId: string) => {
+    setSetFilterChats((prev) =>
+      prev.filter(({ chatId }) => chatId !== deletedChatId)
+    );
+  };
+
+    const searchUsers = (query:string) =>{
+setSetFilterChats(recentChatUsers.filter((user) => user.name.includes(query)))
   }
 
 
   return (
-    <div className="px-3 py-1 w-full md:px-1  ">
+    <div className="px-3 py-1 w-full hide-scrollbar md:px-1 overflow-y-auto  max-h-[75vh] ">
+
+
       <h2 className="text-[1.2rem]  flex justify-center items-center gap-2 font-semibold mb-2">
         {" "}
         {logedInUser.isLogin
@@ -169,23 +198,37 @@ const chats = data.chats as selectedChatType[]
             : "connecting..."
           : "Login first "}{" "}
       </h2>
-      <ul className="flex flex-col gap-2 transition-all  ">
-        <AiChatBot   selectedUser={selectedUser} onSelectUser={onSelectUser} setOpenContextMenu={setOpenContextMenu} setChatId={setChatId}/>
-        {recentChatUsers?.length > 0
-          ? recentChatUsers.map((user)=> {
 
+    <div className="relative ">
+      <input placeholder="search" className="border rounded-lg px-3 py-2 w-full mb-2 outline-none" onChange={(e) =>searchUsers(e.target.value)} />
+      <div  className="absolute  top-2 right-2"><IoSearch className="text-gray-600" size={22} /></div>
+      </div>
 
+      <ul className="flex flex-col gap-2 transition-all   min-h-[65vh]  ">
+        <AiChatBot
+          selectedUser={selectedUser}
+          onSelectUser={onSelectUser}
+          setOpenContextMenu={setOpenContextMenu}
+          setChatId={setChatId}
+        />
+
+        {filterChats?.length > 0
+          ? filterChats.map((user) => {
               return (
-               <div className="relative w-full  ">
+                <div className="relative w-full  ">
                   <li
                     onContextMenu={(e) => handleContextMenu(e, user)}
                     key={user.chatId}
                     className={`p-3 md:p-1 cursor-pointer  sm:w-full rounded-lg  b flex  ${
                       selectedUser?.id === user.id
-                        ? "bg-[#008080d6] text-white" 
+                        ? "bg-[#008080d6] text-white"
                         : "bg-gray-200 "
                     }`}
-                    onClick={() => {onSelectUser(user) ;setOpenContextMenu(null) ;setChatId(user.chatId)}}
+                    onClick={() => {
+                      onSelectUser(user);
+                      setOpenContextMenu(null);
+                      setChatId(user.chatId);
+                    }}
                   >
                     <div className="flex   w-[3rem]  justify-start items-center gap-3 ">
                       <img
@@ -219,7 +262,9 @@ const chats = data.chats as selectedChatType[]
                       >
                         <span className="max-w-[8rem] overflow-hidden truncate">
                           {" "}
-                          {userIsTyping.includes(user.id) ? "Typing..." :user?.lastMessage }
+                          {userIsTyping.includes(user.id)
+                            ? "Typing..."
+                            : user?.lastMessage}
                         </span>
                         <div className="flex gap-1 justify-center items-center ">
                           {user.chatId !== selectedUser?.chatId &&
@@ -250,7 +295,7 @@ const chats = data.chats as selectedChatType[]
                       onSelectUser={onSelectUser}
                     />
                   )}
-               </div>
+                </div>
               );
             })
           : connected

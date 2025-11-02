@@ -24,10 +24,12 @@ export const WebSocketProvider = ({ children }:{children:React.ReactNode}) => {
   const user = useSelector((state: RootState) => state.user);
   const [connected, setConnected] = useState<boolean>(false);
 
+        let tryLimit = 2
+
+
 useEffect(() =>{
  
   if (!user.isLogin) return;
-//  const serverPort = new URLSearchParams(window.location.search).get("port") || 8000;
     const connect = async () => {
       ws.current = new WebSocket(`${import.meta.env.VITE_BASE_URL_WS}`);
      ws.current.onopen = () => {
@@ -58,12 +60,14 @@ useEffect(() =>{
         }
       ws.current.onclose = () => {
         console.log("WebSocket connection closed");
+        tryLimit += 1
         setConnected(false);
         connectionBooleanRef.current = false;
         const intervalId = setInterval(() => {
-          if (!connectionBooleanRef.current) {
-            console.log("trying");
+          if (!connectionBooleanRef.current && tryLimit > 0) {
+            console.log("trying to connect again",tryLimit);
             connect();
+            tryLimit -= 1
           } else {
             clearInterval(intervalId);
           }

@@ -21,7 +21,6 @@ export type MessageType = {
   id?: string;
   senderId: String;
   receiverId: String;
-  content: string;
   senderContent?:string,
   receiverContent?:string,
   createdAt: number;
@@ -91,14 +90,13 @@ const ChatWindow = ({
   const messageInputRef = useRef<HTMLInputElement | null>(null);
   const [mediaFile, setMediaFile] = useState<MediaFileType[] | []>([]);
   const [sendedFiles, setSendedFiles] = useState<sendedFileType[] | []>([]);
-  const [inputPlaceHolder, SetInputPlaceHolder] =
-    useState<string>("Type a message");
+  const [inputPlaceHolder, SetInputPlaceHolder] =useState<string>("Type a message");
   const placeHolderSetterInterval = useRef<ReturnType<
     typeof setInterval
   > | null>(null);
   const [callUserId, setCallUserId] = useState<string | null>(null);
   const [isCallOpen, setIsCallOpen] = useState(false);
-  const [answerCall, setAnswerCall] = useState(false);
+  // const [answerCall, setAnswerCall] = useState(false);
 
   interface Msg {
     selectedUserId: string;
@@ -119,7 +117,6 @@ const ChatWindow = ({
     senderId: string;
     senderContent:string,
     receiverContent:string,
-    content: string;
     receiverId: string;
     tempId?: string;
     uploading?: boolean;
@@ -210,7 +207,6 @@ return senderContent
         receiverContent: input,
         senderContent: input,
         receiverId: selectedUser.id!,
-        content:input,
         isMedia: false,
         tempId: "0",
         error: false,
@@ -251,7 +247,8 @@ return senderContent
         const tempId: string = uuid();
         const msg = newMessage({
           senderId,
-          content: img.url,
+          receiverContent: img.url,
+          senderContent:img.url,
           receiverId: selectedUser.id!,
           isMedia: true,
           tempId: tempId,
@@ -448,7 +445,7 @@ return senderContent
   setHasMoreMsg(res.data.hasMore);
         }
       } catch (error) {
-        // setMessages([]);
+        setMessages([]);
         console.log(error);
       }
     };
@@ -588,9 +585,11 @@ return senderContent
       }
       if (data.type === "chatbot-reply") {
         if (true) {
+          console.log(data)
           const msg = newMessage({
             senderId: data.senderId,
-            content: data.answer,
+            receiverContent: data.answer,
+            senderContent:"chatbot",
             receiverId: data.receiverId,
             isMedia: data.isMedia || false,
             tempId: " 0",
@@ -879,7 +878,7 @@ return senderContent
                     <div className="relative   ">
                       {" "}
                       <img
-                        src={message.content}
+                        src={message.receiverContent}
                         className={`block  rounded-lg object-cover  ${
                           message.senderId === senderId
                             ? " h-[200px] w-[200px]"
