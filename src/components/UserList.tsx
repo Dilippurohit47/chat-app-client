@@ -20,6 +20,7 @@ export interface UserListProps {
   logedInUser: UserType;
   setChatId: (state: string) => void;
   setMessages: React.Dispatch<React.SetStateAction<MessageType[]>>;
+  isConnected:boolean
 }
 // type ChatUser = {
 //   chatId: string;
@@ -38,6 +39,7 @@ const UserList = ({
   onSelectUser,
   connected,
   ws,
+  isConnected,
   onlineUsers,
   setChatId,
   setMessages,
@@ -64,7 +66,6 @@ const UserList = ({
           const decryptedChats = (
             await Promise.all(
               chats.map(async (user) => {
-                console.log(user.senderId, user.receiverId, logedInUser.id);
                 if (user.senderId === logedInUser.id) {
                   const decryptedMessage = await decryptMessage(
                     user.lastMessageForSender,
@@ -105,7 +106,6 @@ const UserList = ({
     const messageHandler = async (m: any) => {
       const data = JSON.parse(m.data);
       if (data.type === "recent-chats") {
-        console.log("chats", data.chats);
         const chats = data.chats as selectedChatType[];
         const privateKeyString = await getkeyFromIndexedDb();
         const privateKeyCrypto = await importPrivateKey(privateKeyString!);
@@ -156,7 +156,7 @@ const UserList = ({
     return () => {
       ws.removeEventListener("message", messageHandler);
     };
-  }, [ws, selectedUser]);
+  }, [  isConnected , selectedUser]);
 
   function formatToLocalDateTime(dateString: string) {
     const date = new Date(dateString);
