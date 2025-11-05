@@ -461,7 +461,6 @@ return senderContent
     };
 
     const getUserKeys = async() =>{
-
       const response = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/user`,{
         params:{
           id:selectedUser.id
@@ -494,6 +493,7 @@ return senderContent
     updateUnreadCount();
     setOpenSearchBar(false);
 
+  console.log("user selected from usefect",selectedUser)
     return () => {
       if (placeHolderSetterInterval.current) {
         clearInterval(placeHolderSetterInterval.current);
@@ -502,6 +502,7 @@ return senderContent
     };
   }, [selectedUser]);
 
+  console.log("user selected",selectedUser)
   useEffect(() => {
     if (!messageContainerRef.current) return;
     const handleScroll = async () => {
@@ -636,8 +637,9 @@ return senderContent
       await axios.put(
         `${import.meta.env.VITE_BASE_URL_HTTP}/chat/update-unreadmessage-count`,
         {
-          userId: logedInUser.id,
+          senderId: selectedUser.id,
           chatId: selectedUser.chatId,
+          receiverId:logedInUser.id
         }
       );
     };

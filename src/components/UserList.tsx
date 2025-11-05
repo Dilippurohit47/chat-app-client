@@ -188,8 +188,6 @@ setSetFilterChats(recentChatUsers.filter((user) => user.name.includes(query.toLo
 
   return (
     <div className="px-3 py-1 w-full hide-scrollbar md:px-1 overflow-y-auto  max-h-[75vh] ">
-
-
       <h2 className="text-[1.2rem]  flex justify-center items-center gap-2 font-semibold mb-2">
         {" "}
         {logedInUser.isLogin
@@ -214,6 +212,7 @@ setSetFilterChats(recentChatUsers.filter((user) => user.name.includes(query.toLo
 
         {filterChats?.length > 0
           ? filterChats.map((user) => {
+            console.log(user.chatId , selectedUser?.chatId)
               return (
                 <div className="relative w-full  ">
                   <li
