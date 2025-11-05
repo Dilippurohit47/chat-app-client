@@ -37,7 +37,7 @@ const TotalUserList = ({
 
 
   const searchUsers = (query:string) =>{
-setFilterusers(totalUsers.filter((user) => user.name.includes(query)))
+setFilterusers(totalUsers.filter((user) => user.name.includes(query.toLowerCase())))
   }
 
   return (

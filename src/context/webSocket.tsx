@@ -13,7 +13,7 @@ export interface WebSocketContextType {
 }
 
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
-
+ 
 export const WebSocketProvider = ({
   children,
 }: {
@@ -58,7 +58,7 @@ export const WebSocketProvider = ({
           } else {
             clearInterval(intervalId);
           }
-        }, 500);
+        }, 2000);
       };
     };
 
@@ -81,6 +81,15 @@ export const WebSocketProvider = ({
       ws.current?.removeEventListener("message", handleMessages);
     };
   }, [user]);
+
+  useEffect(() => {
+  const interval = setInterval(() => {
+    if (ws.current?.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: "ping" }));
+    }
+  }, 10000);
+  return () => clearInterval(interval);
+}, []);
 
   return (
     <WebSocketContext.Provider

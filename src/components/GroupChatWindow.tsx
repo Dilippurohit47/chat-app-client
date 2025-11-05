@@ -1,12 +1,8 @@
-import { axios } from "../apiClient";;
-import React, { KeyboardEventHandler, useEffect, useRef, useState } from "react";
+import React, {  useEffect, useRef, useState } from "react";
 import { MdOutlineAttachment } from "react-icons/md";
 import { IoMdSearch } from "react-icons/io";
-import SearchBarForChat from "../components/SearchBarForChat";
 import { UserType } from "../slices/userSlice";
-import { toast } from "react-toastify";
 import { FaArrowLeftLong } from "react-icons/fa6";
-import { FiUserPlus } from "react-icons/fi";  
 import { HiMiniUserGroup } from "react-icons/hi2";
 import AddMoreMembersInGroupDialogBox from "./AddMoreMembersInGroupDialogBox";
 import { SelectedGroupType } from "../pages/Homepage";
@@ -50,13 +46,13 @@ const GroupChatWindow = ({
 
   const [messages, setMessages] = useState<GroupMessageType[] | []>([]);
   const [openSearchBar, setOpenSearchBar] = useState<boolean>(false);
-  const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-  const [findMessagesIds, setFindMessagesIds] = useState<string[]>([]);
-  const [cursorId, setCursorId] = useState<string | null>(null);
+  // const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  // const [findMessagesIds, setFindMessagesIds] = useState<string[]>([]);
+  // const [cursorId, setCursorId] = useState<string | null>(null);
   const [loadingMoreChat,setLoadingMoreChat] = useState<boolean>(false)
-  const messageContainerRef = useRef<HTMLDivElement>(null);
-  const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
-  const [initialLoad ,setInitialLoad] = useState(true)
+  // const messageContainerRef = useRef<HTMLDivElement>(null);
+  // const [hasMoreMsg,setHasMoreMsg] = useState<boolean>(false)
+  // const [initialLoad ,setInitialLoad] = useState(true)
   const messageInputRef = useRef<HTMLInputElement | null>(null)
 const [showGroupInfo,setShowGroupInfo] = useState<boolean>(false)
 interface MessageParams {
@@ -83,7 +79,7 @@ ws.send(JSON.stringify({
   groupId:selectedGroup.id,
   message:msg,
 }))
-setMessages(prev =>[...prev,msg])
+setMessages(prev =>[msg,...prev])
 setInput("")
   }
 
@@ -97,7 +93,6 @@ useEffect(() =>{
   if(!ws) return 
   const handleMessage =(e:MessageEvent) =>{
     const data = JSON.parse(e.data)
-    console.log(data)
     if(data.type === "group-message"){
         const msg = newMessage({messageId:data.MessageId,senderId:data.senderId,input:data.content,groupId:data.groupId})
         setMessages((prev) =>[msg,...prev])

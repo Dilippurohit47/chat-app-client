@@ -182,7 +182,7 @@ const UserList = ({
   };
 
     const searchUsers = (query:string) =>{
-setSetFilterChats(recentChatUsers.filter((user) => user.name.includes(query)))
+setSetFilterChats(recentChatUsers.filter((user) => user.name.includes(query.toLowerCase())))
   }
 
 
