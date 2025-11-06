@@ -27,12 +27,12 @@ export const WebSocketProvider = ({
   const [connected, setConnected] = useState<boolean>(false);
 
   let tryLimit = 2;
-// const params = new URLSearchParams(window.location.search);
-// const PORT = params.get("port");
+const params = new URLSearchParams(window.location.search);
+const PORT = params.get("port");
   useEffect(() => {
     if (!user.isLogin) return;
     const connect = async () => {
-      ws.current = new WebSocket(`${import.meta.env. VITE_BASE_URL_WS}`);
+      ws.current = new WebSocket(`${import.meta.env.VITE_BASE_URL_WS}`);
       ws.current.onopen = () => {
         if (ws.current?.readyState === WebSocket.OPEN) {
           ws.current.send(
@@ -58,22 +58,32 @@ export const WebSocketProvider = ({
             tryLimit -= 1;
           } else {
             clearInterval(intervalId);
-          }
+          } 
         }, 2000);
       };
     };
 
     const handleMessages = (m: MessageEvent) => {
       const data = JSON.parse(m.data);
+      // console.log("data from main ",data)
       if (data.type === "online-users") {
         const filterData = data?.onlineUsers.filter(
           (c: onlineUsersType) => c !== user.id
         );
         setOnlineUsers(filterData);
       }
+      if(data.type === "pong"){
+        const Latency = Date.now() - data.start
+        const serverLatency = Date.now() - data.newStart
+        console.log("RTT latency" + Latency  + "ms")
+        console.log(" server latency" + serverLatency  + "ms")
+      }
     };
 
     connect();
+
+
+
 
     return () => {
       if (ws.current) {
@@ -83,12 +93,14 @@ export const WebSocketProvider = ({
     };
   }, [user]);
 
+
   useEffect(() => {
   const interval = setInterval(() => {
     if (ws.current?.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify({ type: "ping" }));
-    }
+      ws.current.send(JSON.stringify({ type: "pings" }));}
   }, 10000);
+
+
   return () => clearInterval(interval);
 }, []);
 

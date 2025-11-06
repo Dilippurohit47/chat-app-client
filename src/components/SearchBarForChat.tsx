@@ -31,7 +31,7 @@ const SearchBarForChat = ({
   return (
     <div
       className={`w-[20rem] rounded-sm h-12 mt-1 bg-[#3F3D56] flex justify-start px-2 items-center gap-1 absolute transition-all ease-in-out duration-200 ${
-        isOpen ? " top-15 right-[3rem]  opacity-1" : " none opacity-0 -top-5 right-[3rem]"
+        isOpen ? "  transform -translate-x-[50%] -translate-y-[50%] sm:left-[67%] sm:top-[10%] top-[12%] right-[-10%]  opacity-1" : "  opacity-0 -top-5 right-[3rem]  pointer-events-none hidden"
       }`}
     >
       <div>

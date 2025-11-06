@@ -95,7 +95,8 @@ function Home() {
   const [chatId, setChatId] = useState<string | null>("");
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [isMobile, setIsMobile] = useState<boolean>(false);
-const [publicKey ,setPublicKey] = useState<string>("")
+// const [publicKey ,setPublicKey] = useState<string>("")
+// console.log(user)
 
   const { ws, connected, setConnected, onlineUsers }: WebSocketContextType =
     useWebSocket();

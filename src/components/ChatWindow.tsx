@@ -493,7 +493,6 @@ return senderContent
     updateUnreadCount();
     setOpenSearchBar(false);
 
-  console.log("user selected from usefect",selectedUser)
     return () => {
       if (placeHolderSetterInterval.current) {
         clearInterval(placeHolderSetterInterval.current);
@@ -501,8 +500,6 @@ return senderContent
       }
     };
   }, [selectedUser]);
-
-  console.log("user selected",selectedUser)
   useEffect(() => {
     if (!messageContainerRef.current) return;
     const handleScroll = async () => {
@@ -565,8 +562,6 @@ return senderContent
             data.receiverId === selectedUser.id) 
         ) {
 
-
-          console.log("Data from ws",data) 
           const privateKeyString  =  await getkeyFromIndexedDb()
           const privateKeyCrypto = await importPrivateKey(privateKeyString!)
           const decryptedMessage = await decryptMessage(data.receiverContent , privateKeyCrypto)
@@ -664,17 +659,42 @@ return senderContent
       if (isLast) chatWindowRef.current = el;
     }
   };
+const findMessages = (text: string) => {
+  const allMessageIds = Object.keys(messageRefs.current);
 
-  const findMessages = (text: string) => {
-    const findMessageIds = Object.keys(messageRefs.current).filter((id) =>
-      messageRefs.current[id]?.textContent
-        ?.toLocaleLowerCase()
-        .includes(text.toLocaleLowerCase())
-    );
-    if (findMessageIds) {
-      setFindMessagesIds(findMessageIds);
+  allMessageIds.forEach((id) => {
+    const outer = messageRefs.current[id];
+    if (!outer) return;
+
+    const bubble = outer.querySelector('.message-bubble');
+    if (bubble) {
+      bubble.classList.remove("bg-yellow-400/100"); 
+        }
+  });
+
+  if (!text.trim()) {
+    setFindMessagesIds([]);
+    return;
+  }
+  const findMessageIds = allMessageIds.filter((id) =>
+    messageRefs.current[id]?.textContent
+      ?.toLocaleLowerCase()
+      .includes(text.toLocaleLowerCase())
+  );
+
+  findMessageIds.forEach((messageId) => {
+    const outer = messageRefs.current[messageId];
+    if (!outer) return;
+
+    const bubble = outer.querySelector(".message-bubble");
+    if (bubble) {
+      bubble.classList.add("bg-yellow-400/100"); 
     }
-  };
+  });
+
+  setFindMessagesIds(findMessageIds);
+};
+
 
   useEffect(() => {
     const container = messageContainerRef.current;
@@ -698,6 +718,8 @@ return senderContent
         prevIndex === null ? findMessagesIds.length - 1 : prevIndex - 1;
       if (newIndex >= 0) {
         const messageId = findMessagesIds[newIndex];
+      console.log( "message got ",messageRefs?.current[messageId])
+
         messageRefs?.current[messageId]?.scrollIntoView({
           behavior: "smooth",
           block: "center",
@@ -714,10 +736,12 @@ return senderContent
 
       if (newIndex < findMessagesIds.length) {
         const messageId = findMessagesIds[newIndex];
+
         messageRefs?.current[messageId]?.scrollIntoView({
           behavior: "smooth",
           block: "center",
         });
+
       }
       return newIndex < findMessagesIds.length ? newIndex : prevIndex;
     });
@@ -787,9 +811,9 @@ return senderContent
 
   return (
     <div className="flex  relative overflow-hidden    md:h-full   flex-col h-[100%] max-md:p-4 p-2 bg-[#1e1e2e] max-md:rounded-2xl md:p-0  md:rounded-[0] ">
-      <div className=" pr-2 pl-2 max-md:px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
+      <div className=" pr-2 pl-2 relative max-md:px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
         <div className="flex justify-between items-center gap-2">
-          <div onClick={() => setSelectedUser(null)} className="cursor-pointer">
+          <div onClick={() => {setSelectedUser(null)  ;console.log("clicked")}} className="cursor-pointer">
             <MdArrowBackIosNew size={24} />
           </div>
           <img
@@ -809,7 +833,7 @@ return senderContent
             {selectedUser?.name}
           </h1>
         </div>
-        <div className="flex justify-center pr-4 items-center gap-4">
+        <div className="flex justify-center pr-4 items-center gap-4  relative">
           <div
             className="cursor-pointer "
             onClick={() => {
@@ -821,7 +845,7 @@ return senderContent
           </div>
 
           <div
-            className="cursor-pointer "
+            className="cursor-pointer relative "
             onClick={() => {
               setOpenSearchBar(!openSearchBar), setFindMessagesIds([]);
             }}
@@ -869,10 +893,10 @@ return senderContent
               <div
                 key={message.id}
                 ref={(el) => setRefs(el, message.id!, isLast)}
-                className={`mb-4 flex    md:text-start gap-2 ${
+                className={`mb-4 flex    md:text-start gap-2 break-words sm:max-w-[90vw] ${
                   message.senderId === senderId
                     ? "justify-end "
-                    : "justify-start  max-md:max-w-[70%] "
+                    : "justify-start  max-md:max-w-[70%]  "
                 }`}
               >
                 <div>
@@ -881,7 +905,7 @@ return senderContent
                       {" "}
                       <img
                         src={message.receiverContent}
-                        className={`block  rounded-lg object-cover  ${
+                        className={`block  sm:max-w-[90vw]  rounded-lg object-cover  ${
                           message.senderId === senderId
                             ? " h-[200px] w-[200px]"
                             : " h-[200px] w-[200px]"
@@ -896,7 +920,7 @@ return senderContent
                     </div>
                   ) : (
                  <div
-  className={`inline-block p-3 rounded-lg ${
+  className={`inline-block message-bubble p-3 rounded-lg break-words   text-wrap  max-w-[50vw] sm:max-w-[90vw] ${
     message.senderId === senderId
       ? "bg-blue-500 text-white" // sender
       : "bg-gray-200 text-gray-800" // receiver

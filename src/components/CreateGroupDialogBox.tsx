@@ -104,11 +104,11 @@ const [error,setError] = useState<string>("")
     }
   };
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen} >
       <DialogTrigger asChild>
         <button className="cursor-pointer " onClick={()=>setDialogOpen(true)}>New Group</button>
       </DialogTrigger>
-      <DialogContent className=" h-[30rem]! gap-2 bg-white w-[30%] md:w-[90%] ">
+      <DialogContent className=" h-[30rem]! gap-2 bg-white w-[30%]  md:w-[70%]  sm:w-[90%]     ">
         <DialogHeader>
           <DialogTitle>Create Group</DialogTitle>
           <DialogDescription>
@@ -137,8 +137,8 @@ const [error,setError] = useState<string>("")
 )}
 
         </div>
-        <DialogFooter className=" justify-between! md:flex-col">
-          <div className=" bg-zinc-300  rounded-sm p-1 w-[80%] md:w-[100%] h-[18rem] hide-scrollbar overflow-y-auto gap-2 flex flex-col ">
+        <DialogFooter className=" justify-between! flex-col md:w-[100%]  sm:flex-col  md:max-w-[100%] max-w-[25rem] ">
+          <div className=" bg-zinc-300  rounded-sm p-1 w-[100%]  md:w-[100%] h-[18rem] hide-scrollbar overflow-y-auto gap-2 flex flex-col ">
             {totalUsers.length > 0 &&
               totalUsers.map((u) => {
 
@@ -168,7 +168,7 @@ const [error,setError] = useState<string>("")
                 </div> }
               )}
           </div>
-          <Button onClick={createGroup} disabled={addedMembers.length <= 0} className="bg-blue-600 text-white w-full md:mt-5">Save</Button>
+          <Button onClick={createGroup} disabled={addedMembers.length <= 0} className="bg-blue-600  text-white w-full md:mt-5">Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
