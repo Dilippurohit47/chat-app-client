@@ -27,12 +27,12 @@ export const WebSocketProvider = ({
   const [connected, setConnected] = useState<boolean>(false);
 
   let tryLimit = 2;
-const params = new URLSearchParams(window.location.search);
-const PORT = params.get("port");
+// const params = new URLSearchParams(window.location.search);
+// const PORT = params.get("port");
   useEffect(() => {
     if (!user.isLogin) return;
     const connect = async () => {
-      ws.current = new WebSocket(`ws://localhost:${PORT}`);
+      ws.current = new WebSocket(`${import.meta.env. VITE_BASE_URL_WS}`);
       ws.current.onopen = () => {
         if (ws.current?.readyState === WebSocket.OPEN) {
           ws.current.send(
