@@ -68,3 +68,8 @@ npm run dev
   - WebSocket reconnect
   - Chatbot timeout protection
   - Server fallback logic
+  
+- ⚠️ **All other features**
+  - Groups basic features
+  - search messages 
+  - Aws for storage 
