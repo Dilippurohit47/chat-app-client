@@ -99,8 +99,6 @@ const PORT = params.get("port");
     if (ws.current?.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify({ type: "pings" }));}
   }, 10000);
-
-
   return () => clearInterval(interval);
 }, []);
 

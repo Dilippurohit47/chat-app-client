@@ -145,7 +145,7 @@ const [error,setError] = useState<string>("")
               if(u.id !== userId)   return <div className="bg-white px-2 py-3 rounded-sm flex justify-between items-center">
                   <div className="flex gap-2">
                     <img
-                      src={u.profileUrl}
+                      src={u.profileUrl ? u.profileUrl : "https://github.com/shadcn.png"}
                       alt=""
                       className="w-8 h-8 rounded-full object-cover"
                     />

@@ -30,14 +30,14 @@ const SearchBarForChat = ({
   const [searchInput, setSearchInput] = useState("");
   return (
     <div
-      className={`w-[20rem] rounded-sm h-12 mt-1 bg-[#3F3D56] flex justify-start px-2 items-center gap-1 absolute transition-all ease-in-out duration-200 ${
-        isOpen ? "  transform -translate-x-[50%] -translate-y-[50%] sm:left-[67%] sm:top-[10%] top-[12%] right-[-10%]  opacity-1" : "  opacity-0 -top-5 right-[3rem]  pointer-events-none hidden"
+      className={`w-[25rem] rounded-sm  h-12 mt-1 bg-[#3F3D56] flex justify-start px-2 items-center gap-1 absolute transition-all ease-in-out duration-200 ${
+        isOpen ? "  transform -translate-x-[50%] right-[100%] -translate-y-[50%] sm:left-[-400%] sm:top-[10%]   md:left-[-500%] md:top-[10%] mt-[3.5rem]   opacity-1" : "  opacity-0 -top-5 right-[3rem]  pointer-events-none hidden"
       }`}
     >
-      <div>
+      <div className="w-[100%]"> 
         <input
           type="text"
-          className="h-8 h w-[12rem] bg-white px-2 focus:outline-0 rounded"
+          className="h-8 h w-[100%]  bg-white px-2 focus:outline-0 rounded"
           placeholder="search in chat"
           onChange={(e) =>{
             setSearchInput(e.target.value);
@@ -48,18 +48,18 @@ const SearchBarForChat = ({
         />
       </div>
       <div
-        className="text-white rotate-[180deg] cursor-pointer"
+        className="text-white w-[10%] rotate-[180deg] cursor-pointer"
         onClick={scrollToFindMessageForward}
       >
         <IoIosArrowDown size={22} />
       </div>
       <div
-        className="text-white cursor-pointer"
+        className="text-white w-[10%] cursor-pointer"
         onClick={scrollToFindMessageBackward}
       >
         <IoIosArrowDown size={22} />
       </div>
-      <div className="  text-white  w-full">{ messageIndex && messageIndex +1} of {totalFindmessages}</div>
+      <div className="  text-white  w-[20%]">{ messageIndex && messageIndex +1} of {totalFindmessages}</div>
     </div>
   );
 };

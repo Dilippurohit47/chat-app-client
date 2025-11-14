@@ -13,9 +13,10 @@ import { useWebSocket } from "../context/webSocket";
 import { selectedChatType } from "../pages/Homepage";
 import { MdArrowBackIosNew } from "react-icons/md";
 
-import { LuPhoneCall } from "react-icons/lu";
+import { LuLoader, LuLoaderCircle, LuPhoneCall } from "react-icons/lu";
 import VideoCallDialog from "./VideoCallDialog";
 import { decryptMessage, getkeyFromIndexedDb, importPrivateKey, importPublicKey } from "../lib/helper";
+import { Loader, Loader2, LoaderPinwheel } from "lucide-react";
 
 export type MessageType = {
   id?: string;
@@ -29,21 +30,6 @@ export type MessageType = {
   uploading?: boolean;
   chatId: string | null;
 };
-// type selectedChat = {
-//   chatId: string;
-//   createdAt: string; // or `Date` if parsed
-//   email: string;
-//   id: string;
-//   lastMessage: string;
-//   lastMessageCreatedAt: string; // or `Date` if parsed
-//   name: string;
-//   password: string;
-//   profileUrl: string;
-//   unreadMessages: {
-//     userId: string;
-//     unreadMessages: number;
-//   };
-// };
 
 interface ChatWindowProps {
   ws: WebSocket | null;
@@ -64,7 +50,14 @@ interface sendedFileType {
 interface MediaFileType {
   imageId: string;
   url: string;
+
 }
+
+
+  interface Msg {
+    selectedUserId: string;
+    input: string;
+  }
 
 const ChatWindow = ({
   senderId,
@@ -96,12 +89,9 @@ const ChatWindow = ({
   > | null>(null);
   const [callUserId, setCallUserId] = useState<string | null>(null);
   const [isCallOpen, setIsCallOpen] = useState(false);
-  // const [answerCall, setAnswerCall] = useState(false);
+  const [chatBotResponseLoading , setChatBotResponseLoading]  = useState<boolean>(false) 
 
-  interface Msg {
-    selectedUserId: string;
-    input: string;
-  }
+
   const incompletInputMsgRef = useRef<Msg[]>([]);
 
   function newMessage({
@@ -221,6 +211,7 @@ return senderContent
     if (!logedInUser.isLogin) return toast.error("Login first ");
     if (!ws) return toast.error("server error!");
     if (selectedUser.id === "chat-bot") {
+      setChatBotResponseLoading(true)
       ws.send(
         JSON.stringify({
           type: "get-chatbot-response",
@@ -568,7 +559,7 @@ return senderContent
           const msg = newMessage({
             senderId: data.senderId,
             receiverContent: decryptedMessage,
-            senderContent: "ee",
+            senderContent: data.senderContent,
             receiverId: data.receiverId,
             isMedia: data.isMedia,
             tempId: " 0",
@@ -580,8 +571,7 @@ return senderContent
         }
       }
       if (data.type === "chatbot-reply") {
-        if (true) {
-          console.log(data)
+          
           const msg = newMessage({
             senderId: data.senderId,
             receiverContent: data.answer,
@@ -592,10 +582,9 @@ return senderContent
             error: false,
             uploading: false,
           });
-
+          setChatBotResponseLoading(false)
           setMessages((prev) => [msg, ...prev]);
         }
-      }
     };
     ws.addEventListener("message", getMessage);
 
@@ -844,6 +833,8 @@ const findMessages = (text: string) => {
             <LuPhoneCall size={20} />
           </div>
 
+
+<div className="relative ">
           <div
             className="cursor-pointer relative "
             onClick={() => {
@@ -852,18 +843,8 @@ const findMessages = (text: string) => {
           >
             <IoMdSearch size={24} />
           </div>
-        </div>
-      </div>
-      {isCallOpen && callUserId === selectedUser.id && (
-        <VideoCallDialog
-          logedInUser={logedInUser}
-          setCall={setCallUserId}
-          setIsCallOpen={setIsCallOpen}
-          call={callUserId}
-          selectedUserId={selectedUser.id}
-        />
-      )}
 
+          
       <SearchBarForChat
         messageIndex={messageIndex}
         totalFindmessages={findMessagesIds.length}
@@ -873,6 +854,22 @@ const findMessages = (text: string) => {
         scrollToFindMessageForward={scrollToFindMessageForward}
         scrollToFindMessageBackward={scrollToFindMessageBackward}
       />
+
+</div>
+
+        </div>
+      </div>
+     
+
+       {isCallOpen && callUserId === selectedUser.id && (
+        <VideoCallDialog
+          logedInUser={logedInUser}
+          setCall={setCallUserId}
+          setIsCallOpen={setIsCallOpen}
+          call={callUserId}
+          selectedUserId={selectedUser.id}
+        />
+      )}
       {loadingMoreChat && (
         <div className="flex justify-center ">
           <svg className="loader" viewBox="25 25 50 50">
@@ -919,18 +916,20 @@ const findMessages = (text: string) => {
                       )}
                     </div>
                   ) : (
+<>
                  <div
   className={`inline-block message-bubble p-3 rounded-lg break-words   text-wrap  max-w-[50vw] sm:max-w-[90vw] ${
     message.senderId === senderId
-      ? "bg-blue-500 text-white" // sender
-      : "bg-gray-200 text-gray-800" // receiver
+      ? "bg-blue-500 text-white" 
+      : "bg-gray-200 text-gray-800" 
   }`}
 >
   {message.senderId === senderId
     ? message.senderContent
     : message.receiverContent}
 </div>
-                  )}
+</>
+                  )} 
                   <div className="text-xs  text-end text-gray-500 mt-1">
                     {formatDate(message.createdAt)}
                   </div>
@@ -938,6 +937,10 @@ const findMessages = (text: string) => {
               </div>
             );
           })}
+        {chatBotResponseLoading &&   <div className="text-black px-3 py-3 rounded-md text-start bg-gray-200    w-[fit-content]">
+            <LuLoaderCircle className="animate-spin" />
+          </div>
+        }
       </div>
       <div className="mt-4 flex gap-2 justify-center items-center md:p-2 md:mt-2 md:absolute bottom-0  md:w-full sm:gap-1 ">
         {mediaFile.length <= 0 ? (
