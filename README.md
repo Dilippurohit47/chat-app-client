@@ -15,7 +15,6 @@ The app communicates with the backend via **WebSockets** for real-time messaging
 
 ---
 
-```md
 
 ## 🚀 Clone & Setup
 
@@ -26,7 +25,7 @@ cd chat-app-client
 npm install
 npm run dev
 
----
+```
 
 ## ✨ Features
 
