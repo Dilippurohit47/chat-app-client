@@ -1,4 +1,4 @@
-# 💬 Chat App — Client
+# 💬 Not-A-Basic-Chat App — Client (TypeScript)
 
 A real-time chat application frontend built using **React**.  
 Users can chat with each other instantly, send messages, and even interact with an integrated **ChatBot**.  
@@ -32,7 +32,7 @@ npm run dev
 - 📡 **Real-time Messaging**
   - Messages are delivered instantly using WebSockets
   - Smooth and responsive chat experience
-
+  - video Call(webrtc)
 - 👤 **User Authentication**
   - Login / Signup
   - refresh / access tokens
