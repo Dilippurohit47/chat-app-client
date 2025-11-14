@@ -69,7 +69,7 @@ npm run dev
   - Chatbot timeout protection
   - Server fallback logic
   
-- ⚠️ **All other features**
+- ⭐ **All other features**
   - Groups basic features
   - search messages 
   - Aws for storage 
