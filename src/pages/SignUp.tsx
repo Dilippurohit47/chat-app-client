@@ -14,13 +14,8 @@ import { savePrivateKeyToIndexedDB } from "../lib/helper";
 import { Loader } from "lucide-react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { FcGoogle } from "react-icons/fc";
-type keyPair ={
-  publicKey:string,
-  privateKey:string,
-} 
-interface CredentialResType {
-  [Key: string]: string;
-}
+import { CredentialResType, keyPair } from "../types";
+
 const SignUp = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState("");

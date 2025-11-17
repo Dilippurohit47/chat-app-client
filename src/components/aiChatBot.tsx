@@ -1,12 +1,5 @@
-import React, { SetStateAction } from "react";
-import { selectedChatType } from "../pages/Homepage";
+import { AichatBotProps, selectedChatType } from "../types/index";
 
-interface AichatBotProps {
-  selectedUser: selectedChatType | null;
-  onSelectUser: React.Dispatch<SetStateAction<selectedChatType | null>>;
-  setOpenContextMenu: (state: null) => void;
-  setChatId: (state: string) => void;
-}
 
 const AiChatBot = ({
   selectedUser,

@@ -6,16 +6,8 @@ import { IoMdResize } from "react-icons/io";
 import { FaMicrophone } from "react-icons/fa";
 import { FaMicrophoneSlash } from "react-icons/fa";
 import { forwardRef ,useImperativeHandle } from "react";
-interface VideoCallDialogProps {
-  callerId: string | undefined;
-  setCallAccepted: React.Dispatch<React.SetStateAction<boolean>>;
-  isCallAccepted: boolean;
-}
+import { LocalVideoSizeTypes, VideoCallDialogProps } from "../types";
 
-type LocalVideoSizeTypes = {
-  width: number;
-  height: number;
-};
 const AnswerVideoCall = forwardRef((props: VideoCallDialogProps, ref)=> {
 
   

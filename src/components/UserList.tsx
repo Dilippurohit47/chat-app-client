@@ -1,9 +1,6 @@
-import React, { SetStateAction, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { axios } from "../apiClient";
-import { UserType } from "../slices/userSlice";
 import ContextMenuDialogBox from "./contextMenuDialogBox";
-import { MessageType } from "./ChatWindow";
-import { selectedChatType } from "../pages/Homepage";
 import AiChatBot from "./aiChatBot";
 import {
   decryptMessage,
@@ -11,28 +8,8 @@ import {
   importPrivateKey,
 } from "../lib/helper";
 import { IoSearch } from "react-icons/io5";
-export interface UserListProps {
-  selectedUser: selectedChatType | null;
-  onSelectUser: React.Dispatch<SetStateAction<selectedChatType | null>>;
-  connected: boolean;
-  onlineUsers: string[] | undefined;
-  ws: WebSocket | null;
-  logedInUser: UserType;
-  setChatId: (state: string) => void;
-  setMessages: React.Dispatch<React.SetStateAction<MessageType[]>>;
-  isConnected:boolean
-}
-// type ChatUser = {
-//   chatId: string;
-//   createdAt: string; // If using Date objects, change to `Date`
-//   email: string;
-//   id: string;
-//   lastMessage: string;
-//   lastMessageCreatedAt: string; // Change to `Date` if needed
-//   name: string;
-//   password: string; // Consider removing this for security
-//   profileUrl: string;
-// };
+import { selectedChatType, UserListProps } from "../types";
+
 const UserList = ({
   logedInUser,
   selectedUser,

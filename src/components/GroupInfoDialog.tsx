@@ -1,18 +1,10 @@
 import { axios } from "../apiClient";;
-import React, { SetStateAction, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import { useWebSocket } from "../context/webSocket";
-import { SelectedGroupType } from "../pages/Homepage";
+import { groupInfoProps } from "../types";
 
 
-type groupInfoProps = {
-group:SelectedGroupType,
-showGroupInfo:boolean,
-setShowGroupInfo:(State:boolean)=>void;
-groupInfoButtonRef:React.RefObject<HTMLDivElement | null> 
-userId:string | null
-setSelectedGroup:React.Dispatch<SetStateAction<SelectedGroupType | null >>
-}
 
 const GroupInfoDialog = ({  setSelectedGroup ,userId, group, showGroupInfo ,setShowGroupInfo ,groupInfoButtonRef }:groupInfoProps) => {
 

@@ -2,25 +2,11 @@ import React, { useEffect, useRef, useState } from "react";
 import { useWebSocket } from "../context/webSocket";
 import { FaVideoSlash } from "react-icons/fa";
 import { FaVideo } from "react-icons/fa";
-import { Loader, LoaderCircle } from "lucide-react";
 import { FaMicrophone } from "react-icons/fa";
 import { FaMicrophoneSlash } from "react-icons/fa";
 import { IoMdResize } from "react-icons/io";
-import { UserType } from "../slices/userSlice";
-import { data } from "react-router-dom";
+import { LocalVideoSizeTypes, VideoCallDialogProps } from "../types";
 
-interface VideoCallDialogProps {
-  setCall: React.Dispatch<React.SetStateAction<string | null>>;
-  setIsCallOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  call: string | null;
-  selectedUserId: string;
-  logedInUser: UserType;
-}
-
-type LocalVideoSizeTypes = {
-  width: number;
-  height: number;
-};
 const VideoCallDialog = ({
   setCall,
   call,

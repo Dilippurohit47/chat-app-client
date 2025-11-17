@@ -1,16 +1,7 @@
 import { axios } from "../apiClient";;
-import React, { useEffect, useState } from "react";
-import { UserType } from "../slices/userSlice";
-import { selectedChatType } from "../pages/Homepage";
+import  { useEffect, useState } from "react";
 import { IoSearch } from "react-icons/io5";
-export type onlineUsersType = string
-
-interface UserListProps {
-  selectedUser: selectedChatType | null; 
-  onSelectUser: React.Dispatch<React.SetStateAction<selectedChatType | null>>; 
-  onlineUsers: onlineUsersType[];
-  logedInUser:UserType
-}
+import { selectedChatType, UserListProps } from "../types";
 
 
 const TotalUserList = ({

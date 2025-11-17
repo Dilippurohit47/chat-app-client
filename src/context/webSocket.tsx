@@ -3,14 +3,9 @@ import { createContext, useRef, useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import { onlineUsersType } from "../components/totalUserList";
+import { WebSocketContextType } from "../types";
 
-export interface WebSocketContextType {
-  ws: React.MutableRefObject<WebSocket | null>;
-  connected: boolean;
-  setConnected: React.Dispatch<React.SetStateAction<boolean>>;
-  connectionBooleanRef: React.MutableRefObject<boolean>;
-  onlineUsers: string[];
-}
+
 
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
  
@@ -65,7 +60,6 @@ const PORT = params.get("port");
 
     const handleMessages = (m: MessageEvent) => {
       const data = JSON.parse(m.data);
-      // console.log("data from main ",data)
       if (data.type === "online-users") {
         const filterData = data?.onlineUsers.filter(
           (c: onlineUsersType) => c !== user.id

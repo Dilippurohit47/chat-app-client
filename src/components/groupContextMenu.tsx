@@ -6,7 +6,7 @@ import { RootState } from "../store";
 import React, { useEffect, useRef } from "react";
 import { useWebSocket } from "../context/webSocket";
 import { toast } from "react-toastify";
-import { SelectedGroupType } from "../pages/Homepage";
+import { SelectedGroupType } from "../types/index";
 
 const GroupContextMenuDialogBox = ({ open, setOpen ,groupId ,setSelectedGroup}:{open:null | string  ,setOpen:(state:null)=>void ,groupId:string ,setSelectedGroup:React.Dispatch<React.SetStateAction<SelectedGroupType | null>> }) => {
   const isOpen = !!open;

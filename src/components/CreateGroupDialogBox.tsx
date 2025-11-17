@@ -19,14 +19,9 @@ import { axios } from "../apiClient";;
 import { toast } from "react-toastify";
 import { useWebSocket } from "../context/webSocket";
 import { AxiosError } from "axios";
+import { UserTypes } from "../types";
 
-export interface UserTypes {
-  id: string;
-  name: string;
-  email: string;
-  isLogin: boolean;
-  profileUrl: string | undefined;
-}
+
 
 const CreateGroupDialogBox = ({userId}:{userId:string | null}) => {
   const [totalUsers, setTotalUsers] = useState<UserTypes[]>([]);

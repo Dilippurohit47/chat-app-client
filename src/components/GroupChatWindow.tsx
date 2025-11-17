@@ -5,34 +5,10 @@ import { UserType } from "../slices/userSlice";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import { HiMiniUserGroup } from "react-icons/hi2";
 import AddMoreMembersInGroupDialogBox from "./AddMoreMembersInGroupDialogBox";
-import { SelectedGroupType } from "../pages/Homepage";
-
 import GroupInfoDialog from "./GroupInfoDialog";
-export type MessageType = {
-  id?: string;
-  senderId: String;
-  receiverId: String;
-  content: string;
-  createdAt: number;
-};
+import { GroupChatWindowPropsType, GroupMessageType } from "../types";
 
 
-interface GroupMessageType {
-  id?:string
-  content:string,
-  senderId:string,
-  groupId:string,
-  isMedia?:boolean,
-}
-
-
-interface GroupChatWindowPropsType {
-  ws:WebSocket | null,
-  senderId:string,
-  selectedGroup:SelectedGroupType,
-  setSelectedGroup:React.Dispatch<React.SetStateAction<SelectedGroupType | null >>
-  logedInUser:UserType
-}
 
 const GroupChatWindow = ({
   ws,
@@ -132,7 +108,7 @@ const groupInfonButtonRef = useRef<HTMLDivElement | null>(null)
      <div
           className="cursor-pointer"
           onClick={() => {
-            setOpenSearchBar(!openSearchBar), setFindMessagesIds([]);
+            // setOpenSearchBar(!openSearchBar), setFindMessagesIds([]);
           }}
         >
           <IoMdSearch size={24} />

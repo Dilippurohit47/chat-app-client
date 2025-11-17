@@ -10,26 +10,12 @@ import { RxCross2 } from "react-icons/rx";
 
 import { BiSolidSend } from "react-icons/bi";
 import { useWebSocket } from "../context/webSocket";
-import { selectedChatType } from "../pages/Homepage";
 import { MdArrowBackIosNew } from "react-icons/md";
 
-import { LuLoader, LuLoaderCircle, LuPhoneCall } from "react-icons/lu";
+import {  LuLoaderCircle, LuPhoneCall } from "react-icons/lu";
 import VideoCallDialog from "./VideoCallDialog";
 import { decryptMessage, getkeyFromIndexedDb, importPrivateKey, importPublicKey } from "../lib/helper";
-import { Loader, Loader2, LoaderPinwheel } from "lucide-react";
-
-export type MessageType = {
-  id?: string;
-  senderId: String;
-  receiverId: String;
-  senderContent?:string,
-  receiverContent?:string,
-  createdAt: number;
-  tempId?: string | null;
-  isMedia?: boolean;
-  uploading?: boolean;
-  chatId: string | null;
-};
+import { MessageType, selectedChatType } from "../types";
 
 interface ChatWindowProps {
   ws: WebSocket | null;

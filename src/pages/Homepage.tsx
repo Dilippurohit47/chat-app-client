@@ -1,4 +1,4 @@
-import { use, useEffect, useRef, useState } from "react";
+import {  useEffect, useRef, useState } from "react";
 import "../App.css";
 import UserList from "../components/UserList";
 import ChatWindow, { MessageType } from "../components/ChatWindow";
@@ -15,64 +15,18 @@ import {
   saveUser,
   saveAccessToken,
   logout,
-  UserType,
 } from "../slices/userSlice";
 import { RootState } from "../store";
 import GroupList from "../components/GroupList";
 
 import GroupChatWindow from "../components/GroupChatWindow";
 import { useWebSocket, WebSocketContextType } from "../context/webSocket";
-// import AnswerVideoCall from "../components/AnswerVideoCall";
 import CallNotificationDialog from "../components/CallNotificationDialog";
 import AnswerVideoCall from "../components/AnswerVideoCall";
 import { useNetworkStatus } from "../lib/helper";
+import { incomingCallType, selectedChatType, SelectedGroupType } from "../types";
 
-type members = {
-  groupId: string;
-  id: string;
-  user: UserType;
-  userId: string;
-};
 
-export interface SelectedGroupType {
-  id: string;
-  name: string;
-  groupProfilePicture?: string;
-  members: members[];
-  lastMessage?: string;
-  description?: string;
-}
-
-export type unreadCountType = {
-  unreadMessages: number;
-  userId: string;
-};
-
-export interface selectedChatType {
-  name: string;
-  chatId: string;
-  createdAt: Date;
-  email: string;
-  id: string;
-  lastMessage: string;
-  lastMessageCreatedAt: string;
-  lastMessageForReceiver:string,
-  lastMessageForSender:string,
-  senderId:string,
-  receiverId:string,
-  profileUrl: string;
-  refreshToken: String;
-  tokenExpiresIn: Date | null;
-  unreadCount: unreadCountType;
-  publickey:string
-}
-
-type incomingCallType = {
-  callerId: string;
-  callStatus: string;
-  callerName: string;
-  callerProfileUrl: string;
-};
 
 function Home() {
   const dispatch = useDispatch();
@@ -110,7 +64,8 @@ useEffect(() =>{
                ws.current.send(
         JSON.stringify({
           type: "personal-msg",
-          message: msg.content,
+          senderContent: msg.senderContent,
+          receiverContent: msg.receiverContent,
           receiverId: msg.receiverId,
           senderId:msg.senderId,
           chatId:msg.chatId,

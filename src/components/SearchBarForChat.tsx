@@ -1,16 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { IoIosArrowDown } from "react-icons/io";
-import { MessageType } from "../components/ChatWindow";
-
-interface SearchBarProps {
-  isOpen: boolean;
-  findMessages: (state:string) => void;
-  scrollToFindMessageForward: () => void;  
-  scrollToFindMessageBackward: () => void; 
-  messageIndex: null | number; 
-  totalFindmessages: number; 
-  messages:MessageType[]
-}
+import { SearchBarProps } from "../types";
 
 const SearchBarForChat = ({
   isOpen,

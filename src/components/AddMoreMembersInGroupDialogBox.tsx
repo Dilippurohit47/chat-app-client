@@ -18,22 +18,12 @@ import { FiPlus } from "react-icons/fi";
 import { FiMinus } from "react-icons/fi";
 import { axios } from "../apiClient";;
 import { toast } from "react-toastify";
-import { SelectedGroupType } from "../pages/Homepage";
 import { UserType } from "../slices/userSlice";
 import { AxiosError } from "axios";
+import { AddMoreMembersPropsType, UserTypes } from "../types";
 
-export interface UserTypes {
-  id: string;
-  name: string;
-  email: string;
-  isLogin: boolean;
-  profileUrl: string | undefined;
-}
 
-interface AddMoreMembersPropsType {
-  userId:string,
-  selectedGroup:SelectedGroupType
-}
+
 const AddMoreMembersInGroupDialogBox = ({ userId, selectedGroup }:AddMoreMembersPropsType) => {
   const [totalUsers, setTotalUsers] = useState<UserTypes[]>([]);
   const [filterUsers,setFilterUsers] = useState<UserTypes[]>([])

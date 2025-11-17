@@ -11,10 +11,7 @@ import { AxiosError } from "axios";
 import { FcGoogle } from "react-icons/fc";
 import { useGoogleLogin } from "@react-oauth/google";
 import { Loader } from "lucide-react";
-
-interface CredentialResType {
-  [Key: string]: string;
-}
+import { CredentialResType } from "../types";
 
 
  

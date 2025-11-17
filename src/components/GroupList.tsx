@@ -2,15 +2,8 @@ import { useEffect, useState } from "react";
 import { axios } from "../apiClient";;
 import { useWebSocket } from "../context/webSocket";
 import GroupContextMenuDialogBox from "./groupContextMenu";
-import { UserType } from "../slices/userSlice";
-import { SelectedGroupType } from "../pages/Homepage";
+import { SelectedGroupType } from "../types";
 
-type GroupListType = {
-  connected: boolean;
-  logedInUser: UserType;
-  selectedGroup:SelectedGroupType | null,
-  setSelectedGroup : React.Dispatch<React.SetStateAction<SelectedGroupType | null>>
-};
 
 const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: GroupListType) => {
   const [groupList, setGroupList] = useState<SelectedGroupType[] | []>([]);
