@@ -1,54 +1,75 @@
-# React + TypeScript + Vite
+# 💬 Not-A-Basic-Chat App — Client (TypeScript)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A real-time chat application frontend built using **React**.  
+Users can chat with each other instantly, send messages, and even interact with an integrated **ChatBot**.  
+The app communicates with the backend via **WebSockets** for real-time messaging.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🛠 Tech Stack
 
-## Expanding the ESLint configuration
+- **React**
+- **WebSockets**
+- **Tailwind CSS**
+-  **Redux** 
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+
+## 🚀 Clone & Setup
+
+### 🔹 Clone the Frontend
+```bash
+git clone https://github.com/Dilippurohit47/chat-app-client.git
+cd chat-app-client
+npm install
+npm run dev
+
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## ✨ Features
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- 📡 **Real-time Messaging**
+  - Messages are delivered instantly using WebSockets
+  - Smooth and responsive chat experience
+  - video Call(webrtc)
+- 👤 **User Authentication**
+  - Login / Signup
+  - refresh / access tokens
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+- 🟢 **Online / Offline Status**
+  - See which users are online in real time
+  - Presence updates without refreshing
+
+- 💬 **Typing Indicator**
+  - Shows "user is typing…" in real time
+  - Helps simulate a professional chat experience
+
+- 🔄 **Message Sync Across Devices**
+  - Chat history loads instantly
+  - Messages stay synced even after refresh
+  - offline message sync 
+
+
+- 🤖 **ChatBot Integration**
+  - Ask chatbot questions
+  - Real-time replies with loading indicator
+
+- 🔍 **Search Users**
+  - Search for any user to start a chat
+
+- 🧵 **One-to-One Chats**
+  - Lightweight, clean UI for private messaging
+
+- 🖼 **Responsive UI**
+  - Works on desktop + mobile
+
+- ⚠️ **Error Handling**
+  - WebSocket reconnect
+  - Chatbot timeout protection
+  - Server fallback logic
+  
+- ⭐ **All other features**
+  - Groups basic features
+  - search messages 
+  - Aws for storage 
