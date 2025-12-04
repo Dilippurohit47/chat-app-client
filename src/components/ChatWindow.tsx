@@ -315,6 +315,16 @@ return senderContent
         uploading: false,
       });
 
+      if(selectedUser.id === "chat-bot"){
+        
+             const stringOldMessagesArray = sessionStorage.getItem("chat-bot-messages")
+          if(stringOldMessagesArray){
+          const oldMessages = JSON.parse(stringOldMessagesArray)
+          sessionStorage.setItem("chat-bot-messages",JSON.stringify([...oldMessages  , msg ]))
+          }else{
+          sessionStorage.setItem("chat-bot-messages",JSON.stringify([msg]))
+          }
+      }
       setMessages((prev) => [msg, ...prev]);
     }
 
@@ -373,7 +383,7 @@ return senderContent
       }
       SetInputPlaceHolder("Type a message");
     }
-
+ 
     if (!selectedUser) return;
     const incompleteInput = incompletInputMsgRef.current.find(
       (inc) => inc.selectedUserId === selectedUser.id
@@ -386,7 +396,18 @@ return senderContent
       setInput("");
     }
     const getChats = async () => {
-      try {
+      console.log("here") 
+      if(selectedUser.id === "chat-bot"){
+        const chatBotsMessagesRawString = sessionStorage.getItem("chat-bot-messages")
+        if(!chatBotsMessagesRawString){
+          setMessages([])
+        }
+        if(chatBotsMessagesRawString) {
+          const chatBotMessages = JSON.parse(chatBotsMessagesRawString)
+          setMessages(chatBotMessages.reverse())
+        }
+      }else{
+        try {
         const res = await axios.get(
           `${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`,
           {
@@ -424,6 +445,7 @@ return senderContent
       } catch (error) {
         setMessages([]);
         console.log(error);
+      }
       }
     };
 
@@ -557,9 +579,8 @@ return senderContent
         }
       }
       if (data.type === "chatbot-reply") {
-          
           const msg = newMessage({
-            senderId: data.senderId,
+            senderId: "ai-chat-bot",
             receiverContent: data.answer,
             senderContent:"chatbot",
             receiverId: data.receiverId,
@@ -569,7 +590,19 @@ return senderContent
             uploading: false,
           });
           setChatBotResponseLoading(false)
+  
+
+             const stringOldMessagesArray = sessionStorage.getItem("chat-bot-messages")
+          if(stringOldMessagesArray){
+          const oldMessages = JSON.parse(stringOldMessagesArray)
+          sessionStorage.setItem("chat-bot-messages",JSON.stringify([...oldMessages  , msg ]))
+          }else{
+          sessionStorage.setItem("chat-bot-messages",JSON.stringify([messages , msg]))
+          }
+
+          if(selectedUser.id === "chat-bot"){
           setMessages((prev) => [msg, ...prev]);
+          }
         }
     };
     ws.addEventListener("message", getMessage);
@@ -782,6 +815,7 @@ const findMessages = (text: string) => {
     );
   };
 
+  // console.log(messages)
 
 
   return (
@@ -923,7 +957,7 @@ const findMessages = (text: string) => {
               </div>
             );
           })}
-        {chatBotResponseLoading &&   <div className="text-black px-3 py-3 rounded-md text-start bg-gray-200    w-[fit-content]">
+        { selectedUser.id === "chat-bot"  && chatBotResponseLoading &&   <div className="text-black px-3 py-3 rounded-md text-start bg-gray-200    w-[fit-content]">
             <LuLoaderCircle className="animate-spin" />
           </div>
         }
