@@ -221,7 +221,7 @@ console.log("stat",res)
               Total
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="online-users">
+          <TabsContent value="online-users"  forceMount>
             <UserList
             isConnected={connected}
               selectedUser={selectedUser}
@@ -234,15 +234,15 @@ console.log("stat",res)
               setMessages={setMessages}
             />
           </TabsContent>
-          <TabsContent value="total-users">
+          <TabsContent value="total-users" forceMount>
             <TotalUserList
               selectedUser={selectedUser}
-              onSelectUser={setSelectedUser}
+              onSelectUser={setSelectedUser}  
               onlineUsers={onlineUsers}
               logedInUser={user}
             />
           </TabsContent>
-          <TabsContent value="groups">
+          <TabsContent value="groups" forceMount>
             <GroupList
               selectedGroup={selectedGroup}
               setSelectedGroup={setSelectedGroup}

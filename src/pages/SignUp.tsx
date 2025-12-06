@@ -150,22 +150,32 @@ return {publicKey:publicKeyString  , privateKey : privateKeyString}
         const uploadUrl = res.data.url;
         if (!uploadUrl) return console.log("upload url is absent");
         if(!selectedFile) return
-        const uploadRes = await axios.put(uploadUrl, selectedFile, {
+
+        try {
+                await axios.put(uploadUrl, selectedFile, {
           headers: { "Content-Type": selectedFile.type },
         });
-        if (uploadRes.status !== 200) {
-          console.log("failed to upload image to s3");
-          setError("Failed to upload image try again")
-        } else {
           console.log("image successfully uploaded to s3");
           setImage(uploadUrl?.split("?")[0]);
           setIsImageUploaded(true);
+        } catch (error) {
+          console.log("failed to upload image to s3" ,error);
+          setError("Failed to upload image try again")
+          setImageUploading(false)
+          setImageFile(null)
         }
+
+        
       }else{
         console.log("error in getting signedIn url try again later")
+           setImageUploading(false)
+      setImageFile(null)
       }
     } catch (error) {
       console.log(error);
+      setImageUploading(false)
+      setImageFile(null)
+
     } finally {
       setImageUploading(false);
     }
@@ -255,7 +265,7 @@ uploadImageToS3()
                   </>
                 )}
               </label>
-              {
+              {imageUploading &&
                 imageFile && !image && <label
                 className="bg-gray-200 rounded-sm px-3 py-1 flex justify-center items-center gap-1 cursor-pointer"
               >

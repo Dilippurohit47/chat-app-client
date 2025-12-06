@@ -119,6 +119,11 @@
 
 
 
+/* Hide tabs that are not active */
+[role="tabpanel"][data-state="inactive"] {
+  display: none;
+}
+
 /* From Uiverse.io by barisdogansutcu */ 
 .loader {
   width: 3em;

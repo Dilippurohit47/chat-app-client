@@ -133,7 +133,7 @@ const UserList = ({
     return () => {
       ws.removeEventListener("message", messageHandler);
     };
-  }, [  isConnected , selectedUser]);
+  }, [isConnected,selectedUser]);
 
   function formatToLocalDateTime(dateString: string) {
     const date = new Date(dateString);
