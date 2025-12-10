@@ -76,6 +76,7 @@ const ChatWindow = ({
   const [callUserId, setCallUserId] = useState<string | null>(null);
   const [isCallOpen, setIsCallOpen] = useState(false);
   const [chatBotResponseLoading , setChatBotResponseLoading]  = useState<boolean>(false) 
+  const  [systemError,setSystemError] = useState('Currently facing api error in your region sorry for inconvience')
 
 
   const incompletInputMsgRef = useRef<Msg[]>([]);
@@ -121,8 +122,6 @@ const ChatWindow = ({
     localStorage.setItem("pendingMessages", JSON.stringify(existing));
   };
 
-
-
 const getReceiverMessage = async() =>{
   try {
        const encoder = new TextEncoder();
@@ -142,7 +141,7 @@ const  receiverContent = btoa(
 );
 return receiverContent
   } catch (error) {
-    
+    console.log(error)
   }
 }
 
@@ -165,6 +164,7 @@ const  senderContent = btoa(
 );
 return senderContent
   } catch (error) {
+    console.log(error)
     
   }
 }
@@ -590,7 +590,8 @@ return senderContent
             uploading: false,
           });
           setChatBotResponseLoading(false)
-  
+          setSystemError("API services are temporarily unavailable in your region. We're sorry for the inconvenience.");
+
 
              const stringOldMessagesArray = sessionStorage.getItem("chat-bot-messages")
           if(stringOldMessagesArray){
@@ -788,21 +789,28 @@ const findMessages = (text: string) => {
 
   const prevConvertationref = useRef("");
 
+const  typingTimerRef = useRef<any>(null);
+
   const userIsTyping = () => {
     if (!ws) return;
     try {
-      ws.send(
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+       typingTimerRef.current =  setTimeout(()=>{
+        console.log("send")
+         ws.send(
         JSON.stringify({
           type: "typing",
           senderId: logedInUser.id,
           receiverId: selectedUser.id,
         })
       );
+      },200);
       prevConvertationref.current = selectedUser.id;
     } catch (error) {
       console.log("error in sending typing state", error);
     }
   };
+
 
   const typingStop = () => {
     if (!ws) return;
@@ -820,6 +828,8 @@ const findMessages = (text: string) => {
 
   return (
     <div className="flex  relative overflow-hidden    md:h-full   flex-col h-[100%] max-md:p-4 p-2 bg-[#1e1e2e] max-md:rounded-2xl md:p-0  md:rounded-[0] ">
+
+     
       <div className=" pr-2 pl-2 relative max-md:px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
         <div className="flex justify-between items-center gap-2">
           <div onClick={() => {setSelectedUser(null)  ;console.log("clicked")}} className="cursor-pointer">
@@ -880,6 +890,13 @@ const findMessages = (text: string) => {
         </div>
       </div>
      
+    {selectedUser.id === "chat-bot" &&
+  systemError && (
+    <div className="mt-2 rounded-md bg-red-200 border border-red-300 font-semibold text-red-800 px-3 py-2 text-sm">
+      {systemError}
+    </div>
+  )
+}
 
        {isCallOpen && callUserId === selectedUser.id && (
         <VideoCallDialog

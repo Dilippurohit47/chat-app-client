@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { axios } from "../apiClient";
 import ContextMenuDialogBox from "./contextMenuDialogBox";
 import AiChatBot from "./aiChatBot";
@@ -27,6 +27,41 @@ const UserList = ({
 
   const [userIsTyping, setUserIsTyping] = useState<string[]>([]);
   const [filterChats,setSetFilterChats] =useState<selectedChatType[]>([])
+  const timersRef = useRef<Map<string, number>>(new Map());
+
+
+   const onUserIsTyping = (userId: string, inactivityMs = 3000) => {
+    // add user to the list if not present
+    setUserIsTyping(prev => {
+      if (prev.includes(userId)) return prev;
+      return [...prev, userId];
+    });
+
+    // clear existing timeout for this user
+    const existing = timersRef.current.get(userId);
+    if (existing) clearTimeout(existing);
+
+    // set new timeout to remove only this user after inactivityMs
+    const t = window.setTimeout(() => {
+      timersRef.current.delete(userId);
+      setUserIsTyping(prev => prev.filter(id => id !== userId));
+    }, inactivityMs);
+
+    timersRef.current.set(userId, t);
+  };
+
+  // call this when you receive "user-stopped-typing"
+  const onUserStoppedTyping = (userId: string) => {
+    // clear timer and remove user immediately
+    const existing = timersRef.current.get(userId);
+    if (existing) {
+      clearTimeout(existing);
+      timersRef.current.delete(userId);
+    }
+    setUserIsTyping(prev => prev.filter(id => id !== userId));
+  };
+
+
 
   useEffect(() => {
     const getTotalUsers = async () => {
@@ -117,10 +152,10 @@ const UserList = ({
 
       }
       if (data.type === "user-is-typing") {
-        setUserIsTyping((prev) => [...prev, data.senderId]);
+        onUserIsTyping(data.senderId)
       }
       if (data.type === "user-stopped-typing") {
-        setUserIsTyping((prev) => prev.filter((id) => id !== data.senderId));
+      onUserStoppedTyping(data.senderId)
       }
     };
     ws.send(
@@ -134,6 +169,14 @@ const UserList = ({
       ws.removeEventListener("message", messageHandler);
     };
   }, [isConnected,selectedUser]);
+
+    useEffect(() => {
+    return () => {
+      timersRef.current.forEach((t) => clearTimeout(t));
+      timersRef.current.clear();
+    };
+  }, []);
+
 
   function formatToLocalDateTime(dateString: string) {
     const date = new Date(dateString);
