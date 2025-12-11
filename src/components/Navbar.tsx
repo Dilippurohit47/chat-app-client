@@ -26,11 +26,16 @@ const Navbar = () => {
     }
 
   return (
-    <div className="bg-[#3F3D56]   text-white max-md:mb-2  max-md:rounded-md py-2 flex justify-between px-5 items-center min-h-[3rem] md:px-2 md:mb-0 md:rounded-none">
+    <div className="bg-[#3F3D56]    text-white max-md:mb-2  max-md:rounded-md py-2 flex justify-between px-5 items-center min-h-[3rem] md:px-2 md:mb-0 md:rounded-none">
     
    
      <a href="/"> <h1 className="font-[500]">{user.isLogin ?  user.name?.split(" ")[0] : "Chat-App"}  </h1></a> 
     
+   <div className="mt-3 rounded-md border border-red-300 bg-red-100 px-4 py-3 text-sm font-semibold text-red-700">
+  🚧 Currently migrating my VPS — please check back later.
+</div>
+
+
     {
       user.isLogin ?   <div className="   flex justify-center items-center gap-6">
 <CreateGroupDialogBox userId={user.id}  />
