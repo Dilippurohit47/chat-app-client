@@ -892,7 +892,7 @@ const  typingTimerRef = useRef<any>(null);
      
     {selectedUser.id === "chat-bot" &&
   systemError && (
-    <div className="mt-2 rounded-md bg-red-200 border border-red-300 font-semibold text-red-800 px-3 py-2 text-sm">
+    <div className="mt-2 hidden rounded-md bg-red-200 border border-red-300 font-semibold text-red-800 px-3 py-2 text-sm">
       {systemError}
     </div>
   )

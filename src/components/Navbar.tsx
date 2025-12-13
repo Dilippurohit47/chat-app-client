@@ -31,7 +31,7 @@ const Navbar = () => {
    
      <a href="/"> <h1 className="font-[500]">{user.isLogin ?  user.name?.split(" ")[0] : "Chat-App"}  </h1></a> 
     
-   <div className="mt-3 rounded-md border border-red-300 bg-red-100 px-4 py-3 text-sm font-semibold text-red-700">
+   <div className="mt-3 hidden rounded-md border border-red-300 bg-red-100 px-4 py-3 text-sm font-semibold text-red-700">
   🚧 Currently migrating my VPS — please check back later.
 </div>
 
