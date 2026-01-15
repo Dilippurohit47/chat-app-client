@@ -90,6 +90,7 @@ const ChatWindow = ({
     isMedia = false,
     uploading = false,
     error = false,
+    status= "pending"
   }: {
     senderId: string;
     senderContent:string,
@@ -99,6 +100,7 @@ const ChatWindow = ({
     uploading?: boolean;
     isMedia?: boolean;
     error?: boolean;
+    status?:string;
   }) {
     return {
       tempId: tempId || "0",
@@ -111,6 +113,7 @@ const ChatWindow = ({
       isMedia: isMedia,
       uploading: uploading,
       error: error,
+      status:status,
     };
   }
 
@@ -175,18 +178,19 @@ return senderContent
 
     const receiverContent = await getReceiverMessage()
     const senderContent = await getSenderMessage()
-
+    let tempId = uuid()
     if (!navigator.onLine) {
       toast.error("no internet connection");
-      const msg = newMessage({
+      const msg:MessageType = newMessage({
         senderId,
         receiverContent: input,
         senderContent: input,
         receiverId: selectedUser.id!,
         isMedia: false,
-        tempId: "0",
+        tempId: uuid(),
         error: false,
         uploading: false,
+      status:"pending"
       });
 
       saveOfflineMessage(msg);
@@ -215,6 +219,7 @@ return senderContent
           receiverId: selectedUser.id,
           senderId,
           chatId,
+          tempId:tempId
         })
       );
     }
@@ -231,6 +236,8 @@ return senderContent
           tempId: tempId,
           error: false,
           uploading: true,
+      status:"pending"
+
         });
         setMessages((prev) => [msg, ...prev]);
 
@@ -310,9 +317,10 @@ return senderContent
         senderContent:input,
         receiverId: selectedUser.id!,
         isMedia: false,
-        tempId: "0",
+        tempId: tempId,
         error: false,
         uploading: false,
+      status:"pending"
       });
 
       if(selectedUser.id === "chat-bot"){
@@ -570,7 +578,7 @@ return senderContent
             senderContent: data.senderContent,
             receiverId: data.receiverId,
             isMedia: data.isMedia,
-            tempId: " 0",
+            tempId: "0",
             error: false,
             uploading: false,
           });
@@ -605,9 +613,18 @@ return senderContent
           setMessages((prev) => [msg, ...prev]);
           }
         }
+        if(data.type ===  "message-acknowledge"){
+          console.log("Ack",data)
+          setMessages((prev)=>prev.map((msg)=>{
+            if(msg.tempId === data.clientSideMessageId){
+              console.log("upddating status",msg.tempId);
+              msg.status = data.status
+            }
+            return {...msg}
+          } ))
+        }
     };
     ws.addEventListener("message", getMessage);
-
     const handleClickOutSideMessageInput = (e: MouseEvent) => {
       if (
         messageInputRef.current &&
@@ -650,6 +667,17 @@ return senderContent
     updateUnreadCount();
   }, [messages]);
 
+  useEffect(() =>{
+if(!ws) return
+ws.send(JSON.stringify({
+  type:"message-acknowledge",
+  senderId:senderId,
+  receiverId:selectedUser.id,
+  chatId:selectedUser.chatId,
+}))
+
+  },[])
+
   const handleKeyDown = (e: any) => {
     if (e.key === "Enter") {
       sendMessage();
@@ -668,6 +696,7 @@ return senderContent
       if (isLast) chatWindowRef.current = el;
     }
   };
+  console.log(messages)
 const findMessages = (text: string) => {
   const allMessageIds = Object.keys(messageRefs.current);
 
@@ -927,13 +956,13 @@ const  typingTimerRef = useRef<any>(null);
               <div
                 key={message.id}
                 ref={(el) => setRefs(el, message.id!, isLast)}
-                className={`mb-4 flex    md:text-start gap-2 break-words sm:max-w-[90vw] ${
+                className={`mb-4 flex  min-w-0    md:text-start gap-2 break-words sm:max-w-[90vw] ${
                   message.senderId === senderId
                     ? "justify-end "
                     : "justify-start  max-md:max-w-[70%]  "
                 }`}
               >
-                <div>
+                <div className=" flex flex-col text-wrap  justify-end items-end   max-w-[30vw]">
                   {message.isMedia ? (
                     <div className="relative   ">
                       {" "}
@@ -954,12 +983,14 @@ const  typingTimerRef = useRef<any>(null);
                     </div>
                   ) : (
 <>
-                 <div
-  className={`inline-block message-bubble p-3 rounded-lg break-words   text-wrap  max-w-[50vw] sm:max-w-[90vw] ${
-    message.senderId === senderId
-      ? "bg-blue-500 text-white" 
-      : "bg-gray-200 text-gray-800" 
-  }`}
+        <div
+  className={`max-w-full break-words whitespace-pre-wrap overflow-wrap-anywhere
+    message-bubble p-3 rounded-lg
+    ${
+      message.senderId === senderId
+        ? "bg-blue-500 text-white"
+        : "bg-gray-200 text-gray-800"
+    }`}
 >
   {message.senderId === senderId
     ? message.senderContent
@@ -967,8 +998,8 @@ const  typingTimerRef = useRef<any>(null);
 </div>
 </>
                   )} 
-                  <div className="text-xs  text-end text-gray-500 mt-1">
-                    {formatDate(message.createdAt)}
+                  <div className={`text-xs w-full   flex  text-gray-400   mt-1 ${message.senderId === senderId ? "justify-end text-start" : "justify-start"}`}>
+                  {message.senderId === senderId && message.status } {formatDate(message.createdAt)}
                   </div>
                 </div>
               </div>
@@ -979,7 +1010,7 @@ const  typingTimerRef = useRef<any>(null);
           </div>
         }
       </div>
-      <div className="mt-4 flex gap-2 justify-center items-center md:p-2 md:mt-2 md:absolute bottom-0  md:w-full sm:gap-1 ">
+      <div className="mt-4  flex gap-2 justify-center items-center md:p-2 md:mt-2 md:absolute bottom-0  md:w-full sm:gap-1 ">
         {mediaFile.length <= 0 ? (
           <input
             value={input}

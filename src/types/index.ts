@@ -102,6 +102,7 @@ export  type LocalVideoSizeTypes = {
    height: number;
  }; 
 
+ export type MessageStatus   = "pending"|"sent" | "delivered" | "seen"
  export type MessageType = {
   id?: string;
   senderId: String;
@@ -113,6 +114,7 @@ export  type LocalVideoSizeTypes = {
   isMedia?: boolean;
   uploading?: boolean;
   chatId: string | null;
+  status:MessageStatus
 };
  
 
