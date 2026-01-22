@@ -1,7 +1,7 @@
 import {  useEffect, useRef, useState } from "react";
 import "../App.css";
 import UserList from "../components/UserList";
-import ChatWindow, { MessageType } from "../components/ChatWindow";
+import ChatWindow from "../components/ChatWindow";
 import { axios } from "../apiClient";
 import {
   Tabs,
@@ -20,7 +20,8 @@ import { RootState } from "../store";
 import GroupList from "../components/GroupList";
 
 import GroupChatWindow from "../components/GroupChatWindow";
-import { useWebSocket, WebSocketContextType } from "../context/webSocket";
+import { useWebSocket } from "../context/webSocket";
+import {WebSocketContextType , MessageType } from "../types/index"
 import CallNotificationDialog from "../components/CallNotificationDialog";
 import AnswerVideoCall from "../components/AnswerVideoCall";
 import { useNetworkStatus } from "../lib/helper";
@@ -119,14 +120,12 @@ useEffect(() =>{
 
   useEffect(() => {
     const getAccessToken = async () => {
-      console.log("get refresh token")
       const res = await axios.get(
         `${import.meta.env.VITE_BASE_URL_HTTP}/user/refresh`,
         {
           withCredentials: true,
         }
       );
-console.log("stat",res)
       if (res.status === 200) {
         dispatch(saveAccessToken({ accessToken: res.data.accessToken }));
       }
@@ -143,7 +142,6 @@ console.log("stat",res)
   }, []);
   useEffect(() => {
     const getUser = async () => {
-      console.log("user access tokenge",user.accessToken)
       const res = await axios.get(
         `${import.meta.env.VITE_BASE_URL_HTTP}/user/get-user`,
         {
