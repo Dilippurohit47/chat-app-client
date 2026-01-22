@@ -32,8 +32,6 @@ const userReducer = createSlice({
         (state.publickey = null);
     },
     saveUser: (state, action: PayloadAction<UserType>) => {
-      // console.log("name",action.payload.name)
-      // console.log("key ",action.payload.publickey?.length)
       (state.id = action.payload.id);
         (state.name = action.payload.name);
         (state.email = action.payload.email || null);

@@ -7,11 +7,9 @@ import { UserType } from "../slices/userSlice";
 import { toast } from "react-toastify";
 import { v4 as uuid } from "uuid";
 import { RxCross2 } from "react-icons/rx";
-
 import { BiSolidSend } from "react-icons/bi";
 import { useWebSocket } from "../context/webSocket";
 import { MdArrowBackIosNew } from "react-icons/md";
-
 import {  LuLoaderCircle, LuPhoneCall } from "react-icons/lu";
 import VideoCallDialog from "./VideoCallDialog";
 import { decryptMessage, getkeyFromIndexedDb, importPrivateKey, importPublicKey } from "../lib/helper";
@@ -245,7 +243,8 @@ return senderContent
           prev.filter((img) => img.imageId !== img.imageId)
         );
 
-        const res = await axios.post(
+    try {
+          const res = await axios.post(
           `${
             import.meta.env.VITE_BASE_URL_HTTP
           }/aws/get-presigned-url-s3-media`,
@@ -259,26 +258,7 @@ return senderContent
           const uploadedToAws = await axios.put(signedInUrl, img.file, {
             headers: { "Content-Type": img.file.type },
           });
-          if (uploadedToAws.status !== 200) {
-            console.log("failed to upload iamge", uploadedToAws);
-            setSendedFiles((prev) =>
-              prev.filter((img) => img.imageId !== img.imageId)
-            );
-
-            setMessages((prev) =>
-              prev.map((msg) => {
-                if (msg?.tempId === tempId) {
-                  return {
-                    ...msg,
-                    uploading: false,
-                    error: true,
-                  };
-                } else {
-                  return msg;
-                }
-              })
-            );
-          } else {
+           
             console.log("image successfully uploaed to s3");
             ws.send(
               JSON.stringify({
@@ -308,7 +288,28 @@ return senderContent
               })
             );
           }
-        }
+        
+    } catch (error) {
+            setSendedFiles((prev) =>
+              prev.filter((img) => img.imageId !== img.imageId)
+            );
+
+            setMessages((prev) =>
+              prev.map((msg) => {
+                if (msg?.tempId === tempId) {
+                  return {
+                    ...msg,
+                    uploading: false,
+                    error: true,
+                    errorMessage:"Retry"
+                  };
+                } else {
+                  return msg;
+                }
+              })
+            );
+      console.log("Error in uplaoding image",error)
+    }
       });
     } else {
       const msg = newMessage({
@@ -578,7 +579,7 @@ return senderContent
             senderContent: data.senderContent,
             receiverId: data.receiverId,
             isMedia: data.isMedia,
-            tempId: "0",
+            tempId: data.id,
             error: false,
             uploading: false,
           });
@@ -613,16 +614,26 @@ return senderContent
           setMessages((prev) => [msg, ...prev]);
           }
         }
-        if(data.type ===  "message-acknowledge"){
-          console.log("Ack",data)
-          setMessages((prev)=>prev.map((msg)=>{
-            if(msg.tempId === data.clientSideMessageId){
-              console.log("upddating status",msg.tempId);
-              msg.status = data.status
-            }
-            return {...msg}
-          } ))
-        }
+if (data.type === "message-acknowledge") {
+  const updates = data.messages;
+
+  console.log("msg",updates)
+  setMessages((prev) =>
+    prev.map((msg) => {
+      const matched = updates.find(
+        (m) =>
+          m.id === msg.tempId );
+
+      if (!matched) return msg;
+
+      return {
+        ...msg,
+        status: matched.status,
+      };
+    })
+  );
+}
+
     };
     ws.addEventListener("message", getMessage);
     const handleClickOutSideMessageInput = (e: MouseEvent) => {
@@ -671,8 +682,8 @@ return senderContent
 if(!ws) return
 ws.send(JSON.stringify({
   type:"message-acknowledge",
-  senderId:senderId,
-  receiverId:selectedUser.id,
+  senderId:selectedUser.id,
+  receiverId:senderId,
   chatId:selectedUser.chatId,
 }))
 
@@ -852,7 +863,7 @@ const  typingTimerRef = useRef<any>(null);
     );
   };
 
-  // console.log(messages)
+  console.log(messages)
 
 
   return (
@@ -954,7 +965,7 @@ const  typingTimerRef = useRef<any>(null);
             const isLast = index === messages.length - 1;
             return (
               <div
-                key={message.id}
+                key={message.id || message.tempId}
                 ref={(el) => setRefs(el, message.id!, isLast)}
                 className={`mb-4 flex  min-w-0    md:text-start gap-2 break-words sm:max-w-[90vw] ${
                   message.senderId === senderId
@@ -979,10 +990,16 @@ const  typingTimerRef = useRef<any>(null);
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                           <div className="w-10 h-10 border-4 border-t-green-600 border-gray-300 rounded-full animate-spin"></div>
                         </div>
-                      )}
+                      )}{
+                        message?.error &&  <div className="text-red-500">
+                          failed try again later 
+                          </div>
+                      }
+
                     </div>
                   ) : (
 <>
+             
         <div
   className={`max-w-full break-words whitespace-pre-wrap overflow-wrap-anywhere
     message-bubble p-3 rounded-lg

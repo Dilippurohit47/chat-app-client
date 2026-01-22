@@ -21,8 +21,6 @@ import { useWebSocket } from "../context/webSocket";
 import { AxiosError } from "axios";
 import { UserTypes } from "../types";
 
-
-
 const CreateGroupDialogBox = ({userId}:{userId:string | null}) => {
   const [totalUsers, setTotalUsers] = useState<UserTypes[]>([]);
   const [addedMembers, setAddedMembers] = useState<string[]>([]);

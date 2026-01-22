@@ -114,7 +114,9 @@ export  type LocalVideoSizeTypes = {
   isMedia?: boolean;
   uploading?: boolean;
   chatId: string | null;
-  status:MessageStatus
+  status:MessageStatus;
+  error:boolean;
+  errorMessage:string | null;
 };
  
 
