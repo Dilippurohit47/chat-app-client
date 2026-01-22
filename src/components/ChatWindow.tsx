@@ -863,7 +863,6 @@ const  typingTimerRef = useRef<any>(null);
     );
   };
 
-  console.log(messages)
 
 
   return (

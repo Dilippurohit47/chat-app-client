@@ -6,64 +6,60 @@ import axios from "axios";
 import { logout, saveAccessToken, saveUser } from "../slices/userSlice";
 const PublicLayout = () => {
   const user = useSelector((state: RootState) => state.user);
-  const dispatch = useDispatch()
-  const [loading,setLoading] = useState(false)
+  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    setLoading(true)
-    const getAccessToken = async () => {
-      const res = await axios.get(
-        `${import.meta.env.VITE_BASE_URL_HTTP}/user/refresh`,
-        {
-          withCredentials: true,
+    const bootstrapAuth = async () => {
+      try {
+        const refreshRes = await axios.get(
+          `${import.meta.env.VITE_BASE_URL_HTTP}/user/refresh`,
+          { withCredentials: true }
+        );
+
+        if (refreshRes.status === 200) {
+          const accessToken = refreshRes.data.accessToken;
+          dispatch(saveAccessToken({ accessToken }));
+
+          const userRes = await axios.get(
+            `${import.meta.env.VITE_BASE_URL_HTTP}/user/get-user`,
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+              withCredentials: true,
+            }
+          );
+
+          if (userRes.status === 200) {
+            dispatch(saveUser(userRes.data.user));
+          }
         }
-      );
-      if (res.status === 200) {
-        dispatch(saveAccessToken({ accessToken: res.data.accessToken }));
-      }
-      if (res.status == 403) {
-        getAccessToken();
-      }
-      if (res.status !== 403 && res.status !== 200) {
+      } catch (err) {
         dispatch(logout());
+      } finally {
+        setLoading(false);
       }
     };
-    if (!user.accessToken) {
-      getAccessToken();
-    }
-  }, []);
-  useEffect(() => {
-    const getUser = async () => {
-      const res = await axios.get(
-        `${import.meta.env.VITE_BASE_URL_HTTP}/user/get-user`,
-        {
-          headers: {
-            Authorization: `Bearer ${user.accessToken}`,
-          },
-          withCredentials: true,
-        }
-      );
-      if (res.status === 200) {
-        dispatch(saveUser(res.data.user));
-        setLoading(false)
-      }
-        setLoading(false)
-    };
-    getUser();
-  }, [user.accessToken]);
- 
+
+    bootstrapAuth();
+  }, [dispatch]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center w-full h-full">
+        Loading...
+      </div>
+    );
+  }
+
   if (user.isLogin) {
     return <Navigate to="/" replace />;
   }
-  
-  if( loading){
-    return <div className="flex justify-center items-center w-full h-full">Loading......</div>
-  }
 
-  return (
-    <div>
-      <Outlet />
-    </div>
-  );
+  return <Outlet />;
 };
 
 export default PublicLayout;
+
+
