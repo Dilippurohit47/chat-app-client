@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { axios } from "../apiClient";
 
 import { useNavigate } from "react-router-dom";
@@ -26,11 +26,38 @@ const SignUp = () => {
   const [selectedFile, setSelctedFile] = useState<File | null>(null);
   const [imageUploading, setImageUploading] = useState<boolean>(false);
   const [isImageUploaded, setIsImageUploaded] = useState(false);
-    const [showPassword,setShowPassword] = useState<boolean>(false)
-    const [signupLoaing , setsignUploading] = useState<boolean>(false)
-  
+  const [showPassword,setShowPassword] = useState<boolean>(false)
+  const [signupLoaing , setsignUploading] = useState<boolean>(false)
+  const [isUserNameExist ,setIsUserNameExist] = useState<boolean | null>(null)
   const dispatch = useDispatch();     
   const navigate = useNavigate();
+
+const checkUsername = async()=>{
+  try {
+    const response = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/user/check-username?username=${name}`)
+    console.log(response)
+    if(response.status === 200  &&  response.data.exist !== null){
+      setIsUserNameExist(response?.data?.exist)
+    }
+  } catch (error) {
+    console.log(error)
+    setError("something went wrong!")
+  }
+}
+
+useEffect(()=>{
+  if(!name || name.length < 3 ) return
+  console.log(name , name.length)
+  const id = setTimeout(() => {
+  checkUsername()    
+  }, 300);
+
+  return ()=>{
+    clearTimeout(id)
+  }
+},[name])
+
+
   useEffect(() => {
     const getUser = async () => {
       const res = await axios.get(
@@ -219,7 +246,7 @@ uploadImageToS3()
     onSuccess: (codeResponse) => handleLoginSuccess(codeResponse),
     flow: "auth-code",
   });
-
+console.log("log",isUserNameExist)
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
@@ -288,7 +315,7 @@ uploadImageToS3()
           </div>
         )}
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
+          <div className="mb-4 ">
             <label
               htmlFor="email"
               className="block text-sm font-medium text-start text-gray-700"
@@ -304,6 +331,11 @@ uploadImageToS3()
               placeholder="Enter your email"
               required
             />
+{
+  isUserNameExist !== null &&             <span className={`text-start block ${isUserNameExist ? "text-red-500" :"text-green-600"}`}>{
+ isUserNameExist ? "username already exist" : "username is available"           
+}</span>
+}
           </div>
           <div className="mb-4">
             <label
