@@ -9,7 +9,6 @@ const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: 
   const [groupList, setGroupList] = useState<SelectedGroupType[] | []>([]);
   const [openContextMenu , setOpenContextMenu] = useState<string | null>(null)
   const {ws } = useWebSocket()
-  console.log("group list ",groupList)
   useEffect(() => {
     if(!ws.current) return
     const fetchGroups = async () => {
@@ -17,7 +16,6 @@ const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: 
         const response = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/group`,{
           withCredentials:true
         });
-        console.log(response)
         setGroupList(response.data.groups)
       } catch (error) {
         console.log("err in getting groups",error)
@@ -41,7 +39,6 @@ const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: 
     }
   },[]);
 
-  console.log("group",selectedGroup)
   return (
     <div className="px-3 py-1  overflow-y-auto">
       <h2 className="text-[1.2rem]  flex justify-center items-center gap-2 font-semibold mb-2">

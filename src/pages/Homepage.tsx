@@ -118,28 +118,7 @@ useEffect(() =>{
     };
   }, [connected]);
 
-  useEffect(() => {
-    const getAccessToken = async () => {
-      const res = await axios.get(
-        `${import.meta.env.VITE_BASE_URL_HTTP}/user/refresh`,
-        {
-          withCredentials: true,
-        }
-      );
-      if (res.status === 200) {
-        dispatch(saveAccessToken({ accessToken: res.data.accessToken }));
-      }
-      if (res.status == 403) {
-        getAccessToken();
-      }
-      if (res.status !== 403 && res.status !== 200) {
-        dispatch(logout());
-      }
-    };
-    if (!user.accessToken) {
-      getAccessToken();
-    }
-  }, []);
+
   useEffect(() => {
     const getUser = async () => {
       const res = await axios.get(

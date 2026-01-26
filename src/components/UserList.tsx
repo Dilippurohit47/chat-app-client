@@ -9,6 +9,8 @@ import {
 } from "../lib/helper";
 import { IoSearch } from "react-icons/io5";
 import { selectedChatType, UserListProps } from "../types";
+import { useSelector } from "react-redux";
+import { RootState } from "../store";
 
 const UserList = ({
   logedInUser,
@@ -61,17 +63,24 @@ const UserList = ({
     setUserIsTyping(prev => prev.filter(id => id !== userId));
   };
 
-
+const user = useSelector((state:RootState)=>state.user)
 
   useEffect(() => {
     const getTotalUsers = async () => {
+
+      // const headers ={
+      //   Authorization:`Bearer ${user.accessToken}`
+      // }
       const res = await axios.get(
-        `${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-recent-chats`,
-        { params: { userId: logedInUser.id }, withCredentials: true }
+        `${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-recent-chats`
       );
       if (res.status === 200) {
-        const chats = res.data.chats as selectedChatType[];
-        if (chats.length > 0) {
+        let chats = res.data.chats as selectedChatType[];
+        console.log("chats length",chats.length)
+        if (typeof chats === "string") {
+  chats = JSON.parse(chats);
+    }
+        if (chats?.length > 0) {
           const privateKeyString = await getkeyFromIndexedDb();
           const privateKeyCrypto = await importPrivateKey(privateKeyString!);
 
@@ -83,6 +92,8 @@ const UserList = ({
                     user.lastMessageForSender,
                     privateKeyCrypto
                   );
+
+
                   user.lastMessage = decryptedMessage;
                   return user;
                 } else {
@@ -91,6 +102,8 @@ const UserList = ({
                       user.lastMessageForReceiver,
                       privateKeyCrypto
                     );
+
+                  console.log("DECryoted",decryptedMessage)
                     user.lastMessage = decryptedMessage;
                     return user;
                   }
@@ -232,12 +245,12 @@ setSetFilterChats(recentChatUsers.filter((user) => user.name.includes(query.toLo
 
         {filterChats?.length > 0
           ? filterChats.map((user) => {
-            console.log(user.chatId , selectedUser?.chatId)
               return (
-                <div className="relative w-full  ">
+                <div
+                    key={user.chatId}
+                className="relative w-full  ">
                   <li
                     onContextMenu={(e) => handleContextMenu(e, user)}
-                    key={user.chatId}
                     className={`p-3 md:p-1 cursor-pointer  sm:w-full rounded-lg  b flex  ${
                       selectedUser?.id === user.id
                         ? "bg-[#008080d6] text-white"

@@ -161,13 +161,15 @@ export async function decryptMessage(encryptedBase64: string, privateKey: Crypto
     atob(encryptedBase64),
     (c) => c.charCodeAt(0)
   );
-
-  const decrypted = await window.crypto.subtle.decrypt(
+ try {
+   const decrypted = await window.crypto.subtle.decrypt(
     { name: "RSA-OAEP" },
     privateKey,
     encryptedData
   );
-
   const decoder = new TextDecoder();
   return decoder.decode(decrypted);
+ } catch (error) {
+  console.log(error)
+ }
 }
