@@ -26,6 +26,7 @@ import CallNotificationDialog from "../components/CallNotificationDialog";
 import AnswerVideoCall from "../components/AnswerVideoCall";
 import { useNetworkStatus } from "../lib/helper";
 import { incomingCallType, selectedChatType, SelectedGroupType } from "../types";
+import { useSyncOfflineMessage } from "../Chat/hooks/useSyncOfflineMessage";
 
 
 
@@ -56,25 +57,10 @@ function Home() {
   const { ws, connected, setConnected, onlineUsers }: WebSocketContextType =
     useWebSocket();
     const isOnline = useNetworkStatus() 
+    const {syncOfflineSaveMessages} = useSyncOfflineMessage({ws:ws.current,senderId:user.id})
 useEffect(() =>{ 
   if(!isOnline) return
-    const offlineMessages = JSON.parse(localStorage.getItem("pendingMessages") || "[]")
-    if(offlineMessages  && offlineMessages.length > 0){
-      offlineMessages.forEach((msg:MessageType) =>{
-  if(!ws.current) return    
-               ws.current.send(
-        JSON.stringify({
-          type: "personal-msg",
-          senderContent: msg.senderContent,
-          receiverContent: msg.receiverContent,
-          receiverId: msg.receiverId,
-          senderId:msg.senderId,
-          chatId:msg.chatId,
-        })
-      );
-      })
-    }
-        localStorage.removeItem("pendingMessages");
+syncOfflineSaveMessages()
 },[isOnline])
 
 

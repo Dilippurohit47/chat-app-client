@@ -2,7 +2,6 @@
 import axiosLib from "axios";
 import {  store } from "./store"; // if you're using redux
 import { saveAccessToken, logout } from "./slices/userSlice";
-import { useSelector } from "react-redux";
 const axios = axiosLib.create({
   baseURL: import.meta.env.VITE_BASE_URL_HTTP,
   withCredentials: true,

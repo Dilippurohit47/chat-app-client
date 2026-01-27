@@ -17,6 +17,8 @@ const SearchBarForChat = ({
       inputRef?.current?.focus();
     }
   },[isOpen]);
+
+  console.log("message index",messageIndex)
   const [searchInput, setSearchInput] = useState("");
   return (
     <div
@@ -49,7 +51,7 @@ const SearchBarForChat = ({
       >
         <IoIosArrowDown size={22} />
       </div>
-      <div className="  text-white  w-[20%]">{ messageIndex && messageIndex +1} of {totalFindmessages}</div>
+      <div className="  text-white  w-[20%]">{ messageIndex  !== null ?  messageIndex  + 1 : 1 } of {totalFindmessages}</div>
     </div>
   );
 };

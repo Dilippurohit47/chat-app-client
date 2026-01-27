@@ -12,8 +12,15 @@ import { useWebSocket } from "../context/webSocket";
 import { MdArrowBackIosNew } from "react-icons/md";
 import {  LuLoaderCircle, LuPhoneCall } from "react-icons/lu";
 import VideoCallDialog from "./VideoCallDialog";
-import { decryptMessage, getkeyFromIndexedDb, importPrivateKey, importPublicKey } from "../lib/helper";
 import { MessageType, selectedChatType } from "../types";
+import { useChatMessages } from "../Chat/hooks/useChatMessages";
+import { getReceiverMessage, getSenderMessage } from "../Chat/utils/encryption";
+import { useChatSocket } from "../Chat/hooks/useChatSocket";
+import { uploadMediaToS3 } from "../lib/uploadMediaToS3";
+import { useSyncOfflineMessage } from "../Chat/hooks/useSyncOfflineMessage";
+import { newMessage } from "../Chat/utils/createNewMessage";
+import { useTypingIndicator } from "../Chat/hooks/useTypingIndicator";
+import { useSearchMessages } from "../Chat/hooks/useSearchMessage";
 
 interface ChatWindowProps {
   ws: WebSocket | null;
@@ -21,7 +28,7 @@ interface ChatWindowProps {
   selectedUser: selectedChatType;
   setSelectedUser: (state: null) => void;
   logedInUser: UserType;
-  chatId: string | null;
+  chatId: string;
   messages: MessageType[];
   setMessages: React.Dispatch<React.SetStateAction<MessageType[]>>;
   selectedTab: string;
@@ -36,7 +43,6 @@ interface MediaFileType {
   url: string;
 
 }
-
 
   interface Msg {
     selectedUserId: string;
@@ -57,12 +63,7 @@ const ChatWindow = ({
   const { ws: websocket } = useWebSocket();
   const ws: WebSocket | null = websocket.current;
   const [openSearchBar, setOpenSearchBar] = useState<boolean>(false);
-  const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-  const [findMessagesIds, setFindMessagesIds] = useState<string[]>([]);
-  const [cursorId, setCursorId] = useState<string | null>(null);
-  const [loadingMoreChat, setLoadingMoreChat] = useState<boolean>(false);
   const messageContainerRef = useRef<HTMLDivElement>(null);
-  const [hasMoreMsg, setHasMoreMsg] = useState<boolean>(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const messageInputRef = useRef<HTMLInputElement | null>(null);
   const [mediaFile, setMediaFile] = useState<MediaFileType[] | []>([]);
@@ -79,147 +80,57 @@ const ChatWindow = ({
 
   const incompletInputMsgRef = useRef<Msg[]>([]);
 
-  function newMessage({
-    senderId,
-    receiverContent,
-    senderContent,
-    receiverId,
-    tempId,
-    isMedia = false,
-    uploading = false,
-    error = false,
-    status= "pending"
-  }: {
-    senderId: string;
-    senderContent:string,
-    receiverContent:string,
-    receiverId: string;
-    tempId?: string;
-    uploading?: boolean;
-    isMedia?: boolean;
-    error?: boolean;
-    status?:string;
-  }) {
-    return {
-      tempId: tempId || "0",
-      senderId: senderId,
-      receiverContent: receiverContent,
-      senderContent: senderContent,
-      receiverId: receiverId,
-      chatId: chatId,
-      createdAt: Date.now(),
-      isMedia: isMedia,
-      uploading: uploading,
-      error: error,
-      status:status,
-    };
-  }
 
-  const saveOfflineMessage = (msg: MessageType) => {
-    const existing = JSON.parse(
-      localStorage.getItem("pendingMessages") || "[]"
-    );
-    existing.push(msg);
-    localStorage.setItem("pendingMessages", JSON.stringify(existing));
-  };
+  const {loadInitialMessages , loadMoreMessages , loadingMoreMessages} = useChatMessages({senderId:logedInUser.id , receiverId:selectedUser.id , setMessages:setMessages})
 
-const getReceiverMessage = async() =>{
-  try {
-       const encoder = new TextEncoder();
-const data = encoder.encode(input);
-const receiverCryptoKey = await importPublicKey(selectedUser.publickey);
-const encrypted = await window.crypto.subtle.encrypt(
-  {
-    name: "RSA-OAEP",
-  },
-  receiverCryptoKey, 
-  data
-);
+  const {sendMessageToBot  ,sendMessageToUser  ,sendMedia} = useChatSocket({ws:ws , senderId:logedInUser.id ,setMessages:setMessages ,selectedUser:selectedUser , messages:messages })
 
-const  receiverContent = btoa(
-  String.fromCharCode(...new Uint8Array(encrypted))
+  const {savePendingOfflineMessages} = useSyncOfflineMessage({ws:ws,senderId})
 
-);
-return receiverContent
-  } catch (error) {
-    console.log(error)
-  }
-}
+  const  {userIsTyping , typingStop} = useTypingIndicator({ws,senderId,receiverId:selectedUser.id})
 
-const getSenderMessage = async() =>{
-  try {
-       const encoder = new TextEncoder();
-const data = encoder.encode(input);
-const receiverCryptoKey = await importPublicKey(logedInUser.publickey!);
-const encrypted = await window.crypto.subtle.encrypt(
-  {
-    name: "RSA-OAEP",
-  },
-  receiverCryptoKey, 
-  data
-);
-
-const  senderContent = btoa(
-  String.fromCharCode(...new Uint8Array(encrypted))
-
-);
-return senderContent
-  } catch (error) {
-    console.log(error)
-    
-  }
-}
-
+  const {setRefs ,messageIndex  ,findMessages  , findMessagesIds , setFindMessagesIds  ,clickToFindMessageBackward , clickToFindMessageForward} = useSearchMessages({messages , chatWindowRef})
 
 
   const sendMessage = async () => {
-
-    const receiverContent = await getReceiverMessage()
-    const senderContent = await getSenderMessage()
+    if (!logedInUser.isLogin ) return toast.error("Login first ");
+   
+     const receiverContent = await getReceiverMessage({text:input , publickey:selectedUser.publickey})
+    const senderContent = await getSenderMessage({text:input,publickey:logedInUser.publickey!})
     let tempId = uuid()
+    // offline save message 
     if (!navigator.onLine) {
-      toast.error("no internet connection");
+      if(!receiverContent || !senderContent) return
       const msg:MessageType = newMessage({
         senderId,
         receiverContent: input,
-        senderContent: input,
-        receiverId: selectedUser.id!,
+        senderContent: input, 
+        receiverId: selectedUser.id,
         isMedia: false,
-        tempId: uuid(),
+        tempId: tempId,
         error: false,
         uploading: false,
-      status:"pending"
+      status:"pending",
+      chatId:chatId,
       });
 
-      saveOfflineMessage(msg);
+   savePendingOfflineMessages(msg , receiverContent , senderContent)
       setMessages((prev) => [msg, ...prev]);
       setInput("");
       return;
     }
-    if (!logedInUser.isLogin) return toast.error("Login first ");
     if (!ws) return toast.error("server error!");
-    if (selectedUser.id === "chat-bot") {
-      setChatBotResponseLoading(true)
-      ws.send(
-        JSON.stringify({
-          type: "get-chatbot-response",
-          query: input,
-          receiverId: logedInUser.id,
-        })
-      );
-    }
+      if (selectedUser.id === "chat-bot") {
+        setChatBotResponseLoading(true)
+        sendMessageToBot(input)
+        return
+      }
     if (sendedFiles.length <= 0) {
-      ws.send(
-        JSON.stringify({
-          type: "personal-msg",
-          receiverContent: receiverContent,
-          senderContent:senderContent,
-          receiverId: selectedUser.id,
-          senderId,
-          chatId,
-          tempId:tempId
-        })
-      );
+      if(!receiverContent  || !senderContent){
+        window.alert(" encryption Failed try again")
+        return
+      }
+    sendMessageToUser({receiverContent , senderContent,chatId , tempId ,receiverId:selectedUser.id})
     }
 
     if (sendedFiles.length > 0) {
@@ -234,8 +145,8 @@ return senderContent
           tempId: tempId,
           error: false,
           uploading: true,
-      status:"pending"
-
+      status:"pending",
+      chatId:chatId
         });
         setMessages((prev) => [msg, ...prev]);
 
@@ -243,33 +154,9 @@ return senderContent
           prev.filter((img) => img.imageId !== img.imageId)
         );
 
-    try {
-          const res = await axios.post(
-          `${
-            import.meta.env.VITE_BASE_URL_HTTP
-          }/aws/get-presigned-url-s3-media`,
-          {},
-          {
-            withCredentials: true,
-          }
-        );
-        if (res.status === 200) {
-          const signedInUrl = res.data.url;
-          const uploadedToAws = await axios.put(signedInUrl, img.file, {
-            headers: { "Content-Type": img.file.type },
-          });
-           
-            console.log("image successfully uploaed to s3");
-            ws.send(
-              JSON.stringify({
-                type: "personal-msg",
-                message: signedInUrl?.split("?")[0],
-                receiverId: selectedUser.id,
-                senderId,
-                chatId,
-                isMedia: true,
-              })
-            );
+    try {           
+          const signedInUrl =   await uploadMediaToS3(img) 
+            sendMedia({signedInUrl:signedInUrl , receiverId:selectedUser.id , chatId:chatId})
 
             setSendedFiles((prev) =>
               prev.filter((img) => img.imageId !== img.imageId)
@@ -287,9 +174,9 @@ return senderContent
                 }
               })
             );
-          }
         
     } catch (error) {
+      console.log("Error in uplaoding image",error)
             setSendedFiles((prev) =>
               prev.filter((img) => img.imageId !== img.imageId)
             );
@@ -308,10 +195,11 @@ return senderContent
                 }
               })
             );
-      console.log("Error in uplaoding image",error)
     }
       });
-    } else {
+    } 
+    
+    else {
       const msg = newMessage({
         senderId,
         receiverContent: input,
@@ -321,7 +209,8 @@ return senderContent
         tempId: tempId,
         error: false,
         uploading: false,
-      status:"pending"
+      status:"pending",
+      chatId:chatId,
       });
 
       if(selectedUser.id === "chat-bot"){
@@ -350,12 +239,9 @@ return senderContent
 
     setInput("");
   };
-
-  useEffect(() => {
-    if (!logedInUser.isLogin) {
-      setMessages([]);
-    }
-  }, [logedInUser]);
+  useEffect(()=>{
+    loadInitialMessages()
+  },[selectedUser])
 
   useEffect(() => {
     if (placeHolderSetterInterval.current) {
@@ -405,7 +291,6 @@ return senderContent
       setInput("");
     }
     const getChats = async () => {
-      console.log("here") 
       if(selectedUser.id === "chat-bot"){
         const chatBotsMessagesRawString = sessionStorage.getItem("chat-bot-messages")
         if(!chatBotsMessagesRawString){
@@ -415,47 +300,8 @@ return senderContent
           const chatBotMessages = JSON.parse(chatBotsMessagesRawString)
           setMessages(chatBotMessages.reverse())
         }
-      }else{
-        try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`,
-          {
-            params: {
-              senderId: senderId,
-              receiverId: selectedUser.id,
-              limit: 20,
-              cursor: undefined,
-            },
-          }
-        );
-        if (res.status === 200) {
-         const privateKeyString = await getkeyFromIndexedDb();
-  const privateKeyCrypto = await importPrivateKey(privateKeyString!);
+      }
 
-  const decryptedMessages = await Promise.all(
-    res.data.messages.map(async (msg: any) => {
-      if(msg.senderId === logedInUser.id){
-         const decryptedText = await decryptMessage(msg.senderContent, privateKeyCrypto);
-      return { ...msg,senderContent:decryptedText};
-      }
-      if(msg.senderId === selectedUser.id){
-         const decryptedText = await decryptMessage(msg.receiverContent, privateKeyCrypto);
-      return { ...msg,receiverContent:decryptedText };
-      }else{
-      return msg
-      }
-    })
-  );
-
-  setMessages(decryptedMessages);
-  setCursorId(res.data.cursor);
-  setHasMoreMsg(res.data.hasMore);
-        }
-      } catch (error) {
-        setMessages([]);
-        console.log(error);
-      }
-      }
     };
 
     const updateUnreadCount = async () => {
@@ -468,35 +314,24 @@ return senderContent
       );
     };
 
-    const getUserKeys = async() =>{
-      const response = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/user`,{
-        params:{
-          id:selectedUser.id
-        }
-      })
-
-      if(response.status === 200){
-
-      }
-    }
+  
     if (messageInputRef.current) {
       messageInputRef.current.focus();
     }
 
-    if (prevConvertationref.current) {
+    if (prevConversationRef.current) {
       if (!ws) return;
       ws.send(
         JSON.stringify({
-          receiverId: prevConvertationref.current,
+          receiverId: prevConversationRef.current,
           type: "typing-stop",
           senderId: logedInUser.id,
         })
       );
-      prevConvertationref.current = "";
+      prevConversationRef.current = "";
     }
 
     setInitialLoad(true);
-    getUserKeys()
     getChats();
     updateUnreadCount();
     setOpenSearchBar(false);
@@ -508,134 +343,39 @@ return senderContent
       }
     };
   }, [selectedUser]);
+
+
+
   useEffect(() => {
     if (!messageContainerRef.current) return;
     const handleScroll = async () => {
       const container = messageContainerRef.current;
       if (!container) return;
-      if (container.scrollTop === 0 && cursorId && hasMoreMsg) {
-        setLoadingMoreChat(true);
-        try {
+      if (container.scrollTop === 0 && !loadingMoreMessages ) {
           const scrollHeightBefore = container.scrollHeight;
-          const scrollTopBefore = container.scrollTop;
-          const res = await axios.get(
-            `${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`,
-            {
-              params: {
-                senderId: senderId,
-                receiverId: selectedUser.id,
-                limit: 20,
-                cursor: JSON.stringify(cursorId),
-              },
-            }
-          );
-          if (res.status === 200) {
-            setMessages((prev) => [...prev, ...res.data.messages]);
-            setCursorId(res.data.cursor);
-            setHasMoreMsg(res.data.hasMore);
-            requestAnimationFrame(() => {
-              if (messageContainerRef.current) {
-                container.scrollTop =
-                  container.scrollHeight - scrollHeightBefore + scrollTopBefore;
-              }
-            });
-          }
-        } catch (error) {
-          console.log(error);
-        } finally {
-          setLoadingMoreChat(false);
-        }
+          await loadMoreMessages()
+         requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    container.scrollTop = container.scrollHeight - scrollHeightBefore;
+  });
+});
       }
     };
     messageContainerRef.current.addEventListener("scroll", handleScroll);
     return () => {
       messageContainerRef.current?.removeEventListener("scroll", handleScroll);
     };
-  }, [selectedUser, cursorId, hasMoreMsg]);
+  }, [loadMoreMessages , loadingMoreMessages]);
 
   useEffect(() => {
     if (!chatWindowRef.current || !initialLoad) return;
     chatWindowRef.current?.scrollIntoView({ behavior: "instant" });
     setInitialLoad(false);
   }, [messages]);
+
+
   useEffect(() => {
-    if (!ws || !selectedUser) return;
-    const getMessage =  async(m: MessageEvent) => {
-      const data = JSON.parse(m.data);
-      if (data.type === "personal-msg") {
-        if (
-          (data.receiverId === logedInUser.id &&
-            data.senderId === selectedUser.id) ||
-          (data.senderId === logedInUser.id &&
-            data.receiverId === selectedUser.id) 
-        ) {
-
-          const privateKeyString  =  await getkeyFromIndexedDb()
-          const privateKeyCrypto = await importPrivateKey(privateKeyString!)
-          const decryptedMessage = await decryptMessage(data.receiverContent , privateKeyCrypto)
-          const msg = newMessage({
-            senderId: data.senderId,
-            receiverContent: decryptedMessage,
-            senderContent: data.senderContent,
-            receiverId: data.receiverId,
-            isMedia: data.isMedia,
-            tempId: data.id,
-            error: false,
-            uploading: false,
-          });
-
-          setMessages((prev) => [msg, ...prev]);  
-        }
-      }
-      if (data.type === "chatbot-reply") {
-          const msg = newMessage({
-            senderId: "ai-chat-bot",
-            receiverContent: data.answer,
-            senderContent:"chatbot",
-            receiverId: data.receiverId,
-            isMedia: data.isMedia || false,
-            tempId: " 0",
-            error: false,
-            uploading: false,
-          });
-          setChatBotResponseLoading(false)
-          setSystemError("API services are temporarily unavailable in your region. We're sorry for the inconvenience.");
-
-
-             const stringOldMessagesArray = sessionStorage.getItem("chat-bot-messages")
-          if(stringOldMessagesArray){
-          const oldMessages = JSON.parse(stringOldMessagesArray)
-          sessionStorage.setItem("chat-bot-messages",JSON.stringify([...oldMessages  , msg ]))
-          }else{
-          sessionStorage.setItem("chat-bot-messages",JSON.stringify([messages , msg]))
-          }
-
-          if(selectedUser.id === "chat-bot"){
-          setMessages((prev) => [msg, ...prev]);
-          }
-        }
-if (data.type === "message-acknowledge") {
-  const updates = data.messages;
-
-  console.log("msg",updates)
-  setMessages((prev) =>
-    prev.map((msg) => {
-      const matched = updates.find(
-        (m) =>
-          m.id === msg.tempId );
-
-      if (!matched) return msg;
-
-      return {
-        ...msg,
-        status: matched.status,
-      };
-    })
-  );
-}
-
-    };
-    ws.addEventListener("message", getMessage);
+    if (!selectedUser) return;
     const handleClickOutSideMessageInput = (e: MouseEvent) => {
       if (
         messageInputRef.current &&
@@ -648,10 +388,11 @@ if (data.type === "message-acknowledge") {
     window.addEventListener("click", handleClickOutSideMessageInput);
 
     return () => {
-      ws.removeEventListener("message", getMessage);
       window.removeEventListener("click", handleClickOutSideMessageInput);
     };
   }, [selectedUser]);
+
+
   const formatDate = (newDate: number) => {
     const date = new Date(newDate);
 
@@ -678,16 +419,6 @@ if (data.type === "message-acknowledge") {
     updateUnreadCount();
   }, [messages]);
 
-  useEffect(() =>{
-if(!ws) return
-ws.send(JSON.stringify({
-  type:"message-acknowledge",
-  senderId:selectedUser.id,
-  receiverId:senderId,
-  chatId:selectedUser.chatId,
-}))
-
-  },[])
 
   const handleKeyDown = (e: any) => {
     if (e.key === "Enter") {
@@ -695,54 +426,6 @@ ws.send(JSON.stringify({
       typingStop();
     }
   };
-  const setRefs = (
-    el: HTMLDivElement | null,
-    messageId: string,
-    isLast: boolean
-  ) => {
-    if (el) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      messageRefs.current[messageId] = el;
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      if (isLast) chatWindowRef.current = el;
-    }
-  };
-  console.log(messages)
-const findMessages = (text: string) => {
-  const allMessageIds = Object.keys(messageRefs.current);
-
-  allMessageIds.forEach((id) => {
-    const outer = messageRefs.current[id];
-    if (!outer) return;
-
-    const bubble = outer.querySelector('.message-bubble');
-    if (bubble) {
-      bubble.classList.remove("bg-yellow-400/100"); 
-        }
-  });
-
-  if (!text.trim()) {
-    setFindMessagesIds([]);
-    return;
-  }
-  const findMessageIds = allMessageIds.filter((id) =>
-    messageRefs.current[id]?.textContent
-      ?.toLocaleLowerCase()
-      .includes(text.toLocaleLowerCase())
-  );
-
-  findMessageIds.forEach((messageId) => {
-    const outer = messageRefs.current[messageId];
-    if (!outer) return;
-
-    const bubble = outer.querySelector(".message-bubble");
-    if (bubble) {
-      bubble.classList.add("bg-yellow-400/100"); 
-    }
-  });
-
-  setFindMessagesIds(findMessageIds);
-};
 
 
   useEffect(() => {
@@ -759,42 +442,6 @@ const findMessages = (text: string) => {
     }
   }, [messages]);
 
-  const [messageIndex, setMessageIndex] = useState<number | null>(null);
-  const scrollToFindMessageForward = () => {
-    if (findMessagesIds.length === 0) return;
-    setMessageIndex((prevIndex) => {
-      const newIndex =
-        prevIndex === null ? findMessagesIds.length - 1 : prevIndex - 1;
-      if (newIndex >= 0) {
-        const messageId = findMessagesIds[newIndex];
-      console.log( "message got ",messageRefs?.current[messageId])
-
-        messageRefs?.current[messageId]?.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      }
-      return newIndex >= 0 ? newIndex : prevIndex;
-    });
-  };
-
-  const scrollToFindMessageBackward = () => {
-    if (findMessagesIds.length === 0) return;
-    setMessageIndex((prevIndex) => {
-      const newIndex = prevIndex === null ? 0 : prevIndex + 1;
-
-      if (newIndex < findMessagesIds.length) {
-        const messageId = findMessagesIds[newIndex];
-
-        messageRefs?.current[messageId]?.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-
-      }
-      return newIndex < findMessagesIds.length ? newIndex : prevIndex;
-    });
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -827,42 +474,8 @@ const findMessages = (text: string) => {
     );
   };
 
-  const prevConvertationref = useRef("");
-
-const  typingTimerRef = useRef<any>(null);
-
-  const userIsTyping = () => {
-    if (!ws) return;
-    try {
-      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
-       typingTimerRef.current =  setTimeout(()=>{
-        console.log("send")
-         ws.send(
-        JSON.stringify({
-          type: "typing",
-          senderId: logedInUser.id,
-          receiverId: selectedUser.id,
-        })
-      );
-      },200);
-      prevConvertationref.current = selectedUser.id;
-    } catch (error) {
-      console.log("error in sending typing state", error);
-    }
-  };
-
-
-  const typingStop = () => {
-    if (!ws) return;
-    ws.send(
-      JSON.stringify({
-        receiverId: selectedUser.id,
-        type: "typing-stop",
-        senderId: logedInUser.id,
-      })
-    );
-  };
-
+  const prevConversationRef = useRef("");
+ 
 
 
   return (
@@ -912,16 +525,14 @@ const  typingTimerRef = useRef<any>(null);
           >
             <IoMdSearch size={24} />
           </div>
-
-          
       <SearchBarForChat
         messageIndex={messageIndex}
         totalFindmessages={findMessagesIds.length}
         isOpen={openSearchBar}
         messages={messages}
         findMessages={findMessages}
-        scrollToFindMessageForward={scrollToFindMessageForward}
-        scrollToFindMessageBackward={scrollToFindMessageBackward}
+        scrollToFindMessageForward={clickToFindMessageForward}
+        scrollToFindMessageBackward={clickToFindMessageBackward}
       />
 
 </div>
@@ -946,7 +557,7 @@ const  typingTimerRef = useRef<any>(null);
           selectedUserId={selectedUser.id}
         />
       )}
-      {loadingMoreChat && (
+      {loadingMoreMessages && (
         <div className="flex justify-center ">
           <svg className="loader" viewBox="25 25 50 50">
             <circle r="20" cy="50" cx="50"></circle>

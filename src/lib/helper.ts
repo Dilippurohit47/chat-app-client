@@ -57,7 +57,7 @@ export const savePrivateKeyToIndexedDB = async (privateKey: string) => {
 
 
 export const getkeyFromIndexedDb = async () =>{
- return new Promise<void>((resolve, reject) => {
+ return new Promise<string | null>((resolve, reject) => {
     const request = indexedDB.open("E2EE_DB", 1);
 
     request.onupgradeneeded = (event) => {
@@ -81,8 +81,8 @@ export const getkeyFromIndexedDb = async () =>{
 
       tx.oncomplete = () => {
         db.close();
-        
-        resolve();
+    
+        resolve(null);
       };
       tx.onerror = (err) => reject(err);
     };
@@ -90,15 +90,6 @@ export const getkeyFromIndexedDb = async () =>{
     request.onerror = (err) => reject(err);
   });
 }
-
-
-
-
-
-
-
-
-
 
 export async function importPrivateKey(pem: string): Promise<CryptoKey> {
   const pemHeader = "-----BEGIN PRIVATE KEY-----";
@@ -121,9 +112,6 @@ export async function importPrivateKey(pem: string): Promise<CryptoKey> {
     ["decrypt"] // only decrypt allowed
   );
 }
-
-
-
 
 // convert string public key into crypto public key
   export async function importPublicKey(pem: string): Promise<CryptoKey> {
@@ -148,14 +136,6 @@ export async function importPrivateKey(pem: string): Promise<CryptoKey> {
     ["encrypt"]
   );
 }
-
-
-
-
-
-
-
-
 export async function decryptMessage(encryptedBase64: string, privateKey: CryptoKey) {
   const encryptedData = Uint8Array.from(
     atob(encryptedBase64),

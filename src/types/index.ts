@@ -105,12 +105,12 @@ export  type LocalVideoSizeTypes = {
  export type MessageStatus   = "pending"|"sent" | "delivered" | "seen"
  export type MessageType = {
   id?: string;
-  senderId: String;
-  receiverId: String;
-  senderContent?:string,
-  receiverContent?:string,
+  senderId: string;
+  receiverId: string;
+  senderContent:string,
+  receiverContent:string,
   createdAt: number;
-  tempId?: string | null;
+  tempId: string;
   isMedia?: boolean;
   uploading?: boolean;
   chatId: string | null;
