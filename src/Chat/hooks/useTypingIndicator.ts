@@ -1,13 +1,37 @@
-import { useRef } from "react";
+import { RefObject, useEffect, useRef } from "react";
 
     type useTypingIndicatorprops = {
         ws:WebSocket  | null,
         receiverId:string,
-        senderId:string
+        senderId:string,
+        messageInputRef:RefObject<HTMLInputElement | null>
     }
 
-    export const useTypingIndicator = ({ws,receiverId , senderId}:useTypingIndicatorprops)=>{
-         const  typingTimerRef = useRef<any>(null);        
+    export const useTypingIndicator = ({ws,receiverId , senderId, messageInputRef }:useTypingIndicatorprops)=>{
+         const  typingTimerRef = useRef<any>(null);   
+         
+         
+  // stop typing if click outside input
+  useEffect(() => {
+    if (!receiverId) return;
+    const handleClickOutSideMessageInput = (e: MouseEvent) => {
+      if (
+        messageInputRef.current &&
+        !messageInputRef.current.contains(e.target as Node)
+      ) {
+        typingStop();
+      }
+    };
+
+    window.addEventListener("click", handleClickOutSideMessageInput);
+
+    return () => {
+      window.removeEventListener("click", handleClickOutSideMessageInput);
+    };
+  }, []);
+
+
+
           const userIsTyping = () => {
             if (!ws) return;
             try {

@@ -1,7 +1,7 @@
 import {  useEffect, useRef, useState } from "react";
 import "../App.css";
 import UserList from "../components/UserList";
-import ChatWindow from "../components/ChatWindow";
+import ChatWindow from "../Chat/components/ChatWindow";
 import { axios } from "../apiClient";
 import {
   Tabs,

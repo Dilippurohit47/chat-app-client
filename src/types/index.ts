@@ -1,5 +1,6 @@
 import { SetStateAction } from "react";
 import { UserType } from "../slices/userSlice";
+import { MessageType } from "../Chat/types";
 
 export type members = {
   groupId: string;
@@ -102,23 +103,7 @@ export  type LocalVideoSizeTypes = {
    height: number;
  }; 
 
- export type MessageStatus   = "pending"|"sent" | "delivered" | "seen"
- export type MessageType = {
-  id?: string;
-  senderId: string;
-  receiverId: string;
-  senderContent:string,
-  receiverContent:string,
-  createdAt: number;
-  tempId: string;
-  isMedia?: boolean;
-  uploading?: boolean;
-  chatId: string | null;
-  status:MessageStatus;
-  error:boolean;
-  errorMessage:string | null;
-};
- 
+
 
 export  interface GroupChatWindowPropsType {
   ws:WebSocket | null,
@@ -155,15 +140,6 @@ export interface GroupMessageType {
    setSelectedGroup : React.Dispatch<React.SetStateAction<SelectedGroupType | null>>
  };
 
- export interface SearchBarProps {
-  isOpen: boolean;
-  findMessages: (state:string) => void;
-  scrollToFindMessageForward: () => void;  
-  scrollToFindMessageBackward: () => void; 
-  messageIndex: null | number; 
-  totalFindmessages: number; 
-  messages:MessageType[]
-}
 
 export type onlineUsersType = string
 export interface UserListProps {
@@ -185,10 +161,4 @@ export interface UserListProps {
   isConnected:boolean
 }
 
-export interface VideoCallDialogProps {
-  setCall: React.Dispatch<React.SetStateAction<string | null>>;
-  setIsCallOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  call: string | null;
-  selectedUserId: string;
-  logedInUser: UserType;
-}
+

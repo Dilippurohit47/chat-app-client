@@ -1,14 +1,14 @@
 import React, { SetStateAction, useEffect, useRef } from "react";
-import { MessageType, selectedChatType } from "../../types";
+import { MessageType, selectedChatType } from "../types";
 import { decryptMessage, getkeyFromIndexedDb, importPrivateKey } from "../../lib/helper";
 import { newMessage } from "../utils/createNewMessage";
 
 interface useChatSocketTypes {
   ws: WebSocket | null;
   senderId: string | null;
-  selectedUser:selectedChatType
-  setMessages:React.Dispatch<SetStateAction<MessageType[]>>
-  messages:MessageType[]
+  selectedUser?:selectedChatType
+  setMessages?:React.Dispatch<SetStateAction<MessageType[]>>
+  messages?:MessageType[]
 }
 
 type SendMessageToUserPayload = {
@@ -96,7 +96,6 @@ export const useChatSocket = ({ ws, senderId , selectedUser ,setMessages ,messag
               })
             );
   }
-
 
 
   useEffect(() => {

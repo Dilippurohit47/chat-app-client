@@ -1,8 +1,8 @@
 // src/hooks/useChatMessages.ts
 import { useState } from "react";
-import axios from "axios";
-import { MessageType } from "../../types/index";
+import { MessageType } from "../types";
 import { decryptMessage, getkeyFromIndexedDb, importPrivateKey } from "../../lib/helper";
+import { fetchOlderMessages, getChatMessages } from "../api/api";
 
 type UseChatMessagesParams = {
   senderId: string | null;
@@ -16,30 +16,17 @@ export function useChatMessages({ senderId, receiverId, setMessages }: UseChatMe
   const [loadingInitial, setLoadingInitial] = useState(false);
   const [loadingMoreMessages, setLoadingMoreMessages] = useState(false);
 
-
   const loadInitialMessages = async () => {
-    if (!receiverId) return;
+    if (!receiverId || !senderId) return;
 
     try {
       setLoadingInitial(true);
-
-        const res = await axios.get(
-          `${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`,
-          {
-            params: {
-              senderId: senderId,
-              receiverId: receiverId,
-              limit: 20,
-              cursor: undefined,
-            },
-          }
-        );
-        if (res.status === 200) {
+const  data = await getChatMessages(senderId ,receiverId)
          const privateKeyString = await getkeyFromIndexedDb();
   const privateKeyCrypto = await importPrivateKey(privateKeyString!);
 
   const decryptedMessages = await Promise.all(
-    res.data.messages.map(async (msg: any) => {
+    data.messages.map(async (msg: any) => {
       if(msg.senderId === senderId){
          const decryptedText = await decryptMessage(msg.senderContent, privateKeyCrypto);
       return { ...msg,senderContent:decryptedText};
@@ -52,9 +39,8 @@ export function useChatMessages({ senderId, receiverId, setMessages }: UseChatMe
   );
 
   setMessages(decryptedMessages);
-  setCursorId(res.data.cursor);
-  setHasMore(res.data.hasMore);
-        }
+  setCursorId(data.cursor);
+  setHasMore(data.hasMore);
     } catch (err) {
       setMessages([]);
       console.log(err);
@@ -64,28 +50,16 @@ export function useChatMessages({ senderId, receiverId, setMessages }: UseChatMe
   };
 
   const loadMoreMessages = async () => {
-    if (!receiverId) return;
-    if (!cursorId) return;
-    if (!hasMore) return;
+    if (!receiverId || !senderId  || !cursorId || !hasMore) return;
 
     try {
       setLoadingMoreMessages(true);
-          const res = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`,
-            {
-              params: {
-                senderId: senderId,
-                receiverId: receiverId,
-                limit: 20,
-                cursor: JSON.stringify(cursorId),
-              },
-            }
-          );
-  if (res.status === 200) {
+          const data = await fetchOlderMessages(senderId , receiverId ,cursorId)
          const privateKeyString = await getkeyFromIndexedDb();
   const privateKeyCrypto = await importPrivateKey(privateKeyString!);
 
   const decryptedMessages = await Promise.all(
-    res.data.messages.map(async (msg: any) => {
+    data.messages?.map(async (msg: any) => {
       if(msg.senderId === senderId){
          const decryptedText = await decryptMessage(msg.senderContent, privateKeyCrypto);
       return { ...msg,senderContent:decryptedText};
@@ -98,9 +72,8 @@ export function useChatMessages({ senderId, receiverId, setMessages }: UseChatMe
   );
 
   setMessages((prev)=>[...prev,...decryptedMessages]);
-  setCursorId(res.data.cursor);
-  setHasMore(res.data.hasMore);
-        }
+  setCursorId(data.cursor);
+  setHasMore(data.hasMore);
     } catch (err) {
       console.log(err);
     } finally {

@@ -1,5 +1,5 @@
 import { RefObject, useRef, useState } from "react";
-import { MessageType } from "../../types"
+import { MessageType } from "../types"
 
 type useSearchMessagesProps = {
     messages:MessageType[]
