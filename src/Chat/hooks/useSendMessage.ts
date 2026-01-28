@@ -9,6 +9,7 @@ import { useChatSocket } from './useChatSocket';
 import { useSyncOfflineMessage } from './useSyncOfflineMessage';
 import { uploadMediaToS3 } from '../../lib/uploadMediaToS3';
 import { MediaFileType } from '../components/ChatWindow';
+import { useChatBot } from './useChatBot';
 type useSendMessageProps ={
     ws:WebSocket  | null,
     messages:MessageType[]
@@ -35,18 +36,40 @@ export const useSendMessage = ({ ws,messages ,isLogin,senderId ,chatId, input,se
 ) => {
 
 
-      const {sendMessageToBot  ,sendMessageToUser  ,sendMedia} = useChatSocket({ws:ws , senderId:logedInUser.id ,setMessages:setMessages ,selectedUser:receiver , messages:messages })
+      const {sendMessageToBot  ,sendMessageToUser  ,sendMedia} = useChatSocket({ws:ws , senderId:logedInUser.id ,setMessages:setMessages ,selectedUser:receiver , messages:messages  ,setChatBotResponseLoading})
       const {savePendingOfflineMessages} = useSyncOfflineMessage({ws:ws,senderId})
 
       const [sendedFiles, setSendedFiles] = useState<sendedFileType[] | []>([]);
-
+const {sendMessageToChatBot} = useChatBot({input})
 
      const sendMessage = async () => {
         if (!isLogin ) return toast.error("Login first ");
-       
+
+        let tempId = uuid()
+
+
+        const msg = newMessage({
+            senderId,
+            receiverContent: input,
+            senderContent:input,
+            receiverId: receiver.id!,
+            isMedia: false,
+            tempId: tempId,
+            error: false,
+            uploading: false,
+          status:receiver.id === "chat-bot" ? "sent" : "pending",
+          chatId:chatId,
+          });
+          setMessages((prev) => [msg, ...prev]);
+        clearDraftForReceiver(receiver.id)
+        setInput("");
+
+                    if(receiver.id === "chat-bot"){
+                     sendMessageToChatBot({sendMessageToBot,setChatBotResponseLoading ,msg})
+                     return
+}   
          const receiverContent = await getReceiverMessage({text:input , publickey:receiver.publickey})
         const senderContent = await getSenderMessage({text:input,publickey:logedInUser.publickey!})
-        let tempId = uuid()
         // offline save message 
         if (!navigator.onLine) {
           if(!receiverContent || !senderContent) return
@@ -69,11 +92,7 @@ export const useSendMessage = ({ ws,messages ,isLogin,senderId ,chatId, input,se
           return;
         }
         if (!ws) return toast.error("server error!");
-          if (receiver.id === "chat-bot") {
-            setChatBotResponseLoading(true)
-            sendMessageToBot(input)
-            return
-          }
+          
         if (sendedFiles.length <= 0) {
           if(!receiverContent  || !senderContent){
             window.alert(" encryption Failed try again")
@@ -147,36 +166,6 @@ export const useSendMessage = ({ ws,messages ,isLogin,senderId ,chatId, input,se
         }
           });
         } 
-        
-        else {
-          const msg = newMessage({
-            senderId,
-            receiverContent: input,
-            senderContent:input,
-            receiverId: receiver.id!,
-            isMedia: false,
-            tempId: tempId,
-            error: false,
-            uploading: false,
-          status:"pending",
-          chatId:chatId,
-          });
-    
-          if(receiver.id === "chat-bot"){
-            
-                 const stringOldMessagesArray = sessionStorage.getItem("chat-bot-messages")
-              if(stringOldMessagesArray){
-              const oldMessages = JSON.parse(stringOldMessagesArray)
-              sessionStorage.setItem("chat-bot-messages",JSON.stringify([...oldMessages  , msg ]))
-              }else{
-              sessionStorage.setItem("chat-bot-messages",JSON.stringify([msg]))
-              }
-          }
-          setMessages((prev) => [msg, ...prev]);
-        }
-    
-        clearDraftForReceiver(receiver.id)
-        setInput("");
       };
 
 

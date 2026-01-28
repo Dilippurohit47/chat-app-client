@@ -153,26 +153,20 @@ const clearDraftForReceiver = (receiverId: string) => {
     const getChats = async () => {
       if(selectedUser.id === "chat-bot"){
         const chatBotsMessagesRawString = sessionStorage.getItem("chat-bot-messages")
+
+
         if(!chatBotsMessagesRawString){
           setMessages([])
         }
         if(chatBotsMessagesRawString) {
           const chatBotMessages = JSON.parse(chatBotsMessagesRawString)
+          console.log("chabot",chatBotMessages)
           setMessages(chatBotMessages.reverse())
         }
       }
 
     };
 
-    const updateUnreadCount = async () => {
-      await axios.put(
-        `${import.meta.env.VITE_BASE_URL_HTTP}/chat/update-unreadmessage-count`,
-        {
-          userId: logedInUser.id,
-          chatId: selectedUser.chatId,
-        }
-      );
-    };
 
   
     if (messageInputRef.current) {
@@ -193,7 +187,6 @@ const clearDraftForReceiver = (receiverId: string) => {
 
     setInitialLoad(true);
     getChats();
-    updateUnreadCount();
     setOpenSearchBar(false);
 
     return () => {
@@ -203,7 +196,6 @@ const clearDraftForReceiver = (receiverId: string) => {
       }
     };
   }, [selectedUser]);
-
 
 
   // load more messages through pagination
@@ -310,6 +302,7 @@ const clearDraftForReceiver = (receiverId: string) => {
 
  
 
+console.log("messsages",messages)
 
   return (
     <div className="flex  relative overflow-hidden    md:h-full   flex-col h-[100%] max-md:p-4 p-2 bg-[#1e1e2e] max-md:rounded-2xl md:p-0  md:rounded-[0] ">
@@ -408,7 +401,7 @@ const clearDraftForReceiver = (receiverId: string) => {
             const isLast = index === messages.length - 1;
             return (
               <div
-                key={message.id || message.tempId}
+                key={message.id || message.tempId + index}
                 ref={(el) => setRefs(el, message.id!, isLast)}
                 className={`mb-4 flex  min-w-0    md:text-start gap-2 break-words sm:max-w-[90vw] ${
                   message.senderId === senderId

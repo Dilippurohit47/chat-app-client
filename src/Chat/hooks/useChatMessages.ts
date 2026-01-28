@@ -17,8 +17,7 @@ export function useChatMessages({ senderId, receiverId, setMessages }: UseChatMe
   const [loadingMoreMessages, setLoadingMoreMessages] = useState(false);
 
   const loadInitialMessages = async () => {
-    if (!receiverId || !senderId) return;
-
+    if (!receiverId || !senderId || receiverId  === "chat-bot") return;
     try {
       setLoadingInitial(true);
 const  data = await getChatMessages(senderId ,receiverId)

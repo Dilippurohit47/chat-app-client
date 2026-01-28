@@ -8,7 +8,8 @@ interface useChatSocketTypes {
   senderId: string | null;
   selectedUser?:selectedChatType
   setMessages?:React.Dispatch<SetStateAction<MessageType[]>>
-  messages?:MessageType[]
+  messages?:MessageType[],
+  setChatBotResponseLoading?:React.Dispatch<SetStateAction<boolean>>
 }
 
 type SendMessageToUserPayload = {
@@ -25,7 +26,7 @@ type sendMediaPayload = {
     chatId:string,
 }
 
-export const useChatSocket = ({ ws, senderId , selectedUser ,setMessages ,messages }: useChatSocketTypes) => {
+export const useChatSocket = ({ ws, senderId , selectedUser ,setMessages ,messages  ,setChatBotResponseLoading }: useChatSocketTypes) => {
 
     const privateKeyRef = useRef<CryptoKey | null>(null);
     const loadingRef = useRef(false);
@@ -151,9 +152,8 @@ export const useChatSocket = ({ ws, senderId , selectedUser ,setMessages ,messag
           sessionStorage.setItem("chat-bot-messages",JSON.stringify([messages , msg]))
           }
 
-          if(selectedUser.id === "chat-bot"){
           setMessages((prev) => [msg, ...prev]);
-          }
+          setChatBotResponseLoading(false)
         }
 if (data.type === "message-acknowledge") {
   const updates = data.messages;

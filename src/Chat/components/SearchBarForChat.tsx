@@ -18,7 +18,6 @@ const SearchBarForChat = ({
     }
   },[isOpen]);
 
-  console.log("message index",messageIndex)
   const [searchInput, setSearchInput] = useState("");
   return (
     <div
