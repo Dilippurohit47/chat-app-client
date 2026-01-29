@@ -6,7 +6,6 @@ import { RootState } from "../store";
 import { SetStateAction, useEffect, useRef } from "react";
 
 const ContextMenuDialogBox = ({ open, setOpen,userId ,chatId ,onSelectUser ,deletechat ,setMessages}:{open:null | string , userId:string ,setOpen:React.Dispatch<SetStateAction<string | null >>, chatId:string,setMessages:(state:[])=>void,onSelectUser:(state:null)=>void ,deletechat:(state:string) =>void})=> {
-  console.log("chat id",chatId)
   const isOpen = !!open;
 
  const user = useSelector((state:RootState) =>state.user)  

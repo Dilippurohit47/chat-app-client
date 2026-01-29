@@ -10,7 +10,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 import { axios } from "../apiClient";;
-import CreateGroupDialogBox from "./CreateGroupDialogBox";
+import CreateGroupDialogBox from "../features/group/components/CreateGroupDialogBox";
 import {logout} from "../slices/userSlice"
 const Navbar = () => {
     const user = useSelector((state:RootState) =>state.user)      

@@ -15,9 +15,9 @@ import {
   saveUser
 } from "../slices/userSlice";
 import { RootState } from "../store";
-import GroupList from "../components/GroupList";
+import GroupList from "../features/group/components/GroupList";
 
-import GroupChatWindow from "../components/GroupChatWindow";
+import GroupChatWindow from "../features/group/components/GroupChatWindow";
 import { useWebSocket } from "../context/webSocket";
 import {WebSocketContextType  } from "../types/index"
 import CallNotificationDialog from "../features/call/components/CallNotificationDialog";
@@ -25,7 +25,7 @@ import AnswerVideoCall from "../features/call/components/AnswerVideoCall";
 import { useNetworkStatus } from "../lib/helper";
 import { incomingCallType, selectedChatType, SelectedGroupType } from "../types";
 import { useSyncOfflineMessage } from "../features/chat/hooks/useSyncOfflineMessage";
-import { MessageType } from "../features/Chat/types";
+import { MessageType } from "../features/chat/types";
 
 
 function Home() {
