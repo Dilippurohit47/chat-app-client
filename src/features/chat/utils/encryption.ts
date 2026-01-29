@@ -1,4 +1,4 @@
-import { importPublicKey } from "../../lib/helper";
+import { importPublicKey } from "../../../lib/helper";
 
 
 // it will encrypt the message which the reciver will see

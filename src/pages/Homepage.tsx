@@ -1,7 +1,7 @@
 import {  useEffect, useRef, useState } from "react";
 import "../App.css";
 import UserList from "../components/UserList";
-import ChatWindow from "../Chat/components/ChatWindow";
+import ChatWindow from "../features/chat/components/ChatWindow";
 import { axios } from "../apiClient";
 import {
   Tabs,
@@ -12,22 +12,20 @@ import {
 import TotalUserList from "../components/totalUserList";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  saveUser,
-  saveAccessToken,
-  logout,
+  saveUser
 } from "../slices/userSlice";
 import { RootState } from "../store";
 import GroupList from "../components/GroupList";
 
 import GroupChatWindow from "../components/GroupChatWindow";
 import { useWebSocket } from "../context/webSocket";
-import {WebSocketContextType , MessageType } from "../types/index"
-import CallNotificationDialog from "../components/CallNotificationDialog";
-import AnswerVideoCall from "../components/AnswerVideoCall";
+import {WebSocketContextType  } from "../types/index"
+import CallNotificationDialog from "../features/call/components/CallNotificationDialog";
+import AnswerVideoCall from "../features/call/components/AnswerVideoCall";
 import { useNetworkStatus } from "../lib/helper";
 import { incomingCallType, selectedChatType, SelectedGroupType } from "../types";
-import { useSyncOfflineMessage } from "../Chat/hooks/useSyncOfflineMessage";
-
+import { useSyncOfflineMessage } from "../features/chat/hooks/useSyncOfflineMessage";
+import { MessageType } from "../features/Chat/types";
 
 
 function Home() {
@@ -51,8 +49,6 @@ function Home() {
   const [chatId, setChatId] = useState<string | null>("");
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [isMobile, setIsMobile] = useState<boolean>(false);
-// const [publicKey ,setPublicKey] = useState<string>("")
-// console.log(user)
 
   const { ws, connected, setConnected, onlineUsers }: WebSocketContextType =
     useWebSocket();
@@ -264,14 +260,14 @@ syncOfflineSaveMessages()
         )}
       </div>
       {incomingCall && showCallNotification && (
-        <CallNotificationDialog
+        <CallNotificationDialog    
           callerData={incomingCall}
           onAccept={() => {
             setCallAccepted(true);
             setShowCallNotification(false);
           }}
-          onReject={() => callRejected()}
-          onIgnore={() => setShowCallNotification(false)}
+          onReject={callRejected}
+          onIgnore={()=>setShowCallNotification(false)}
         />
       )}
     </div>

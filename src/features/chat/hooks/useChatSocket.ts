@@ -1,6 +1,6 @@
 import React, { SetStateAction, useEffect, useRef } from "react";
 import { MessageType, selectedChatType } from "../types";
-import { decryptMessage, getkeyFromIndexedDb, importPrivateKey } from "../../lib/helper";
+import { decryptMessage, getkeyFromIndexedDb, importPrivateKey } from "../../../lib/helper";
 import { newMessage } from "../utils/createNewMessage";
 
 interface useChatSocketTypes {

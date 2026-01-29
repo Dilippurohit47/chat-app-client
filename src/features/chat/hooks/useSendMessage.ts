@@ -3,11 +3,11 @@ import { getReceiverMessage, getSenderMessage } from '../utils/encryption';
 import { MessageType, selectedChatType } from "../types";
 import { newMessage } from '../utils/createNewMessage';
 import  {v4 as uuid} from "uuid"
-import { UserType } from '../../slices/userSlice';
+import { UserType } from '../../../slices/userSlice';
 import React, { SetStateAction, useState } from 'react';
 import { useChatSocket } from './useChatSocket';
 import { useSyncOfflineMessage } from './useSyncOfflineMessage';
-import { uploadMediaToS3 } from '../../lib/uploadMediaToS3';
+import { uploadMediaToS3 } from '../../../lib/uploadMediaToS3';
 import { MediaFileType } from '../components/ChatWindow';
 import { useChatBot } from './useChatBot';
 type useSendMessageProps ={

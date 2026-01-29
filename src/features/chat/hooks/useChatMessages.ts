@@ -1,7 +1,7 @@
 // src/hooks/useChatMessages.ts
 import { useState } from "react";
 import { MessageType } from "../types";
-import { decryptMessage, getkeyFromIndexedDb, importPrivateKey } from "../../lib/helper";
+import { decryptMessage, getkeyFromIndexedDb, importPrivateKey } from "../../../lib/helper";
 import { fetchOlderMessages, getChatMessages } from "../api/api";
 
 type UseChatMessagesParams = {

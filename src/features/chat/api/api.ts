@@ -1,5 +1,5 @@
-import { axios } from "../../apiClient";
-import { MessageType } from "../../types";
+import { axios } from "../../../apiClient";
+import { MessageType } from "../types";
 
 export type GetChatMessagesResponse = {
   messages: MessageType[]; // replace later with MessageType[]

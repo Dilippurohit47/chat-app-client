@@ -1,16 +1,15 @@
-import { axios } from "../../apiClient";
 import { useEffect, useRef, useState } from "react";
 import { MdOutlineAttachment } from "react-icons/md";
 import { IoMdSearch } from "react-icons/io";
-import SearchBarForChat from "../components/SearchBarForChat";
-import { UserType } from "../../slices/userSlice";
+import SearchBarForChat from "./SearchBarForChat";
+import { UserType } from "../../../slices/userSlice";
 import { v4 as uuid } from "uuid";
 import { RxCross2 } from "react-icons/rx";
 import { BiSolidSend } from "react-icons/bi";
-import { useWebSocket } from "../../context/webSocket";
+import { useWebSocket } from "../../../context/webSocket";
 import { MdArrowBackIosNew } from "react-icons/md";
 import {  LuLoaderCircle, LuPhoneCall } from "react-icons/lu";
-import VideoCallDialog from "./VideoCallDialog";
+import StartVideoCall from "../../call/components/StartVideoCall";
 import { MessageType, selectedChatType } from "../types";
 import { useChatMessages } from "../hooks/useChatMessages";
 import { useTypingIndicator } from "../hooks/useTypingIndicator";
@@ -375,7 +374,7 @@ console.log("messsages",messages)
 }
 
        {isCallOpen && callUserId === selectedUser.id && (
-        <VideoCallDialog
+        <StartVideoCall
           logedInUser={logedInUser}
           setCall={setCallUserId}
           setIsCallOpen={setIsCallOpen}

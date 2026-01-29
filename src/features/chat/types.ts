@@ -1,5 +1,5 @@
 import { SetStateAction } from "react";
-import { UserType } from "../slices/userSlice";
+import { UserType } from "../../slices/userSlice";
 
 export type members = {
   groupId: string;
@@ -41,13 +41,6 @@ export interface selectedChatType {
   unreadCount: unreadCountType;
   publickey:string
 }
-
-export type incomingCallType = {
-  callerId: string;
-  callStatus: string;
-  callerName: string;
-  callerProfileUrl: string;
-};
 
 
 
@@ -91,16 +84,6 @@ export interface AichatBotProps {
 } 
 
 
-export  interface VideoCallDialogProps {
-   callerId: string | undefined;
-   setCallAccepted: React.Dispatch<React.SetStateAction<boolean>>;
-   isCallAccepted: boolean;
- }
- 
-export  type LocalVideoSizeTypes = {
-   width: number;
-   height: number;
- }; 
 
  export type MessageStatus   = "pending"|"sent" | "delivered" | "seen"
  export type MessageType = {
@@ -185,10 +168,3 @@ export interface UserListProps {
   isConnected:boolean
 }
 
-export interface VideoCallDialogProps {
-  setCall: React.Dispatch<React.SetStateAction<string | null>>;
-  setIsCallOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  call: string | null;
-  selectedUserId: string;
-  logedInUser: UserType;
-}
