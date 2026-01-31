@@ -1,4 +1,4 @@
-import { AichatBotProps, selectedChatType } from "../types/index";
+import { AichatBotProps, selectedChatType } from "../types";
 
 
 const AiChatBot = ({

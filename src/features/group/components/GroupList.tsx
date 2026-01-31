@@ -1,43 +1,36 @@
 import { useEffect, useState } from "react";
-import { axios } from "../../../apiClient";;
 import { useWebSocket } from "../../../context/webSocket";
 import GroupContextMenuDialogBox from "./groupContextMenu";
 import { GroupListType, SelectedGroupType } from "../types";
+import { fetchGroups } from "../api/api";
 
 
 const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: GroupListType) => {
   const [groupList, setGroupList] = useState<SelectedGroupType[] | []>([]);
   const [openContextMenu , setOpenContextMenu] = useState<string | null>(null)
-  const {ws } = useWebSocket()
+  const {ws} = useWebSocket()
+
+
   useEffect(() => {
     if(!ws.current) return
-    const fetchGroups = async () => {
-      try {
-        const response = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/group`,{
-          withCredentials:true
-        });
-        setGroupList(response.data.groups)
-      } catch (error) {
-        console.log("err in getting groups",error)
-      }
-    };
-
-    fetchGroups();
-
-    const getRefreshedGroups =(e:MessageEvent) =>{
-    const data = JSON.parse(e.data)
-  if(data.type === "get-groups-ws"){
-    setGroupList(data.groups)
-  }
-    }
-
-
-    ws.current.addEventListener("message",getRefreshedGroups)
-    return () =>{ 
-      if(!ws.current) return
-      ws.current.removeEventListener("message",getRefreshedGroups)
-    }
+    fetchGroups().then((data)=>setGroupList(data)).catch(e=>console.log(e))
   },[]);
+
+  useEffect(() => {
+  if (!ws.current) return
+
+  const onMessage = (e: MessageEvent) => {
+    const data = JSON.parse(e.data)
+    if (data.type === "get-groups-ws") {
+      setGroupList(data.groups)
+    }
+  }
+  ws.current.addEventListener("message", onMessage)
+  return () => {
+    ws.current?.removeEventListener("message", onMessage)
+  }
+}, [])
+
 
   return (
     <div className="px-3 py-1  overflow-y-auto">

@@ -1,8 +1,8 @@
-import { axios } from "../apiClient";;
+import { axios } from "../../../apiClient";;
 import { FiTrash, FiX, FiUserX } from "react-icons/fi";
 import { LuMessageSquareOff } from "react-icons/lu";
 import { useSelector } from "react-redux";
-import { RootState } from "../store";
+import { RootState } from "../../../store";
 import { SetStateAction, useEffect, useRef } from "react";
 
 const ContextMenuDialogBox = ({ open, setOpen,userId ,chatId ,onSelectUser ,deletechat ,setMessages}:{open:null | string , userId:string ,setOpen:React.Dispatch<SetStateAction<string | null >>, chatId:string,setMessages:(state:[])=>void,onSelectUser:(state:null)=>void ,deletechat:(state:string) =>void})=> {

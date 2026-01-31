@@ -12,7 +12,6 @@ const GroupInfoDialog = ({  setSelectedGroup ,userId, group, showGroupInfo ,setS
 
 
   useEffect(() =>{
-
     const  handleClickOutside  =(e:MouseEvent) =>{
 if( groupInfoButtonRef && groupInfoButtonRef.current && !groupInfoButtonRef.current.contains(e.target as Node)   && infoRef.current && !infoRef.current.contains(e.target as Node)){
 setShowGroupInfo(false)
@@ -28,6 +27,7 @@ setShowGroupInfo(false)
   const {ws} = useWebSocket()
 
 const deleteGroup = async () =>{
+  
   try {
     const res = await axios.delete(`${import.meta.env.VITE_BASE_URL_HTTP}/group/delete-group/${group.id}/${userId}`,{
       withCredentials:true

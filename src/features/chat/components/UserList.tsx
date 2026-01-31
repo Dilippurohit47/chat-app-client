@@ -1,16 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
-import { axios } from "../apiClient";
+import React, { useEffect, useState } from "react";
 import ContextMenuDialogBox from "./contextMenuDialogBox";
 import AiChatBot from "./aiChatBot";
-import {
-  decryptMessage,
-  getkeyFromIndexedDb,
-  importPrivateKey,
-} from "../lib/helper";
 import { IoSearch } from "react-icons/io5";
 import { selectedChatType, UserListProps } from "../types";
-import { useSelector } from "react-redux";
-import { RootState } from "../store";
+import { useTypingListener } from "../hooks/useTypingListener";
+import { fetchRecentChats } from "../api/api";
+import { useChatDecryption } from "../hooks/useChatDecryption";
+import { dateStringToHoursAndMinutes } from "../../../utils/helper";
 
 const UserList = ({
   logedInUser,
@@ -26,97 +22,22 @@ const UserList = ({
   const [recentChatUsers, setRecentChatUsers] = useState<selectedChatType[]>(
     []
   );
-
-  const [userIsTyping, setUserIsTyping] = useState<string[]>([]);
   const [filterChats,setSetFilterChats] =useState<selectedChatType[]>([])
-  const timersRef = useRef<Map<string, number>>(new Map());
-
-
-   const onUserIsTyping = (userId: string, inactivityMs = 3000) => {
-    // add user to the list if not present
-    setUserIsTyping(prev => {
-      if (prev.includes(userId)) return prev;
-      return [...prev, userId];
-    });
-
-    // clear existing timeout for this user
-    const existing = timersRef.current.get(userId);
-    if (existing) clearTimeout(existing);
-
-    // set new timeout to remove only this user after inactivityMs
-    const t = window.setTimeout(() => {
-      timersRef.current.delete(userId);
-      setUserIsTyping(prev => prev.filter(id => id !== userId));
-    }, inactivityMs);
-
-    timersRef.current.set(userId, t);
-  };
-
-  // call this when you receive "user-stopped-typing"
-  const onUserStoppedTyping = (userId: string) => {
-    // clear timer and remove user immediately
-    const existing = timersRef.current.get(userId);
-    if (existing) {
-      clearTimeout(existing);
-      timersRef.current.delete(userId);
-    }
-    setUserIsTyping(prev => prev.filter(id => id !== userId));
-  };
-
-const user = useSelector((state:RootState)=>state.user)
+  const [openContextMenu, setOpenContextMenu] = useState<null | string>("")
+  const {userIsTyping}  =  useTypingListener({ws,isConnected})
+  let {chatDecrypter} = useChatDecryption()
 
   useEffect(() => {
     const getTotalUsers = async () => {
-
-      // const headers ={
-      //   Authorization:`Bearer ${user.accessToken}`
-      // }
-      const res = await axios.get(
-        `${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-recent-chats`
-      );
-      if (res.status === 200) {
-        let chats = res.data.chats as selectedChatType[];
-        console.log("chats length",chats.length)
+     let chats = await fetchRecentChats()
         if (typeof chats === "string") {
-  chats = JSON.parse(chats);
-    }
+            chats = JSON.parse(chats);
+           }
         if (chats?.length > 0) {
-          const privateKeyString = await getkeyFromIndexedDb();
-          const privateKeyCrypto = await importPrivateKey(privateKeyString!);
-
-          const decryptedChats = (
-            await Promise.all(
-              chats.map(async (user) => {
-                if (user.senderId === logedInUser.id) {
-                  const decryptedMessage = await decryptMessage(
-                    user.lastMessageForSender,
-                    privateKeyCrypto
-                  );
-
-
-                  user.lastMessage = decryptedMessage;
-                  return user;
-                } else {
-                  if (privateKeyCrypto) {
-                    const decryptedMessage = await decryptMessage(
-                      user.lastMessageForReceiver,
-                      privateKeyCrypto
-                    );
-
-                  console.log("DECryoted",decryptedMessage)
-                    user.lastMessage = decryptedMessage;
-                    return user;
-                  }
-                }
-
-                //  return user
-              })
-            )
-          ).filter((chat) => chat !== undefined);
+          let decryptedChats  = await chatDecrypter(chats,logedInUser.id!)
           setRecentChatUsers(decryptedChats);
           setSetFilterChats(decryptedChats)
         }
-      }
     };
     getTotalUsers();
     if (!logedInUser.isLogin) {
@@ -132,43 +53,11 @@ const user = useSelector((state:RootState)=>state.user)
       const data = JSON.parse(m.data);
       if (data.type === "recent-chats") {
         const chats = data.chats as selectedChatType[];
-        const privateKeyString = await getkeyFromIndexedDb();
-        const privateKeyCrypto = await importPrivateKey(privateKeyString!);
-
-        const decryptedChats = (
-          await Promise.all(
-            chats.map(async (user) => {
-              if (user.senderId === logedInUser.id) {
-                if (privateKeyCrypto) {
-                  const decryptedMessage = await decryptMessage(
-                    user.lastMessageForSender,
-                    privateKeyCrypto
-                  );
-                  user.lastMessage = decryptedMessage;
-                  return user;
-                }
-              } else {
-                if (privateKeyCrypto) {
-                  const decryptedMessage = await decryptMessage(
-                    user.lastMessageForReceiver,
-                    privateKeyCrypto
-                  );
-                  user.lastMessage = decryptedMessage;
-                  return user;
-                }
-              }
-            })
-          )
-        ).filter((u) => u !== undefined);
-        setRecentChatUsers(decryptedChats);
+         if (chats?.length > 0) {
+          let decryptedChats  = await chatDecrypter(chats,logedInUser.id!)
+          setRecentChatUsers(decryptedChats);
           setSetFilterChats(decryptedChats)
-
-      }
-      if (data.type === "user-is-typing") {
-        onUserIsTyping(data.senderId)
-      }
-      if (data.type === "user-stopped-typing") {
-      onUserStoppedTyping(data.senderId)
+        }
       }
     };
     ws.send(
@@ -183,24 +72,11 @@ const user = useSelector((state:RootState)=>state.user)
     };
   }, [isConnected,selectedUser]);
 
-    useEffect(() => {
-    return () => {
-      timersRef.current.forEach((t) => clearTimeout(t));
-      timersRef.current.clear();
-    };
-  }, []);
 
 
-  function formatToLocalDateTime(dateString: string) {
-    const date = new Date(dateString);
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
 
-    return `${hours}:${minutes}`;
-  }
-  const [openContextMenu, setOpenContextMenu] = useState<null | string>("");
 
-  const handleContextMenu = (
+  const handleContextMenu = ( 
     e: React.MouseEvent<HTMLLIElement, MouseEvent>,
     user: selectedChatType
   ) => {
@@ -215,7 +91,7 @@ const user = useSelector((state:RootState)=>state.user)
   };
 
     const searchUsers = (query:string) =>{
-setSetFilterChats(recentChatUsers.filter((user) => user.name.includes(query.toLowerCase())))
+    setSetFilterChats(recentChatUsers.filter((user) => user.name.includes(query.toLowerCase())))
   }
 
 
@@ -310,7 +186,7 @@ setSetFilterChats(recentChatUsers.filter((user) => user.name.includes(query.toLo
                             : ""}
                           <span>
                             {" "}
-                            {formatToLocalDateTime(user.lastMessageCreatedAt)}
+                            {dateStringToHoursAndMinutes(user.lastMessageCreatedAt)}
                           </span>
                         </div>
                       </div>

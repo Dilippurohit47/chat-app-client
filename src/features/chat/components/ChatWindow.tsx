@@ -12,7 +12,7 @@ import {  LuLoaderCircle, LuPhoneCall } from "react-icons/lu";
 import StartVideoCall from "../../call/components/StartVideoCall";
 import { MessageType, selectedChatType } from "../types";
 import { useChatMessages } from "../hooks/useChatMessages";
-import { useTypingIndicator } from "../hooks/useTypingIndicator";
+import { useTypingIndicator } from "../hooks/useTypingEmiiter";
 import { useSearchMessages } from "../hooks/useSearchMessage";
 import { useSendMessage } from "../hooks/useSendMessage";
 import { updateUnreadCount } from "../api/api";

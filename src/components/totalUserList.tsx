@@ -10,9 +10,10 @@ const TotalUserList = ({
   onlineUsers,
   logedInUser,
 }: UserListProps) => {
-  const [totalUsers, setTotalUSers] = useState<selectedChatType[]>([]);
-  const [filterUsers,setFilterusers] = useState<selectedChatType[]>(totalUsers)
-  useEffect(() => {
+const [totalUsers, setTotalUSers] = useState<selectedChatType[]>([]);
+const [filterUsers,setFilterusers] = useState<selectedChatType[]>(totalUsers)
+  
+useEffect(() => {
     const getTotalUsers = async () => {
       const res = await axios.get(`${import.meta.env.VITE_BASE_URL_HTTP}/user/all-users`, {
         withCredentials: true,
@@ -24,12 +25,11 @@ const TotalUserList = ({
       }
     };
     getTotalUsers();
-  }, []);
+}, []);
 
-
-  const searchUsers = (query:string) =>{
+const searchUsers = (query:string) =>{
 setFilterusers(totalUsers.filter((user) => user.name.includes(query.toLowerCase())))
-  }
+}
 
   return (
     <div className="px-3 py-1  overflow-hidden">

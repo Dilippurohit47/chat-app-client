@@ -1,4 +1,5 @@
 import { axios } from "../../../apiClient";
+import { SelectedGroupType } from "../types";
 
 type createGroupProps = {
   groupName: string;
@@ -38,3 +39,27 @@ export const addNewMembersInGroup = async ({
     { params: { groupId: groupId } },
   );
 };
+
+type deleteGroupProps = {
+  groupId:string,
+  userId:string
+}
+
+export const deleteGroup = async({groupId , userId}:deleteGroupProps):Promise<void>=>{
+      await axios.delete<void>(`$/group/delete-group/${groupId}/${userId}`,{
+        withCredentials:true
+      })
+    }
+
+
+    type FetchGroupsApiResponse ={
+      groups:SelectedGroupType[] | []
+    }
+
+export const fetchGroups = async (): Promise<SelectedGroupType[]> => {
+  const response = await axios.get<FetchGroupsApiResponse>("/group", {
+    withCredentials: true,
+  })
+
+  return response.data.groups
+}

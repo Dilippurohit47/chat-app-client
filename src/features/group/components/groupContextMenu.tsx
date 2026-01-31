@@ -1,4 +1,3 @@
-import { axios } from "../../../apiClient";;
 import { FiTrash, FiX } from "react-icons/fi";
 import { LuMessageSquareOff } from "react-icons/lu";
 import { useSelector } from "react-redux";
@@ -7,20 +6,19 @@ import React, { useEffect, useRef } from "react";
 import { useWebSocket } from "../../../context/webSocket";
 import { toast } from "react-toastify";
 import { SelectedGroupType } from "../types";
+import { deleteGroup } from "../api/api";
 
 const GroupContextMenuDialogBox = ({ open, setOpen ,groupId ,setSelectedGroup}:{open:null | string  ,setOpen:(state:null)=>void ,groupId:string ,setSelectedGroup:React.Dispatch<React.SetStateAction<SelectedGroupType | null>> }) => {
-  const isOpen = !!open;
+const isOpen = !!open;
+const contextMenuRef = useRef<HTMLDivElement | null>(null)
 
   
 const {ws} = useWebSocket()
 const user = useSelector((state:RootState)=>state.user)
-console.log()
-const deleteGroup = async () =>{
+const deleteGroupHandle = async (groupId:string , userId:string | null) =>{
   try {
-    const res = await axios.delete(`${import.meta.env.VITE_BASE_URL_HTTP}/group/delete-group/${groupId}/${user.id}`,{
-      withCredentials:true
-    })
-    if(res.status === 200){
+if(!userId) return
+    await deleteGroup({groupId,userId:userId})
       toast.success("Group Delete")
       setSelectedGroup(null)
       if(!ws.current) return
@@ -30,35 +28,30 @@ const deleteGroup = async () =>{
           userId:user.id
         })
       )
-    }
   } catch (error) {
     console.log(error)
   }
 }
 
-
   const options = [
-  { label: "delete group", icon: <LuMessageSquareOff />, onClick: () => deleteGroup()},
+  { label: "delete group", icon: <LuMessageSquareOff />, onClick: () => deleteGroupHandle(groupId ,user?.id)},
   { label: "Delete Chat", icon: <FiTrash />, onClick: () => {} },
   { label: "Close", icon: <FiX />, onClick: () => {} },
 ];
 
-const contextMenuRef = useRef<HTMLDivElement  | null>(null)
+
  
 
 useEffect(() =>{
     const handleClickOutside =(e:MouseEvent)=>{
-        console.log('cli')
         if(contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)){
             setOpen(null)
         }
     }
     window.addEventListener("click",handleClickOutside) 
-
     return () =>{
         window.removeEventListener("click",handleClickOutside)
     }
-
 },[])
 
 

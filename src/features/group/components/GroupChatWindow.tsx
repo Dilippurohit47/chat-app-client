@@ -1,4 +1,4 @@
-import React, {  useRef, useState } from "react";
+import React, {  useEffect, useRef, useState } from "react";
 import { MdOutlineAttachment } from "react-icons/md";
 import { IoMdSearch } from "react-icons/io";
 import { FaArrowLeftLong } from "react-icons/fa6";
@@ -39,6 +39,7 @@ const handleSendMessageToGroup =(input:string)=>{
   setMessages(prev =>[msg,...prev])
   setInput("")
 }
+
 
 
 const handleKeyDown = (e:React.KeyboardEvent<HTMLInputElement>) =>{

@@ -1,6 +1,5 @@
 import {  useEffect, useRef, useState } from "react";
 import "../App.css";
-import UserList from "../components/UserList";
 import ChatWindow from "../features/chat/components/ChatWindow";
 import { axios } from "../apiClient";
 import {
@@ -26,6 +25,7 @@ import { useNetworkStatus } from "../lib/helper";
 import { incomingCallType, selectedChatType, SelectedGroupType } from "../types";
 import { useSyncOfflineMessage } from "../features/chat/hooks/useSyncOfflineMessage";
 import { MessageType } from "../features/chat/types";
+import UserList from "../features/chat/components/UserList";
 
 
 function Home() {
