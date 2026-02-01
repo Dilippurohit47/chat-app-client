@@ -12,9 +12,11 @@ import { RootState } from "../store";
 import { axios } from "../apiClient";;
 import CreateGroupDialogBox from "../features/group/components/CreateGroupDialogBox";
 import {logout} from "../slices/userSlice"
+import { useState } from "react";
 const Navbar = () => {
     const user = useSelector((state:RootState) =>state.user)      
     const dispatch = useDispatch()
+    const [maintenanceMode,setMaintenanceMode] = useState<boolean>(true)
     const logoutUser =async() =>{
       const res = await axios.post(`${import.meta.env.VITE_BASE_URL_HTTP}/user/sign-out`,{},{
         withCredentials:true
@@ -31,9 +33,11 @@ const Navbar = () => {
    
      <a href="/"> <h1 className="font-[500]">{user.isLogin ?  user.name?.split(" ")[0] : "Chat-App"}  </h1></a> 
     
-   <div className="mt-3 hidden rounded-md border border-red-300 bg-red-100 px-4 py-3 text-sm font-semibold text-red-700">
+{maintenanceMode &&
+     <div className=" sm:absolute sm:inset-0 sm:h-16 sm:z-40  rounded-md border border-red-300 bg-red-100 px-4 py-3 text-sm font-semibold text-red-700">
   🚧 Currently migrating my VPS — please check back later.
 </div>
+}
 
 
     {

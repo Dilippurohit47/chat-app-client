@@ -22,10 +22,10 @@ const UserList = ({
   const [recentChatUsers, setRecentChatUsers] = useState<selectedChatType[]>(
     []
   );
-  const [filterChats,setSetFilterChats] =useState<selectedChatType[]>([])
+  const [filteredChats,setFilteredChats] =useState<selectedChatType[]>([])
   const [openContextMenu, setOpenContextMenu] = useState<null | string>("")
   const {userIsTyping}  =  useTypingListener({ws,isConnected})
-  let {chatDecrypter} = useChatDecryption()
+ const {chatDecrypter} = useChatDecryption()
 
   useEffect(() => {
     const getTotalUsers = async () => {
@@ -36,13 +36,13 @@ const UserList = ({
         if (chats?.length > 0) {
           let decryptedChats  = await chatDecrypter(chats,logedInUser.id!)
           setRecentChatUsers(decryptedChats);
-          setSetFilterChats(decryptedChats)
+          setFilteredChats(decryptedChats)
         }
     };
     getTotalUsers();
     if (!logedInUser.isLogin) {
       setRecentChatUsers([]);
-          setSetFilterChats([])
+          setFilteredChats([])
       onSelectUser(null);
     }
   }, [logedInUser]);
@@ -56,7 +56,7 @@ const UserList = ({
          if (chats?.length > 0) {
           let decryptedChats  = await chatDecrypter(chats,logedInUser.id!)
           setRecentChatUsers(decryptedChats);
-          setSetFilterChats(decryptedChats)
+          setFilteredChats(decryptedChats)
         }
       }
     };
@@ -85,13 +85,13 @@ const UserList = ({
   };
 
   const deletechat = (deletedChatId: string) => {
-    setSetFilterChats((prev) =>
+    setFilteredChats((prev) =>
       prev.filter(({ chatId }) => chatId !== deletedChatId)
     );
   };
 
     const searchUsers = (query:string) =>{
-    setSetFilterChats(recentChatUsers.filter((user) => user.name.includes(query.toLowerCase())))
+    setFilteredChats(recentChatUsers.filter((user) => user.name.includes(query.toLowerCase())))
   }
 
 
@@ -119,8 +119,8 @@ const UserList = ({
           setChatId={setChatId}
         />
 
-        {filterChats?.length > 0
-          ? filterChats.map((user) => {
+        {filteredChats?.length > 0
+          ? filteredChats.map((user) => {
               return (
                 <div
                     key={user.chatId}

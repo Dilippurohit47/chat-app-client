@@ -8,7 +8,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "../components/ui/tabs";
-import TotalUserList from "../components/totalUserList";
+import TotalUserList from "../features/chat/components/totalUserList";
 import { useDispatch, useSelector } from "react-redux";
 import {
   saveUser

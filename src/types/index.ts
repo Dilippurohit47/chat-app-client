@@ -1,6 +1,6 @@
 import { SetStateAction } from "react";
 import { UserType } from "../slices/userSlice";
-import { MessageType } from "../Chat/types";
+import { MessageType } from "../features/chat/types";
 
 export type members = {
   groupId: string;

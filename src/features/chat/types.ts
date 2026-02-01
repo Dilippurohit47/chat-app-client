@@ -120,3 +120,12 @@ export interface UserListProps {
   isConnected:boolean
 }
 
+
+export interface User {
+   id:string,
+   email:string,
+   name:string,
+   profileUrl :string | null,
+   publicKey:string
+}
+
