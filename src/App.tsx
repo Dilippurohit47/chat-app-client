@@ -4,8 +4,9 @@ import Navbar from "./components/Navbar";
 import PublicLayout from "./layouts/PublicLayout";
 import LoginPage from "./features/auth/pages/LoginPage"
 import SignUp from "./features/auth/pages/SignUp";
+import { useLoadInitialUser } from "./hooks/useLoadInitialUser";
 const App = () => {
-
+  useLoadInitialUser()
   return (
     <BrowserRouter>
     <Navbar />

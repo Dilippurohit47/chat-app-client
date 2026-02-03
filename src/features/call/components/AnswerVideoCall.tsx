@@ -1,17 +1,16 @@
-import React, {  useEffect, useRef } from "react";
+import {  useEffect, useRef } from "react";
 import { useWebSocket } from "../../../context/webSocket";
 import { FaVideoSlash } from "react-icons/fa";
 import { FaVideo } from "react-icons/fa";
 import { IoMdResize } from "react-icons/io";
 import { FaMicrophone } from "react-icons/fa";
 import { FaMicrophoneSlash } from "react-icons/fa";
-import { forwardRef ,useImperativeHandle } from "react";
 import {  VideoCallDialogProps } from "../types";
 import { useCallSignaling } from "../hooks/useCallSignaling";
 import { useCallMedia } from "../hooks/useCallMedia";
 
-const AnswerVideoCall = forwardRef((props: VideoCallDialogProps, ref)=> {
-    const { callerId, setCallAccepted, isCallAccepted } = props;
+const AnswerVideoCall = ((props: VideoCallDialogProps,)=> {
+    const { callerId, callIsEnded, isCallAccepted } = props;
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const { ws } = useWebSocket();
       const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -21,7 +20,7 @@ const AnswerVideoCall = forwardRef((props: VideoCallDialogProps, ref)=> {
   remoteStream,
   remoteUserCamera,
   hangUp
-} = useCallSignaling({ ws, callerId ,setCallAccepted  });
+} = useCallSignaling({ ws, callerId   });
 
   if (!callerId) return null;
 const {toggleVideo ,toggleAudio , isCameraOn:camera , isMicOn:mic , localVideoResize , localVideoSize} = useCallMedia(localStream)
@@ -39,9 +38,12 @@ useEffect(() => {
 
 
 
-useImperativeHandle(ref, () => ({
-  hangUp, 
-}));
+useEffect(() => {
+  return () => {
+    hangUp();
+  callIsEnded()
+  };
+}, []);
 
   useEffect(() => {
       if (!ws.current) return;

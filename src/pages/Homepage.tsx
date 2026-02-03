@@ -1,7 +1,6 @@
-import {  useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import "../App.css";
 import ChatWindow from "../features/chat/components/ChatWindow";
-import { axios } from "../apiClient";
 import {
   Tabs,
   TabsContent,
@@ -9,156 +8,83 @@ import {
   TabsTrigger,
 } from "../components/ui/tabs";
 import TotalUserList from "../features/chat/components/totalUserList";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  saveUser
-} from "../slices/userSlice";
+import {  useSelector } from "react-redux";
 import { RootState } from "../store";
 import GroupList from "../features/group/components/GroupList";
 
 import GroupChatWindow from "../features/group/components/GroupChatWindow";
 import { useWebSocket } from "../context/webSocket";
-import {WebSocketContextType  } from "../types/index"
+import { WebSocketContextType } from "../types/index";
 import CallNotificationDialog from "../features/call/components/CallNotificationDialog";
 import AnswerVideoCall from "../features/call/components/AnswerVideoCall";
-import { incomingCallType, selectedChatType, SelectedGroupType } from "../types";
+import {
+  selectedChatType,
+  SelectedGroupType,
+} from "../types";
 import { useSyncOfflineMessage } from "../features/chat/hooks/useSyncOfflineMessage";
 import { MessageType } from "../features/chat/types";
 import UserList from "../features/chat/components/UserList";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
-
+import { useCallManager } from "../features/call/hooks/useCallManager";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 function Home() {
-  const dispatch = useDispatch();
 
   const [selectedUser, setSelectedUser] = useState<selectedChatType | null>(
-    null
+    null,
   );
   const [selectedGroup, setSelectedGroup] = useState<SelectedGroupType | null>(
-    null
+    null,
   );
-  const [callAccepted, setCallAccepted] = useState<boolean>(false);
-  const [showCallNotification, setShowCallNotification] =
-    useState<boolean>(false);
+
   const user = useSelector((state: RootState) => state.user);
-  const [incomingCall, setIncomingCall] = useState<incomingCallType | null>(
-    null
-  );
-  const answerVideoCallRef  = useRef<any>(null)
-   const [selectedTab, setSelectedTab] = useState("");
+  const [selectedTab, setSelectedTab] = useState("");
   const [chatId, setChatId] = useState<string | null>("");
-  const [messages, setMessages] = useState<MessageType[]>([]);
-  const [isMobile, setIsMobile] = useState<boolean>(false);
 
-  const { ws, connected, setConnected, onlineUsers }: WebSocketContextType =
-    useWebSocket();
-    const isOnline = useNetworkStatus() 
-    const {syncOfflineSaveMessages} = useSyncOfflineMessage({ws:ws.current,senderId:user.id})
-useEffect(() =>{ 
-  if(!isOnline) return
-syncOfflineSaveMessages()
-},[isOnline])
+  const  {isMobile} =useIsMobile()
+  const { ws, connected, onlineUsers }: WebSocketContextType = useWebSocket();
+  const {
+    showCallNotification,
+    callRejected,
+    callIsAccepted,
+    callAccepted,
+    incomingCall,
+    callIsIgnored,
+    callIsEnded,
+  } = useCallManager({ ws, connected });
 
-
+  const isOnline = useNetworkStatus();
+  const { syncOfflineSaveMessages } = useSyncOfflineMessage({
+    ws: ws.current,
+    senderId: user.id,
+  });
   useEffect(() => {
-    if (!ws.current) return;
-
-    ws.current.onerror = (e) => {
-      console.error("WebSocket error:", e);
-      setConnected(false);
-    };
-
-    const handleMessage = (m: MessageEvent) => {
-      const data = JSON.parse(m.data);
-      if (data.type === "someone-is-calling") {
-        const callerData = data.callerData;
-
-        setIncomingCall({
-          callerId: callerData.callerId,
-          callerName: callerData.callerName,
-          callerProfileUrl: callerData.callerProfileUrl,
-          callStatus: "incoming",
-        });
-        setShowCallNotification(true);
-      }
-      if (data.type === "client-call-status") {
-        if(data.callStatus === "hang-up"){
-          if(answerVideoCallRef.current){
-            answerVideoCallRef.current.hangUp()
-            answerVideoCallRef.current = null
-          }
-        setIncomingCall(null);
-
-        } 
-      }
-    };
-    ws.current.addEventListener("message", handleMessage);
-
-    return () => {
-      if (!ws.current) return;
-      ws.current.removeEventListener("message", handleMessage);
-    };
-  }, [connected]);
+    if (!isOnline) return;
+    syncOfflineSaveMessages();
+  }, [isOnline]);
 
 
-  useEffect(() => {
-    const getUser = async () => {
-      const res = await axios.get(
-        `${import.meta.env.VITE_BASE_URL_HTTP}/user/get-user`,
-        {
-          headers: {
-            Authorization: `Bearer ${user.accessToken}`,
-          },
-          withCredentials: true,
-        }
-      );
-      if (res.status === 200) {
-        dispatch(saveUser(res.data.user));
-      }
-    };
-    getUser();
-  }, [user.accessToken]);
- 
 
-  useEffect(() => {
-    const handleScreenSize = () => {
-      setIsMobile(window.innerWidth < 521);
-    };
 
-    // Run once on mount to set initial state
-    handleScreenSize();
-
-    window.addEventListener("resize", handleScreenSize);
-
-    return () => {
-      window.removeEventListener("resize", handleScreenSize);
-    };
-  }, []);
-
-  const callRejected =() =>{
-    if(!incomingCall?.callerId) return
-    ws.current?.send(JSON.stringify({
-      type:"call-status",
-      callStatus:"hang-up",
-      callReceiverId:incomingCall?.callerId
-    }))
-  }
   return (
     <div className="flex  h-[84.5vh] sm:h-[calc(100vh-3rem)] md:h-[calc(100vh-3rem)]  relative justify-center mx-auto my-auto sm:mx-0 hide-scrollbar ">
       <div
         className={` shadow-2xl sm:w-[100%] rounded-md border-r  border-gray-300 border-2  sm:mr-0   ${
-          isMobile && !((selectedUser || selectedGroup ) === null)
+          isMobile && !((selectedUser || selectedGroup) === null)
             ? " hidden -translate-x-[100%]   "
             : "w-1/4  md:w-[35%]"
-        } `}  
+        } `}
       >
-        <Tabs defaultValue="online-users" className={` md:max-w-[400px] md:mx-auto md:my-0 sm:w-full`}>
+        <Tabs
+          defaultValue="online-users"
+          className={` md:max-w-[400px] md:mx-auto md:my-0 sm:w-full`}
+        >
           <TabsList className="w-full border-2 ">
             <TabsTrigger
               value="online-users"
               className="cursor-pointer data-[state=active]:bg-[#008080] data-[state=active]:text-white"
               onClick={() => {
-                setSelectedTab("recent-chats"), setSelectedGroup(null);
+                (setSelectedTab("recent-chats"), setSelectedGroup(null));
               }}
             >
               Recent
@@ -167,7 +93,7 @@ syncOfflineSaveMessages()
               value="groups"
               className="cursor-pointer data-[state=active]:bg-[#008080] data-[state=active]:text-white"
               onClick={() => {
-                setSelectedTab("group-list"), setSelectedUser(null);
+                (setSelectedTab("group-list"), setSelectedUser(null));
               }}
             >
               Groups
@@ -175,14 +101,16 @@ syncOfflineSaveMessages()
             <TabsTrigger
               value="total-users"
               className="cursor-pointer data-[state=active]:bg-blue-500 data-[state=active]:text-white"
-              onClick={() => {setSelectedTab("all-users") ,setSelectedUser(null)}}
+              onClick={() => {
+                (setSelectedTab("all-users"), setSelectedUser(null));
+              }}
             >
               Total
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="online-users"  forceMount>
+          <TabsContent value="online-users" forceMount>
             <UserList
-            isConnected={connected}
+              isConnected={connected}
               selectedUser={selectedUser}
               onSelectUser={setSelectedUser}
               connected={connected}
@@ -190,13 +118,12 @@ syncOfflineSaveMessages()
               ws={ws.current}
               onlineUsers={onlineUsers}
               setChatId={setChatId}
-              setMessages={setMessages}
             />
           </TabsContent>
           <TabsContent value="total-users" forceMount>
             <TotalUserList
               selectedUser={selectedUser}
-              onSelectUser={setSelectedUser}  
+              onSelectUser={setSelectedUser}
               onlineUsers={onlineUsers}
               logedInUser={user}
             />
@@ -213,11 +140,13 @@ syncOfflineSaveMessages()
         </Tabs>
       </div>
       {/* Chat Window Section */}
-     <div
-  className={` relative w-3/4  ${
-    selectedUser || selectedGroup ? "md:w-full sm:w-[100%] sm:h-[100%]" : "sm:w-0"
-  }`}
->
+      <div
+        className={` relative w-3/4  ${
+          selectedUser || selectedGroup
+            ? "md:w-full sm:w-[100%] sm:h-[100%]"
+            : "sm:w-0"
+        }`}
+      >
         {selectedUser && (
           <ChatWindow
             logedInUser={user}
@@ -226,8 +155,6 @@ syncOfflineSaveMessages()
             selectedUser={selectedUser}
             setSelectedUser={setSelectedUser}
             chatId={chatId}
-            messages={messages}
-            setMessages={setMessages}
             selectedTab={selectedTab}
           />
         )}
@@ -252,22 +179,18 @@ syncOfflineSaveMessages()
         )}
         {callAccepted && (
           <AnswerVideoCall
-            setCallAccepted={setCallAccepted}
+            callIsEnded={callIsEnded}
             isCallAccepted={callAccepted}
             callerId={incomingCall?.callerId}
-            ref={answerVideoCallRef}
           />
         )}
       </div>
       {incomingCall && showCallNotification && (
-        <CallNotificationDialog    
+        <CallNotificationDialog
           callerData={incomingCall}
-          onAccept={() => {
-            setCallAccepted(true);
-            setShowCallNotification(false);
-          }}
+          onAccept={() => callIsAccepted()}
           onReject={callRejected}
-          onIgnore={()=>setShowCallNotification(false)}
+          onIgnore={() => callIsIgnored()}
         />
       )}
     </div>

@@ -24,8 +24,6 @@ interface ChatWindowProps {
   setSelectedUser: (state: null) => void;
   logedInUser: UserType;
   chatId: string;
-  messages: MessageType[];
-  setMessages: React.Dispatch<React.SetStateAction<MessageType[]>>;
   selectedTab: string;
 }
 
@@ -46,9 +44,10 @@ const ChatWindow = ({
   setSelectedUser,
   logedInUser,
   chatId,
-  messages,
-  setMessages,
 }: ChatWindowProps) => {
+
+    const [messages, setMessages] = useState<MessageType[]>([]);
+
   const [input, setInput] = useState<string>("");
   const chatWindowRef: React.RefObject<HTMLDivElement | null> = useRef(null);
   const { ws: websocket } = useWebSocket();
@@ -65,7 +64,7 @@ const ChatWindow = ({
   const [callUserId, setCallUserId] = useState<string | null>(null);
   const [isCallOpen, setIsCallOpen] = useState(false);
   const [chatBotResponseLoading , setChatBotResponseLoading]  = useState<boolean>(false) 
-  const  [systemError,setSystemError] = useState('Currently facing api error in your region sorry for inconvience')
+  const  [systemError,setSystemError] = useState('Currently facing api error in your region sorry for inconvience'  )
   const prevConversationRef = useRef("");
 
 

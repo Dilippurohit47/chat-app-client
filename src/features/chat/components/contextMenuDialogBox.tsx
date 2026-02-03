@@ -1,51 +1,44 @@
-import { axios } from "../../../apiClient";;
 import { FiTrash, FiX, FiUserX } from "react-icons/fi";
 import { LuMessageSquareOff } from "react-icons/lu";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store";
 import { SetStateAction, useEffect, useRef } from "react";
+import { useChatActions } from "../hooks/useChatActions";
+import { toast } from "react-toastify";
 
-const ContextMenuDialogBox = ({ open, setOpen,userId ,chatId ,onSelectUser ,deletechat ,setMessages}:{open:null | string , userId:string ,setOpen:React.Dispatch<SetStateAction<string | null >>, chatId:string,setMessages:(state:[])=>void,onSelectUser:(state:null)=>void ,deletechat:(state:string) =>void})=> {
+const ContextMenuDialogBox = ({ open, setOpen, chatId ,onSelectUser ,deletechat }:{open:null | string , setOpen:React.Dispatch<SetStateAction<string | null >>, chatId:string,onSelectUser:(state:null)=>void ,deletechat:(state:string) =>void})=> {
   const isOpen = !!open;
-
  const user = useSelector((state:RootState) =>state.user)  
-  const clearChat =  async() =>{
-    const res = await axios.delete(`${import.meta.env.VITE_BASE_URL_HTTP}/chat-setting/clear-chat`,{
-        withCredentials:true,
-        data:{
- userId:userId,
- chatId:chatId
-        }
-    })
-if(res.status === 200){
-  setMessages([])
-}
+ const contextMenuRef = useRef<HTMLDivElement | null >(null)
+ const {clearChat ,deleteChat} = useChatActions({currentUserId:user.id , chatId})
 
-}
+ const onHandleClearChat = async()=>{
+  const response = await clearChat()
+  if(!response){
+    toast.error("Something went wrong")
+    return
+  }
+ }
 
-const deleteChat =  async() =>{
-  const res = await axios.delete(`${import.meta.env.VITE_BASE_URL_HTTP}/chat-setting/delete-chat`,{
-    withCredentials:true,
-    data:{
-        userId:user.id,
-        chatId:chatId
-    }
-  })
-if(res.status === 200){
+
+const onHandleDeleteChat =  async() =>{
+  const response = await deleteChat()
+  if(!response){
+    toast.error("Something went wrong")
+    return
+  }
 deletechat(chatId)
 onSelectUser(null)
-}
 }
 
 
   const options = [
-  { label: "Clear Chat", icon: <LuMessageSquareOff />, onClick: () => {clearChat()} },
-  { label: "Delete Chat", icon: <FiTrash />, onClick: () => {deleteChat()} },
+  { label: "Clear Chat", icon: <LuMessageSquareOff />, onClick: onHandleClearChat },
+  { label: "Delete Chat", icon: <FiTrash />, onClick: onHandleDeleteChat},
   { label: "Block User", icon: <FiUserX />, onClick: () => {} },
   { label: "Close", icon: <FiX />, onClick: () => {} },
 ];
 
-const contextMenuRef = useRef<HTMLDivElement | null >(null)
 
 useEffect(() =>{
     const handleClickOutside =(e:MouseEvent)=>{
@@ -61,8 +54,6 @@ useEffect(() =>{
     }
 
 },[])
-
-
 
 
   return (

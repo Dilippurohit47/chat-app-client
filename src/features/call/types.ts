@@ -9,7 +9,7 @@ export type incomingCallType = {
 
 export  interface VideoCallDialogProps {
    callerId: string | undefined;
-   setCallAccepted: React.Dispatch<React.SetStateAction<boolean>>;
+   callIsEnded: ()=>void;
    isCallAccepted: boolean;
  }
  

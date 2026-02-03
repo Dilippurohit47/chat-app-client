@@ -17,7 +17,6 @@ const UserList = ({
   isConnected,
   onlineUsers,
   setChatId,
-  setMessages,
 }: UserListProps) => {
   const [recentChatUsers, setRecentChatUsers] = useState<selectedChatType[]>(
     []
@@ -199,7 +198,6 @@ const UserList = ({
                       userId={user.id}
                       deletechat={deletechat}
                       chatId={user.chatId}
-                      setMessages={setMessages}
                       onSelectUser={onSelectUser}
                     />
                   )}

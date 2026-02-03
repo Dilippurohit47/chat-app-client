@@ -1,12 +1,11 @@
-import React, { RefObject, SetStateAction, useEffect, useRef, useState } from "react";
+import React, { RefObject,  useEffect, useRef, useState } from "react";
 
 type UseCallSignalingProps = {
   callerId: string | undefined;
   ws: RefObject<WebSocket | null>;
-  setCallAccepted:React.Dispatch<SetStateAction<boolean>>
 };
 
-export const useCallSignaling = ({ ws, callerId ,setCallAccepted }: UseCallSignalingProps) => {
+export const useCallSignaling = ({ ws, callerId }: UseCallSignalingProps) => {
   const pcRef = useRef<RTCPeerConnection | null>(null);
 
 
@@ -139,7 +138,6 @@ export const useCallSignaling = ({ ws, callerId ,setCallAccepted }: UseCallSigna
         setLocalStream(null);
       }
       pcRef.current?.close();
-      setCallAccepted(false);
           ws.current?.send(
         JSON.stringify({
           type: "call-status",

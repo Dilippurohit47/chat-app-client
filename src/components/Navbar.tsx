@@ -16,7 +16,7 @@ import { useState } from "react";
 const Navbar = () => {
     const user = useSelector((state:RootState) =>state.user)      
     const dispatch = useDispatch()
-    const [maintenanceMode,setMaintenanceMode] = useState<boolean>(true)
+    const [maintenanceMode,setMaintenanceMode] = useState<boolean>(false)
     const logoutUser =async() =>{
       const res = await axios.post(`${import.meta.env.VITE_BASE_URL_HTTP}/user/sign-out`,{},{
         withCredentials:true

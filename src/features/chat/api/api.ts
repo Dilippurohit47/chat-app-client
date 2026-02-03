@@ -68,3 +68,23 @@ export const fetchRecentChats =  async():Promise<selectedChatType[]>=>{
 }
 
 
+
+export const clearChatWithId =async(currentUserId:string ,chatId:string):Promise<void>=>{
+   await axios.delete<void>(`/chat-setting/clear-chat`, {
+      withCredentials: true,
+      data: {
+        userId: currentUserId,
+        chatId: chatId,
+      },
+    });
+}
+
+export const deleteChatWithId = async(currentUserId:string,chatId:string):Promise<void>=>{
+     await axios.delete(`/chat-setting/delete-chat`,{
+    withCredentials:true,
+    data:{
+        userId:currentUserId,
+        chatId:chatId
+    }
+  })
+}
