@@ -21,11 +21,11 @@ import { useWebSocket } from "../context/webSocket";
 import {WebSocketContextType  } from "../types/index"
 import CallNotificationDialog from "../features/call/components/CallNotificationDialog";
 import AnswerVideoCall from "../features/call/components/AnswerVideoCall";
-import { useNetworkStatus } from "../lib/helper";
 import { incomingCallType, selectedChatType, SelectedGroupType } from "../types";
 import { useSyncOfflineMessage } from "../features/chat/hooks/useSyncOfflineMessage";
 import { MessageType } from "../features/chat/types";
 import UserList from "../features/chat/components/UserList";
+import { useNetworkStatus } from "../hooks/useNetworkStatus";
 
 
 function Home() {

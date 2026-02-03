@@ -1,5 +1,5 @@
 import { toast } from 'react-toastify';
-import { getReceiverMessage, getSenderMessage } from '../utils/encryption';
+import { encryptMessage } from '../../auth/crypto/encyptMessage';
 import { MessageType, selectedChatType } from "../types";
 import { newMessage } from '../utils/createNewMessage';
 import  {v4 as uuid} from "uuid"
@@ -7,9 +7,9 @@ import { UserType } from '../../../slices/userSlice';
 import React, { SetStateAction, useState } from 'react';
 import { useChatSocket } from './useChatSocket';
 import { useSyncOfflineMessage } from './useSyncOfflineMessage';
-import { uploadMediaToS3 } from '../../../lib/uploadMediaToS3';
 import { MediaFileType } from '../components/ChatWindow';
 import { useChatBot } from './useChatBot';
+import { uploadFileToS3 } from '../../../utils/uploadFileToS3';
 type useSendMessageProps ={
     ws:WebSocket  | null,
     messages:MessageType[]
@@ -68,8 +68,8 @@ const {sendMessageToChatBot} = useChatBot({input})
                      sendMessageToChatBot({sendMessageToBot,setChatBotResponseLoading ,msg})
                      return
 }   
-         const receiverContent = await getReceiverMessage({text:input , publickey:receiver.publickey})
-        const senderContent = await getSenderMessage({text:input,publickey:logedInUser.publickey!})
+         const receiverContent = await encryptMessage({text:input , publicKeyPem:receiver.publickey})
+        const senderContent = await encryptMessage({text:input,publicKeyPem:logedInUser.publickey!})
         // offline save message 
         if (!navigator.onLine) {
           if(!receiverContent || !senderContent) return
@@ -123,7 +123,7 @@ const {sendMessageToChatBot} = useChatBot({input})
             );
     
         try {           
-              const signedInUrl =   await uploadMediaToS3(img) 
+              const signedInUrl =   await uploadFileToS3(img.file) 
                 sendMedia({signedInUrl:signedInUrl , receiverId:receiver.id , chatId:chatId})
     
                 setSendedFiles((prev) =>

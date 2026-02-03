@@ -1,9 +1,9 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Homepage";
-import LoginPage from "./pages/LoginPage";
 import Navbar from "./components/Navbar";
-import SignUp from "./pages/SignUp";
 import PublicLayout from "./layouts/PublicLayout";
+import LoginPage from "./features/auth/pages/LoginPage"
+import SignUp from "./features/auth/pages/SignUp";
 const App = () => {
 
   return (

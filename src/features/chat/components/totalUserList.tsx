@@ -1,7 +1,8 @@
 import  { useEffect, useState } from "react";
 import { IoSearch } from "react-icons/io5";
-import { User, UserListProps } from "../types";
-import { fetchAllUsers } from "../api/api";
+import {  UserListProps } from "../types";
+import { fetchAllUsers } from "../../../api/userApi";
+import { User } from "../../../types";
 
 
 const TotalUserList = ({

@@ -1,4 +1,6 @@
-import { decryptMessage, getkeyFromIndexedDb, importPrivateKey } from "../../../lib/helper";
+import { decryptMessage } from "../../auth/crypto/decryptMessage";
+import { importPrivateKey } from "../../auth/crypto/importPrivateKey";
+import { getkeyFromIndexedDb } from "../../auth/storage/keyStorage";
 import { selectedChatType } from "../types";
 
 

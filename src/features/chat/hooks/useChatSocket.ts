@@ -1,7 +1,9 @@
 import React, { SetStateAction, useEffect, useRef } from "react";
 import { MessageType, selectedChatType } from "../types";
-import { decryptMessage, getkeyFromIndexedDb, importPrivateKey } from "../../../lib/helper";
 import { newMessage } from "../utils/createNewMessage";
+import { getkeyFromIndexedDb } from "../../auth/storage/keyStorage";
+import { importPrivateKey } from "../../auth/crypto/importPrivateKey";
+import { decryptMessage } from "../../auth/crypto/decryptMessage";
 
 interface useChatSocketTypes {
   ws: WebSocket | null;
@@ -152,14 +154,13 @@ export const useChatSocket = ({ ws, senderId , selectedUser ,setMessages ,messag
           sessionStorage.setItem("chat-bot-messages",JSON.stringify([messages , msg]))
           }
 
-          setMessages((prev) => [msg, ...prev]);
-          setChatBotResponseLoading(false)
+          if(setMessages) setMessages((prev) => [msg, ...prev]);
+          if(setChatBotResponseLoading) setChatBotResponseLoading(false) 
         }
 if (data.type === "message-acknowledge") {
   const updates = data.messages;
 
-  console.log("msg",updates)
-  setMessages((prev) =>
+  if(setMessages) setMessages((prev) =>
     prev.map((msg) => {
       const matched = updates.find(
         (m) =>

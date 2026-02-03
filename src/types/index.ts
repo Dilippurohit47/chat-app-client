@@ -162,3 +162,11 @@ export interface UserListProps {
 }
 
 
+export interface User {
+   id:string,
+   email:string,
+   name:string,
+   profileUrl :string | null,
+   publicKey:string
+}
+

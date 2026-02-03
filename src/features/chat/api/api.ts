@@ -1,5 +1,5 @@
 import { axios } from "../../../apiClient";
-import { User, MessageType, selectedChatType } from "../types";
+import {  MessageType, selectedChatType } from "../types";
 
 export type GetChatMessagesResponse = {
   messages: MessageType[]; // replace later with MessageType[]
@@ -64,13 +64,7 @@ export const fetchRecentChats =  async():Promise<selectedChatType[]>=>{
  const res =   await axios.get<fetchRecentChatApiResponse>(
           `${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-recent-chats`
         );
-
         return res.data.chats
 }
 
 
-
-export const fetchAllUsers = async():Promise<User[]> =>{
-    const res = await axios.get<User[]>(`/user/all-users`);
-   return  res.data
-}

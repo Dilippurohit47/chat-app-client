@@ -1,8 +1,10 @@
 // src/hooks/useChatMessages.ts
 import { useState } from "react";
 import { MessageType } from "../types";
-import { decryptMessage, getkeyFromIndexedDb, importPrivateKey } from "../../../lib/helper";
 import { fetchOlderMessages, getChatMessages } from "../api/api";
+import { getkeyFromIndexedDb } from "../../auth/storage/keyStorage";
+import { importPrivateKey } from "../../auth/crypto/importPrivateKey";
+import { decryptMessage } from "../../auth/crypto/decryptMessage";
 
 type UseChatMessagesParams = {
   senderId: string | null;
