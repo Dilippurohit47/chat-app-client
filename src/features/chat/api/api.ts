@@ -57,7 +57,7 @@ export const fetchOlderMessages = async (
 
 type  fetchRecentChatApiResponse = {
  chats:selectedChatType[]
-}
+} 
 
 
 export const fetchRecentChats =  async():Promise<selectedChatType[]>=>{
@@ -70,13 +70,16 @@ export const fetchRecentChats =  async():Promise<selectedChatType[]>=>{
 
 
 export const clearChatWithId =async(currentUserId:string ,chatId:string):Promise<void>=>{
-   await axios.delete<void>(`/chat-setting/clear-chat`, {
+  const res =  await axios.delete<void>(`/chat-setting/clear-chat`, {
       withCredentials: true,
       data: {
         userId: currentUserId,
         chatId: chatId,
       },
     });
+
+    console.log("resposne",res)
+
 }
 
 export const deleteChatWithId = async(currentUserId:string,chatId:string):Promise<void>=>{

@@ -14,7 +14,7 @@ const GroupList = ({ logedInUser, connected  ,selectedGroup ,setSelectedGroup}: 
   useEffect(() => {
     if(!ws.current) return
     fetchGroups().then((data)=>setGroupList(data)).catch(e=>console.log(e))
-  },[]);
+  },[connected]);
 
   useEffect(() => {
   if (!ws.current) return

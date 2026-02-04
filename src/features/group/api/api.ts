@@ -57,9 +57,6 @@ export const deleteGroup = async({groupId , userId}:deleteGroupProps):Promise<vo
     }
 
 export const fetchGroups = async (): Promise<SelectedGroupType[]> => {
-  const response = await axios.get<FetchGroupsApiResponse>("/group", {
-    withCredentials: true,
-  })
-
+  const response = await axios.get<FetchGroupsApiResponse>("/group",)
   return response.data.groups
 }

@@ -16,7 +16,6 @@ export const useCallManager = ({ws , connected}:useCallManagerProps)=>{
     useState<boolean>(false);
     const [callAccepted, setCallAccepted] = useState<boolean>(false);
 
-    const [isCallHanged,setCallHanged] = useState<boolean>(false)
 
      useEffect(() => {
     if (!ws.current) return;
@@ -35,7 +34,6 @@ export const useCallManager = ({ws , connected}:useCallManagerProps)=>{
       }
       if (data.type === "client-call-status") {
         if (data.callStatus === "hang-up") {
-            setCallHanged(true)
           setIncomingCall(null);
         }
       }

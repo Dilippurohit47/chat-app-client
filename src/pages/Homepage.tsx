@@ -22,7 +22,6 @@ import {
   SelectedGroupType,
 } from "../types";
 import { useSyncOfflineMessage } from "../features/chat/hooks/useSyncOfflineMessage";
-import { MessageType } from "../features/chat/types";
 import UserList from "../features/chat/components/UserList";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { useCallManager } from "../features/call/hooks/useCallManager";
@@ -38,7 +37,7 @@ function Home() {
   );
 
   const user = useSelector((state: RootState) => state.user);
-  const [selectedTab, setSelectedTab] = useState("");
+  const [selectedTab, setSelectedTab] = useState<"online-users" | "groups" | "total-users" >("online-users");
   const [chatId, setChatId] = useState<string | null>("");
 
   const  {isMobile} =useIsMobile()
@@ -65,7 +64,6 @@ function Home() {
 
 
 
-
   return (
     <div className="flex  h-[84.5vh] sm:h-[calc(100vh-3rem)] md:h-[calc(100vh-3rem)]  relative justify-center mx-auto my-auto sm:mx-0 hide-scrollbar ">
       <div
@@ -78,13 +76,14 @@ function Home() {
         <Tabs
           defaultValue="online-users"
           className={` md:max-w-[400px] md:mx-auto md:my-0 sm:w-full`}
+          value={selectedTab} onValueChange={setSelectedTab}
         >
           <TabsList className="w-full border-2 ">
             <TabsTrigger
               value="online-users"
               className="cursor-pointer data-[state=active]:bg-[#008080] data-[state=active]:text-white"
               onClick={() => {
-                (setSelectedTab("recent-chats"), setSelectedGroup(null));
+                ( setSelectedGroup(null));
               }}
             >
               Recent
@@ -93,7 +92,7 @@ function Home() {
               value="groups"
               className="cursor-pointer data-[state=active]:bg-[#008080] data-[state=active]:text-white"
               onClick={() => {
-                (setSelectedTab("group-list"), setSelectedUser(null));
+                ( setSelectedUser(null));
               }}
             >
               Groups
@@ -102,7 +101,7 @@ function Home() {
               value="total-users"
               className="cursor-pointer data-[state=active]:bg-blue-500 data-[state=active]:text-white"
               onClick={() => {
-                (setSelectedTab("all-users"), setSelectedUser(null));
+                (setSelectedUser(null));
               }}
             >
               Total
@@ -132,7 +131,6 @@ function Home() {
             <GroupList
               selectedGroup={selectedGroup}
               setSelectedGroup={setSelectedGroup}
-              // onlineUsers={onlineUsers}
               connected={connected}
               logedInUser={user}
             />

@@ -20,7 +20,6 @@ const StartVideoCall = ({
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const { ws } = useWebSocket();
 
-  // const [stream, setStream] = useState<MediaStream | null>(null);
   const [isCallAccepted, setIsCallAccepted] = useState<boolean>(false);
 
 

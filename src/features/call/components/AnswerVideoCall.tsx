@@ -10,20 +10,15 @@ import { useCallSignaling } from "../hooks/useCallSignaling";
 import { useCallMedia } from "../hooks/useCallMedia";
 
 const AnswerVideoCall = ((props: VideoCallDialogProps,)=> {
-    const { callerId, callIsEnded, isCallAccepted } = props;
+  const { callerId, callIsEnded, isCallAccepted } = props;
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const { ws } = useWebSocket();
-      const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
-
-  const {
-  localStream,
-  remoteStream,
-  remoteUserCamera,
-  hangUp
-} = useCallSignaling({ ws, callerId   });
+  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+  const {localStream,  remoteStream,remoteUserCamera, hangUp} = useCallSignaling({ ws, callerId   });
 
   if (!callerId) return null;
 const {toggleVideo ,toggleAudio , isCameraOn:camera , isMicOn:mic , localVideoResize , localVideoSize} = useCallMedia(localStream)
+
 useEffect(() => {
   if (!remoteVideoRef.current) return;
   remoteVideoRef.current.srcObject = remoteStream;

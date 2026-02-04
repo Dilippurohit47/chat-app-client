@@ -14,6 +14,7 @@ const ContextMenuDialogBox = ({ open, setOpen, chatId ,onSelectUser ,deletechat 
 
  const onHandleClearChat = async()=>{
   const response = await clearChat()
+  console.log("response",response)
   if(!response){
     toast.error("Something went wrong")
     return
