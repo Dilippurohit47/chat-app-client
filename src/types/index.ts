@@ -68,6 +68,8 @@ export interface WebSocketContextType {
   setConnected: React.Dispatch<React.SetStateAction<boolean>>;
   connectionBooleanRef: React.MutableRefObject<boolean>;
   onlineUsers: string[];
+  subscribe:  (data:any)=>void;
+  unsubscribe: (data:any)=>void;
 }
 
 export interface UserTypes {

@@ -14,7 +14,7 @@ export const useChatActions = ({
   const clearChat = async () => {
     if(!currentUserId || !chatId) return
     try {
-       await clearChatWithId(currentUserId ,chatId)
+       await clearChatWithId(currentUserId)
         return true
     } catch (error) {
         return false
@@ -24,8 +24,8 @@ export const useChatActions = ({
 
   const deleteChat = async()=>{
     try {
-        if(!currentUserId || !chatId) return
-        await deleteChatWithId(currentUserId , chatId)
+        if(!chatId) return
+        await deleteChatWithId(chatId)
         return true
     } catch (error) {
         return false

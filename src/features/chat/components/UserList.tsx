@@ -7,6 +7,7 @@ import { useTypingListener } from "../hooks/useTypingListener";
 import { fetchRecentChats } from "../api/api";
 import { useChatDecryption } from "../hooks/useChatDecryption";
 import { dateStringToHoursAndMinutes } from "../../../utils/helper";
+import { useWebSocket } from "../../../context/webSocket";
 
 const UserList = ({
   logedInUser,
@@ -25,6 +26,8 @@ const UserList = ({
   const [openContextMenu, setOpenContextMenu] = useState<null | string>("")
   const {userIsTyping}  =  useTypingListener({ws,isConnected})
  const {chatDecrypter} = useChatDecryption()
+
+ const {subscribe ,unsubscribe} = useWebSocket()
 
   useEffect(() => {
     const getTotalUsers = async () => {
@@ -47,7 +50,6 @@ const UserList = ({
   }, [logedInUser]);
 
   useEffect(() => {
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
     const messageHandler = async (m: any) => {
       const data = JSON.parse(m.data);
       if (data.type === "recent-chats") {
@@ -59,15 +61,16 @@ const UserList = ({
         }
       }
     };
+    if (ws  && ws.readyState === WebSocket.OPEN) {
     ws.send(
       JSON.stringify({
         type: "get-recent-chats",
         userId: logedInUser.id,
       })
-    );
-    ws.addEventListener("message", messageHandler);
+    ) };
+    subscribe(messageHandler);
     return () => {
-      ws.removeEventListener("message", messageHandler);
+      unsubscribe(messageHandler);
     };
   }, [isConnected,selectedUser]);
 
@@ -92,7 +95,7 @@ const UserList = ({
     const searchUsers = (query:string) =>{
     setFilteredChats(recentChatUsers.filter((user) => user.name.includes(query.toLowerCase())))
   }
-
+console.log(filteredChats)
 
   return (
     <div className="px-3 py-1 w-full hide-scrollbar md:px-1 overflow-y-auto  max-h-[75vh] ">

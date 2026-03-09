@@ -23,13 +23,11 @@ export const getChatMessages = async (
 };
 
 export const updateUnreadCount = async (
-  senderId: string,
   chatId: string,
   receiverId: string,
 ):Promise<void> => {
   await axios.put(`/chat/update-unreadmessage-count`,
     {
-      senderId: senderId,
       chatId: chatId,
       receiverId: receiverId,
     },
@@ -37,7 +35,6 @@ export const updateUnreadCount = async (
 };
 
 export const fetchOlderMessages = async (
-  senderId: string,
   receiverId: string,
   cursorId: string | null,
 ): Promise<GetChatMessagesResponse> => {
@@ -45,7 +42,6 @@ export const fetchOlderMessages = async (
     `${import.meta.env.VITE_BASE_URL_HTTP}/chat/get-messages`,
     {
       params: {
-        senderId: senderId,
         receiverId: receiverId,
         limit: 20,
         cursor: JSON.stringify(cursorId),
@@ -69,25 +65,16 @@ export const fetchRecentChats =  async():Promise<selectedChatType[]>=>{
 
 
 
-export const clearChatWithId =async(currentUserId:string ,chatId:string):Promise<void>=>{
-  const res =  await axios.delete<void>(`/chat-setting/clear-chat`, {
-      withCredentials: true,
-      data: {
-        userId: currentUserId,
-        chatId: chatId,
-      },
-    });
+export const clearChatWithId =async(chatId:string):Promise<void>=>{
+  const res =  await axios.delete<void>(`/chat-setting/clear-chat/${chatId}`, {
+      withCredentials: true    });
 
     console.log("resposne",res)
 
 }
 
-export const deleteChatWithId = async(currentUserId:string,chatId:string):Promise<void>=>{
-     await axios.delete(`/chat-setting/delete-chat`,{
+export const deleteChatWithId = async(chatId:string):Promise<void>=>{
+     await axios.delete(`/chat-setting/delete-chat/${chatId}`,{
     withCredentials:true,
-    data:{
-        userId:currentUserId,
-        chatId:chatId
-    }
   })
 }

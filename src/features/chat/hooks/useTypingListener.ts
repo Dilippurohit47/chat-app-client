@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useWebSocket } from "../../../context/webSocket";
 
 
 interface useTypingListenerProps {
@@ -10,6 +11,8 @@ export const useTypingListener = ({ws , isConnected}:useTypingListenerProps)=>{
 
       const [userIsTyping, setUserIsTyping] = useState<string[]>([]);
       const timersRef = useRef<Map<string, number>>(new Map());
+
+      const {subscribe , unsubscribe} = useWebSocket()
 
 // call these when "user-start-typing" received
  const onUserIsTyping = (userId: string, inactivityMs = 3000) => {
@@ -44,7 +47,6 @@ export const useTypingListener = ({ws , isConnected}:useTypingListenerProps)=>{
   };
 
   useEffect(() => {
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
     const messageHandler = async (m: any) => {
       const data = JSON.parse(m.data);
       if (data.type === "user-is-typing") {
@@ -55,9 +57,9 @@ export const useTypingListener = ({ws , isConnected}:useTypingListenerProps)=>{
       }
     };
  
-    ws.addEventListener("message", messageHandler);
+    subscribe(messageHandler);
     return () => {
-      ws.removeEventListener("message", messageHandler);
+      unsubscribe(messageHandler);
     };
   }, [isConnected]);
 

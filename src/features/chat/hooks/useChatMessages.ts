@@ -55,7 +55,7 @@ const  data = await getChatMessages(senderId ,receiverId)
 
     try {
       setLoadingMoreMessages(true);
-          const data = await fetchOlderMessages(senderId , receiverId ,cursorId)
+          const data = await fetchOlderMessages( receiverId ,cursorId)
          const privateKeyString = await getkeyFromIndexedDb();
   const privateKeyCrypto = await importPrivateKey(privateKeyString!);
 

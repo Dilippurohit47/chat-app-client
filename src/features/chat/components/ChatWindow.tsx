@@ -78,7 +78,6 @@ const ChatWindow = ({
 
 
 const clearDraftForReceiver = (receiverId: string) => {
-  console.log(incompletInputMsgRef.current  ,  receiverId)
   incompletInputMsgRef.current =
     incompletInputMsgRef.current.map((inc) =>
       inc.selectedUserId === receiverId
@@ -228,7 +227,7 @@ const clearDraftForReceiver = (receiverId: string) => {
 
   useEffect(() => {
   if (!selectedUser) return;
-  updateUnreadCount(senderId, selectedUser.chatId, selectedUser.id);
+  updateUnreadCount( selectedUser.chatId, selectedUser.id);
 }, [selectedUser?.id]);
 
   const formatDate = (newDate: number) => {
@@ -300,7 +299,6 @@ const clearDraftForReceiver = (receiverId: string) => {
 
  
 
-console.log("messsages",messages)
 
   return (
     <div className="flex  relative overflow-hidden    md:h-full   flex-col h-[100%] max-md:p-4 p-2 bg-[#1e1e2e] max-md:rounded-2xl md:p-0  md:rounded-[0] ">

@@ -21,9 +21,21 @@ export const WebSocketProvider = ({
   const user = useSelector((state: RootState) => state.user);
   const [connected, setConnected] = useState<boolean>(false);
 
+  const subscribers = useRef(new Set<(data:any)=>void>());
+  const subscribe = (fn:(data:any)=>void) => {
+  subscribers.current.add(fn);
+};
+
+const unsubscribe = (fn:(data:any)=>void) => {
+  subscribers.current.delete(fn);
+};
+
   let tryLimit = 2;
 const params = new URLSearchParams(window.location.search);
 const PORT = params.get("port");
+
+
+
   useEffect(() => {
     if (!user.isLogin) return;
     const connect = async () => {
@@ -60,6 +72,10 @@ const PORT = params.get("port");
 
     const handleMessages = (m: MessageEvent) => {
       const data = JSON.parse(m.data);
+
+       subscribers.current.forEach((fn) => fn(data));
+
+
       if (data.type === "online-users") {
         const filterData = data?.onlineUsers.filter(
           (c: onlineUsersType) => c !== user.id
@@ -98,7 +114,7 @@ const PORT = params.get("port");
 
   return (
     <WebSocketContext.Provider
-      value={{ ws, connected, setConnected, connectionBooleanRef, onlineUsers }}
+      value={{ ws, connected, setConnected, connectionBooleanRef, onlineUsers , subscribe ,unsubscribe }}
     >
       {children}
     </WebSocketContext.Provider>

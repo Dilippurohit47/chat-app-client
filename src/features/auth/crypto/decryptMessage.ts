@@ -6,6 +6,7 @@ export async function decryptMessage(encryptedBase64: string, privateKey: Crypto
     (c) => c.charCodeAt(0)
   );
  try {
+
    const decrypted = await window.crypto.subtle.decrypt(
     { name: "RSA-OAEP" },
     privateKey, 

@@ -4,6 +4,7 @@ import { newMessage } from "../utils/createNewMessage";
 import { getkeyFromIndexedDb } from "../../auth/storage/keyStorage";
 import { importPrivateKey } from "../../auth/crypto/importPrivateKey";
 import { decryptMessage } from "../../auth/crypto/decryptMessage";
+import { useWebSocket } from "../../../context/webSocket";
 
 interface useChatSocketTypes {
   ws: WebSocket | null;
@@ -32,6 +33,7 @@ export const useChatSocket = ({ ws, senderId , selectedUser ,setMessages ,messag
 
     const privateKeyRef = useRef<CryptoKey | null>(null);
     const loadingRef = useRef(false);
+    const { subscribe, unsubscribe } = useWebSocket();
 
   useEffect(() => {
     const loadPrivateKey = async () => {
@@ -102,11 +104,10 @@ export const useChatSocket = ({ ws, senderId , selectedUser ,setMessages ,messag
 
 
   useEffect(() => {
-    if (!ws || !selectedUser) return;
-    const getMessage =  async(m: MessageEvent) => {
-      const data = JSON.parse(m.data);
+    if (!selectedUser) return;
+    const getMessage =  async(data: any) => {
       if (data.type === "personal-msg") {
-        if (
+        if ( 
           (data.receiverId === senderId &&
             data.senderId === selectedUser.id) ||
           (data.senderId === senderId &&
@@ -158,6 +159,7 @@ export const useChatSocket = ({ ws, senderId , selectedUser ,setMessages ,messag
           if(setChatBotResponseLoading) setChatBotResponseLoading(false) 
         }
 if (data.type === "message-acknowledge") {
+  console.log("hit")
   const updates = data.messages;
 
   if(setMessages) setMessages((prev) =>
@@ -165,6 +167,7 @@ if (data.type === "message-acknowledge") {
       const matched = updates.find(
         (m) =>
           m.id === msg.tempId );
+
 
       if (!matched) return msg;
 
@@ -177,9 +180,9 @@ if (data.type === "message-acknowledge") {
 }
 
     };
-    ws.addEventListener("message", getMessage);
+   subscribe(getMessage)
     return () => {
-      ws.removeEventListener("message", getMessage);
+      unsubscribe(getMessage);
     };
   }, []);
 

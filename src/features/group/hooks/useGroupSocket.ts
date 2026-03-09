@@ -1,6 +1,7 @@
 import { newMessage } from "../utils/createNewMessage"
 import { IncomingGroupMessagePayload, SelectedGroupType } from "../types"
 import { useEffect } from "react"
+import { useWebSocket } from "../../../context/webSocket"
 
 type useGroupSocketProps = {
     ws:WebSocket | null,
@@ -10,8 +11,7 @@ type useGroupSocketProps = {
 }
 
 export const useGroupsocket =({ws,senderId , selectedGroup,onIncomingGroupMessage}:useGroupSocketProps)=>{
-
-
+  const {subscribe ,unsubscribe} = useWebSocket()
     useEffect(() =>{
       if(!ws) return 
       const handleMessage =(e:MessageEvent) =>{
@@ -20,9 +20,9 @@ export const useGroupsocket =({ws,senderId , selectedGroup,onIncomingGroupMessag
             onIncomingGroupMessage(data)
         }
       }
-      ws.addEventListener("message",handleMessage)
+      subscribe(handleMessage)
       return () =>{
-        ws.removeEventListener("message",handleMessage)
+        unsubscribe(handleMessage)
       }
     },[])
 
