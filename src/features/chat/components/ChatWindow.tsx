@@ -16,6 +16,7 @@ import { useTypingIndicator } from "../hooks/useTypingEmiiter";
 import { useSearchMessages } from "../hooks/useSearchMessage";
 import { useSendMessage } from "../hooks/useSendMessage";
 import { updateUnreadCount } from "../api/api";
+import { useChatPresence } from "../hooks/useChatPresence";
 
 interface ChatWindowProps {
   ws: WebSocket | null;
@@ -85,6 +86,8 @@ const clearDraftForReceiver = (receiverId: string) => {
         : inc
     );
 };
+
+useChatPresence(ws ,selectedUser.chatId )
 
 
   // send message function used hooks to send messages
