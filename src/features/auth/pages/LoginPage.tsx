@@ -39,7 +39,6 @@ const dispatch = useDispatch()
       );
       if (res.status === 200) {
       const user = res.data.user;
-      console.log(res.data)
 dispatch(saveUser({
   id: user.id,
   name: user.name,

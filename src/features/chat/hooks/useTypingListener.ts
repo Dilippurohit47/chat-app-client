@@ -47,8 +47,7 @@ export const useTypingListener = ({ws , isConnected}:useTypingListenerProps)=>{
   };
 
   useEffect(() => {
-    const messageHandler = async (m: any) => {
-      const data = JSON.parse(m.data);
+    const messageHandler = async (data: any) => {
       if (data.type === "user-is-typing") {
         onUserIsTyping(data.senderId)
       }

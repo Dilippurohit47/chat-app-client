@@ -159,7 +159,6 @@ export const useChatSocket = ({ ws, senderId , selectedUser ,setMessages ,messag
           if(setChatBotResponseLoading) setChatBotResponseLoading(false) 
         }
 if (data.type === "message-acknowledge") {
-  console.log("hit")
   const updates = data.messages;
 
   if(setMessages) setMessages((prev) =>

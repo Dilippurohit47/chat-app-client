@@ -12,10 +12,9 @@ type useGroupSocketProps = {
 
 export const useGroupsocket =({ws,senderId , selectedGroup,onIncomingGroupMessage}:useGroupSocketProps)=>{
   const {subscribe ,unsubscribe} = useWebSocket()
-    useEffect(() =>{
+    useEffect(() =>{ 
       if(!ws) return 
-      const handleMessage =(e:MessageEvent) =>{
-        const data = JSON.parse(e.data)
+      const handleMessage =(data:any) =>{
         if(data.type === "group-message"){
             onIncomingGroupMessage(data)
         }

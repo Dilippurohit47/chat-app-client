@@ -31,8 +31,8 @@ const unsubscribe = (fn:(data:any)=>void) => {
 };
 
   let tryLimit = 2;
-const params = new URLSearchParams(window.location.search);
-const PORT = params.get("port");
+// const params = new URLSearchParams(window.location.search);
+// const PORT = params.get("port");
 
 
 

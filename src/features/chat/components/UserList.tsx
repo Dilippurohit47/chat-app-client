@@ -50,8 +50,7 @@ const UserList = ({
   }, [logedInUser]);
 
   useEffect(() => {
-    const messageHandler = async (m: any) => {
-      const data = JSON.parse(m.data);
+    const messageHandler = async (data: any) => {
       if (data.type === "recent-chats") {
         const chats = data.chats as selectedChatType[];
          if (chats?.length > 0) {
