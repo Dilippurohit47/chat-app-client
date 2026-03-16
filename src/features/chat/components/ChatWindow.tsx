@@ -90,8 +90,21 @@ const clearDraftForReceiver = (receiverId: string) => {
 useChatPresence(ws ,selectedUser.chatId )
 
 
+  const removeImage = (imageId: string) => {
+    setMediaFile((prev) => prev.filter((img) => img.imageId !== imageId));
+
+    setSendedFiles((prev) =>
+      prev.filter((file) => {
+        return file.imageId !== imageId;
+      })
+    );
+  };
+
+ 
+
+
   // send message function used hooks to send messages
-  const {sendMessage ,setSendedFiles} = useSendMessage({ws , messages ,isLogin:logedInUser.isLogin ,receiver:selectedUser, senderId , chatId , input ,setInput , logedInUser , setMessages , setChatBotResponseLoading ,setMediaFile,   clearDraftForReceiver})
+  const {sendMessage ,setSendedFiles} = useSendMessage({ws , messages ,isLogin:logedInUser.isLogin ,receiver:selectedUser, senderId , chatId , input ,setInput , logedInUser , setMessages , setChatBotResponseLoading ,setMediaFile,   clearDraftForReceiver })
 
 
   
@@ -290,23 +303,10 @@ useChatPresence(ws ,selectedUser.chatId )
     setSendedFiles((prev) => [...prev, ...mappedFiles]);
   };
 
-  const removeImage = (imageId: string) => {
-    setMediaFile((prev) => prev.filter((img) => img.imageId !== imageId));
-
-    setSendedFiles((prev) =>
-      prev.filter((file) => {
-        return file.imageId !== imageId;
-      })
-    );
-  };
-
- 
 
 
   return (
     <div className="flex  relative overflow-hidden    md:h-full   flex-col h-[100%] max-md:p-4 p-2 bg-[#1e1e2e] max-md:rounded-2xl md:p-0  md:rounded-[0] ">
-
-     
       <div className=" pr-2 pl-2 relative max-md:px-4 bg-[#ffffffc6] h-10 rounded-sm flex justify-between items-center gap-3">
         <div className="flex justify-between items-center gap-2">
           <div onClick={() => {setSelectedUser(null)  ;console.log("clicked")}} className="cursor-pointer">

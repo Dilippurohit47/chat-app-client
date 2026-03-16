@@ -26,9 +26,10 @@ const  data = await getChatMessages(senderId ,receiverId)
          const privateKeyString = await getkeyFromIndexedDb();
   const privateKeyCrypto = await importPrivateKey(privateKeyString!);
 
-  const decryptedMessages = await Promise.all(
-    data.messages.map(async (msg: any) => {
-      if(msg.senderId === senderId){
+  const decryptedMessages =( await Promise.all(
+    data.messages.map(async (msg: any) => { 
+      if(!msg.isMedia){
+  if(msg.senderId === senderId){
          const decryptedText = await decryptMessage(msg.senderContent, privateKeyCrypto);
       return { ...msg,senderContent:decryptedText};
       }
@@ -36,8 +37,12 @@ const  data = await getChatMessages(senderId ,receiverId)
          const decryptedText = await decryptMessage(msg.receiverContent, privateKeyCrypto);
       return { ...msg,receiverContent:decryptedText };
       }
+      }else{
+        return msg
+      }
+    
     })
-  );
+  )).filter(Boolean)
 
   setMessages(decryptedMessages);
   setCursorId(data.cursor);

@@ -26,7 +26,8 @@ export interface selectedChatType {
   refreshToken: String;
   tokenExpiresIn: Date | null;
   unreadCount: unreadCountType;
-  publickey:string
+  publickey:string;
+  lastMessageType:string
 }
 
 

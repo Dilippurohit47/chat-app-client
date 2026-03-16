@@ -32,7 +32,7 @@ interface sendedFileType {
   url: string;
 }
 
-export const useSendMessage = ({ ws,messages ,isLogin,senderId ,chatId, input,setInput ,receiver ,logedInUser ,setMessages ,setChatBotResponseLoading,clearDraftForReceiver,setMediaFile}:useSendMessageProps
+export const useSendMessage = ({ ws,messages ,isLogin,senderId ,chatId, input,setInput ,receiver ,logedInUser ,setMessages ,setChatBotResponseLoading,clearDraftForReceiver,setMediaFile }:useSendMessageProps
 ) => {
 
 
@@ -40,135 +40,123 @@ export const useSendMessage = ({ ws,messages ,isLogin,senderId ,chatId, input,se
       const {savePendingOfflineMessages} = useSyncOfflineMessage({ws:ws,senderId})
 
       const [sendedFiles, setSendedFiles] = useState<sendedFileType[] | []>([]);
+
+
 const {sendMessageToChatBot} = useChatBot({input})
 
-     const sendMessage = async () => {
-        if (!isLogin ) return toast.error("Login first ");
+const sendTextMessage = async () => {
+  const tempId = uuid();
 
-        let tempId = uuid()
+    const msg = newMessage({
+    senderId,
+    receiverContent: input,
+    senderContent: input,
+    receiverId: receiver.id!,
+    isMedia: false,
+    tempId,
+    uploading: false,
+    error: false,
+    status: "pending",
+    chatId
+  });
 
-
-        const msg = newMessage({
-            senderId,
-            receiverContent: input,
-            senderContent:input,
-            receiverId: receiver.id!,
-            isMedia: false,
-            tempId: tempId,
-            error: false,
-            uploading: false,
-          status:receiver.id === "chat-bot" ? "sent" : "pending",
-          chatId:chatId,
-          });
-          setMessages((prev) => [msg, ...prev]);
-        clearDraftForReceiver(receiver.id)
-        setInput("");
-
-                    if(receiver.id === "chat-bot"){
-                     sendMessageToChatBot({sendMessageToBot,setChatBotResponseLoading ,msg})
-                     return
-}   
-         const receiverContent = await encryptMessage({text:input , publicKeyPem:receiver.publickey})
-        const senderContent = await encryptMessage({text:input,publicKeyPem:logedInUser.publickey!})
-        // offline save message 
-        if (!navigator.onLine) {
-          if(!receiverContent || !senderContent) return
-          const msg:MessageType = newMessage({
-            senderId:logedInUser.id!,
-            receiverContent: input,
-            senderContent: input, 
-            receiverId: receiver.id,
-            isMedia: false,
-            tempId: tempId,
-            error: false,
-            uploading: false,
-          status:"pending",
-          chatId:receiver.chatId,
-          });
-    
-       savePendingOfflineMessages(msg , receiverContent , senderContent)
-          setMessages((prev) => [msg, ...prev]);
-          setInput("");
-          return;
-        }
-        if (!ws) return toast.error("server error!");
-          
-        if (sendedFiles.length <= 0) {
-          if(!receiverContent  || !senderContent){
-            window.alert(" encryption Failed try again")
-            return
-          }
-        sendMessageToUser({receiverContent , senderContent,chatId , tempId ,receiverId:receiver.id})
-        }
-    
-        if (sendedFiles.length > 0) {
-          sendedFiles.forEach(async (img) => {
-            const tempId: string = uuid();
-            const msg = newMessage({
-              senderId,
-              receiverContent: img.url,
-              senderContent:img.url,
-              receiverId: receiver.id!,
-              isMedia: true,
-              tempId: tempId,
-              error: false,
-              uploading: true,
-          status:"pending",
-          chatId:chatId
-            });
-            setMessages((prev) => [msg, ...prev]);
-    
-            setMediaFile((prev) =>
-              prev.filter((img) => img.imageId !== img.imageId)
-            );
-    
-        try {           
-              const signedInUrl =   await uploadFileToS3(img.file) 
-                sendMedia({signedInUrl:signedInUrl , receiverId:receiver.id , chatId:chatId})
-    
-                setSendedFiles((prev) =>
-                  prev.filter((img) => img.imageId !== img.imageId)
-                );
-                setMessages((prev) =>
-                  prev.map((msg) => {
-                    if (msg?.tempId === tempId) {
-                      return {
-                        ...msg,
-                        uploading: false,
-                        error: false,
-                      };
-                    } else {
-                      return msg;
-                    }
-                  })
-                );
-            
-        } catch (error) {
-          console.log("Error in uplaoding image",error)
-                setSendedFiles((prev) =>
-                  prev.filter((img) => img.imageId !== img.imageId)
-                );
-    
-                setMessages((prev) =>
-                  prev.map((msg) => {
-                    if (msg?.tempId === tempId) {
-                      return {
-                        ...msg,
-                        uploading: false,
-                        error: true,
-                        errorMessage:"Retry"
-                      };
-                    } else {
-                      return msg;
-                    }
-                  })
-                );
-        }
-          });
-        } 
-      };
+  if(chatId === "ai-chat-bot"){
+    sendMessageToChatBot({sendMessageToBot , setChatBotResponseLoading , msg})
+  }
 
 
+  if(chatId !==  "ai-chat-bot"){
+  const receiverContent = await encryptMessage({
+    text: input,
+    publicKeyPem: receiver.publickey
+  });
+
+  const senderContent = await encryptMessage({
+    text: input,
+    publicKeyPem: logedInUser.publickey!
+  });
+
+  sendMessageToUser({
+    receiverContent,
+    senderContent,
+    chatId,
+    tempId,
+    receiverId: receiver.id
+  });
+  }
+
+
+  setMessages(prev => [msg, ...prev]);
+  setInput("");
+
+};
+
+
+const sendMediaMessage = async () => {
+  setMediaFile([])
+  for (const img of sendedFiles) {
+
+    const tempId = uuid();
+
+    const msg = newMessage({
+      senderId,
+      receiverContent: img.url,
+      senderContent: img.url,
+      receiverId: receiver.id!,
+      isMedia: true,
+      tempId,
+      uploading: true,
+      error: false,
+      status: "pending",
+      chatId
+    });
+
+    setMessages(prev => [msg, ...prev]);
+
+    try {
+
+      const signedUrl = await uploadFileToS3(img.file);
+
+      sendMedia({
+        signedInUrl: signedUrl,
+        receiverId: receiver.id,
+        chatId,
+        tempId
+      });
+
+      setMessages(prev =>
+        prev.map(m =>
+          m.tempId === tempId
+            ? { ...m, uploading: false }
+            : m
+        )
+      );
+
+    } catch (err) {
+
+      setMessages(prev =>
+        prev.map(m =>
+          m.tempId === tempId
+            ? { ...m, uploading: false, error: true }
+            : m
+        )
+      );
+
+    }
+  }
+  setSendedFiles([]);
+
+};
+
+const sendMessage = async () => {
+  if (!isLogin) return toast.error("Login first");
+
+  if (sendedFiles.length > 0) {
+    await sendMediaMessage();
+  } else {
+    await sendTextMessage();
+  }
+};
 
   return {
 sendMessage,

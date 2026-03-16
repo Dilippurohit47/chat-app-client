@@ -94,7 +94,6 @@ const UserList = ({
     const searchUsers = (query:string) =>{
     setFilteredChats(recentChatUsers.filter((user) => user.name.includes(query.toLowerCase())))
   }
-console.log(filteredChats)
 
   return (
     <div className="px-3 py-1 w-full hide-scrollbar md:px-1 overflow-y-auto  max-h-[75vh] ">
@@ -122,6 +121,7 @@ console.log(filteredChats)
 
         {filteredChats?.length > 0
           ? filteredChats.map((user) => {
+
               return (
                 <div
                     key={user.chatId}

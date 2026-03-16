@@ -27,6 +27,7 @@ type sendMediaPayload = {
     signedInUrl:string,
     receiverId:string,
     chatId:string,
+    tempId:string
 }
 
 export const useChatSocket = ({ ws, senderId , selectedUser ,setMessages ,messages  ,setChatBotResponseLoading }: useChatSocketTypes) => {
@@ -88,12 +89,14 @@ export const useChatSocket = ({ ws, senderId , selectedUser ,setMessages ,messag
     );
   };
 
-  const sendMedia = ({signedInUrl  , receiverId , chatId}:sendMediaPayload)=>{
+  const sendMedia = ({signedInUrl ,tempId , receiverId , chatId}:sendMediaPayload)=>{
     if(!ws) return
    ws.send(
               JSON.stringify({
                 type: "personal-msg",
-                message: signedInUrl,
+                tempId:tempId,
+                receiverContent: signedInUrl,
+                senderContent: signedInUrl,
                 receiverId: receiverId,
                 senderId,
                 chatId,
@@ -107,6 +110,9 @@ export const useChatSocket = ({ ws, senderId , selectedUser ,setMessages ,messag
     if (!selectedUser) return;
     const getMessage =  async(data: any) => {
       if (data.type === "personal-msg") {
+
+        console.log(data)
+
         if ( 
           (data.receiverId === senderId &&
             data.senderId === selectedUser.id) ||
@@ -114,11 +120,15 @@ export const useChatSocket = ({ ws, senderId , selectedUser ,setMessages ,messag
             data.receiverId === selectedUser.id) 
         ) {
 
-          if(!privateKeyRef.current){
+
+          let msg:MessageType;
+
+          if(data.isMedia === false){
+   if(!privateKeyRef.current){
             return
           }
           const decryptedMessage = await decryptMessage(data.receiverContent , privateKeyRef.current)
-          const msg = newMessage({
+           msg = newMessage({
             senderId: data.senderId,
             receiverContent: decryptedMessage || "",
             senderContent: data.senderContent,
@@ -128,10 +138,29 @@ export const useChatSocket = ({ ws, senderId , selectedUser ,setMessages ,messag
             error: false,
             uploading: false,
             chatId:selectedUser.chatId,
+            status:data.status
           });
 
+          }
+          if(data.isMedia){
+
+              msg = newMessage({
+            senderId: data.senderId,
+            receiverContent: data.receiverContent || "",
+            senderContent: data.senderContent,
+            receiverId: data.receiverId,
+            isMedia: data.isMedia,
+            tempId: data.id,
+            error: false,
+            uploading: false,
+            chatId:selectedUser.chatId,
+            status:data.status
+          });
+            
+          }
+       
           setMessages((prev) => [msg, ...prev]);  
-        }
+        } 
       }
       if (data.type === "chatbot-reply") {
           const msg = newMessage({
@@ -177,7 +206,6 @@ if (data.type === "message-acknowledge") {
     })
   );
 }
-
     };
    subscribe(getMessage)
     return () => {
@@ -196,9 +224,6 @@ if(!ws || !selectedUser) return
 }))
   },[])
   
-
-
-
   return {
     sendMessageToBot,
     sendMessageToUser,
