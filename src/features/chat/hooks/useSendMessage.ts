@@ -45,6 +45,7 @@ export const useSendMessage = ({ ws,messages ,isLogin,senderId ,chatId, input,se
 const {sendMessageToChatBot} = useChatBot({input})
 
 const sendTextMessage = async () => {
+  if(input.trim().length === 0) return
   const tempId = uuid();
 
     const msg = newMessage({
@@ -150,6 +151,8 @@ const sendMediaMessage = async () => {
 
 const sendMessage = async () => {
   if (!isLogin) return toast.error("Login first");
+
+
 
   if (sendedFiles.length > 0) {
     await sendMediaMessage();

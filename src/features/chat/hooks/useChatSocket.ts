@@ -74,6 +74,7 @@ export const useChatSocket = ({ ws, senderId , selectedUser ,setMessages ,messag
         senderId,
         chatId,
         tempId: tempId,
+        isMedia:false
       }),
     );
   };
