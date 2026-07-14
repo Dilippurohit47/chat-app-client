@@ -60,15 +60,30 @@ useEffect(()=>{
 },[name])
 
 
-  useEffect(() => {
-    const getUser = async () => {
-      const user = await getAuthenticatedUser()
-        dispatch(saveUser(user));
-        navigate("/")
-    };
-    getUser();
-  }, []);
-  
+const resetImage = () => {
+  setImage(null);
+  setImageFile(null);
+  setSelctedFile(null);
+  setIsImageUploaded(false);
+  setImageUploading(false);
+};
+
+
+
+
+useEffect(() => {
+  const getUser = async () => {
+    try {
+      const user = await getAuthenticatedUser();
+      if (!user?.id) return;     
+      dispatch(saveUser(user));
+      navigate("/");
+    } catch {
+      // expected when no session exists
+    }
+  };
+  getUser();
+}, []);
  
 
 
@@ -119,14 +134,13 @@ useEffect(()=>{
   };
   
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setSelctedFile(file);
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setImageFile(imageUrl);
-    }
-  };
+const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0] || null;
+  setError("");
+  setSelctedFile(file);
+  if (file) setImageFile(URL.createObjectURL(file));
+  e.target.value = "";   
+};
   const removeImage = () => {
     setImage(null);
     setImageFile(null)
@@ -156,22 +170,18 @@ useEffect(()=>{
           setImage(uploadUrl?.split("?")[0]);
           setIsImageUploaded(true);
         } catch (error) {
-          console.log("failed to upload image to s3" ,error);
-          setError("Failed to upload image try again")
-          setImageUploading(false)
-          setImageFile(null)
+          setError("Couldn't upload image. You can continue without one.");
+resetImage()
         }
 
         
       }else{
-        console.log("error in getting signedIn url try again later")
-           setImageUploading(false)
-      setImageFile(null)
+      setError("Couldn't upload image. You can continue without one.");
+resetImage()
       }
     } catch (error) {
-      console.log(error);
-      setImageUploading(false)
-      setImageFile(null)
+         setError("Couldn't upload image. You can continue without one.");
+resetImage()
 
     } finally {
       setImageUploading(false);
