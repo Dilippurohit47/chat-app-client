@@ -14,7 +14,7 @@ export const useChatActions = ({
   const clearChat = async () => {
     if(!currentUserId || !chatId) return
     try {
-       await clearChatWithId(currentUserId)
+       await clearChatWithId(chatId)
         return true
     } catch (error) {
         return false
