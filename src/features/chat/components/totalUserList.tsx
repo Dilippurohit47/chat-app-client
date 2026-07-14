@@ -13,7 +13,7 @@ const TotalUserList = ({
 }: UserListProps) => {
 const [totalUsers, setTotalUSers] = useState<User[]>([]);
 const [filterUsers,setFilterusers] = useState<User[]>(totalUsers)
-  
+
 useEffect(() => {
     const getTotalUsers = async () => {
       const users  = await fetchAllUsers()
@@ -22,11 +22,12 @@ useEffect(() => {
         setFilterusers(filterData)
     };
     getTotalUsers();
-}, []);
+}, [logedInUser?.id]);
 
 const searchUsers = (query:string) =>{
 setFilterusers(totalUsers.filter((user) => user.name.includes(query.toLowerCase())))
 }
+
 
   return (
     <div className="px-3 py-1  overflow-hidden">
