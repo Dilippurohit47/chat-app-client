@@ -169,6 +169,7 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           console.log("image successfully uploaded to s3");
           setImage(uploadUrl?.split("?")[0]);
           setIsImageUploaded(true);
+          setError("")
         } catch (error) {
           setError("Couldn't upload image. You can continue without one.");
 resetImage()

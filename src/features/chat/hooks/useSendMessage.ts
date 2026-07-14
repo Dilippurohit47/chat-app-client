@@ -47,7 +47,6 @@ const {sendMessageToChatBot} = useChatBot({input})
 const sendTextMessage = async () => {
   if(input.trim().length === 0) return
   const tempId = uuid();
-
     const msg = newMessage({
     senderId,
     receiverContent: input,
@@ -62,6 +61,7 @@ const sendTextMessage = async () => {
   });
 
   if(chatId === "ai-chat-bot"){
+    msg.status = "sent"
     sendMessageToChatBot({sendMessageToBot , setChatBotResponseLoading , msg})
   }
 
