@@ -27,10 +27,10 @@ const processQueue = (error: any, token: string | null = null) => {
     else prom.resolve(token);
   });
   failedQueue = [];
-};
+};  
 
 
-const AUTH_PATHS = ["/user/refresh", "/user/sign-in", "/user/sign-up", "/user/get-user"];
+const AUTH_PATHS = ["/user/refresh", "/user/sign-in", "/user/sign-up",];
 
 axios.interceptors.response.use(
   (response) => response,
