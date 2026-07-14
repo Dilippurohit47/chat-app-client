@@ -25,6 +25,7 @@ const Login = () => {
 const dispatch = useDispatch()
   const handleSubmit = async (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+     setError("")
     setSignInLoading(true)
     try {
       const res = await axios.post(
@@ -62,21 +63,23 @@ dispatch(saveUser({
     }
   };
 
-  useEffect(() => {
-    const getUser = async () => {
+useEffect(() => {
+  const getUser = async () => {
+    try {
       const res = await axios.get(
         `${import.meta.env.VITE_BASE_URL_HTTP}/user/get-user`,
-        {
-          withCredentials: true,
-        }
+        { withCredentials: true }
       );
       if (res.status === 200) {
-        dispatch(saveUser(res.data)); 
-        navigate("/")
+        dispatch(saveUser(res.data));
+        navigate("/");
       }
-    };
-    getUser();
-  }, []);
+    } catch {
+      // no active session — expected on the login page, ignore
+    }
+  };
+  getUser();
+}, []);
 
  const handleLoginSuccess = async (credentialResponse:CredentialResType) => {
     try {

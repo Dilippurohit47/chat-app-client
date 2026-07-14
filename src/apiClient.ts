@@ -27,15 +27,19 @@ const processQueue = (error: any, token: string | null = null) => {
     else prom.resolve(token);
   });
   failedQueue = [];
-};
+};  
+
+
+const AUTH_PATHS = ["/user/refresh", "/user/sign-in", "/user/sign-up",];
 
 axios.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (originalRequest.url?.includes("/user/refresh")) {
-      return Promise.reject(error);
-    }
+if (AUTH_PATHS.some((p) => originalRequest.url?.includes(p))) {
+  return Promise.reject(error);
+}
+
 
     if (
       (error.response?.status === 401 || error.response?.status === 403) &&
@@ -76,7 +80,7 @@ axios.interceptors.response.use(
       } catch (err) {
         processQueue(err, null);
         store.dispatch(logout());
-        return Promise.reject(err);
+        return Promise.reject(error);
       } finally {
         isRefreshing = false; // ✅ MUST
       }
